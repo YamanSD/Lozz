@@ -62,4 +62,4 @@ yarn-error.log
 .metro-health-check*
 
 # My files
-./Resources/
+./Resources

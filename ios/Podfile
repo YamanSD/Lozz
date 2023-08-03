@@ -26,6 +26,12 @@ if linkage != nil
 end
 
 target 'Lozz' do
+  # These 4 lines replace the use_frameworks! :linkage => :static, in order to use flipper
+  pod 'Firebase', :modular_headers => true
+  pod 'FirebaseCoreInternal', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'FirebaseCore', :modular_headers => true
+  $RNFirebaseAsStaticFramework = true
   config = use_native_modules!
 
   # Flags change depending on the env values.

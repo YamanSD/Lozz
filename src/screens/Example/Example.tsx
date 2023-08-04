@@ -15,6 +15,7 @@ import { useTheme } from '../../hooks';
 import { useLazyFetchOneQuery } from '../../services/modules/users';
 import { changeTheme, ThemeState } from '../../store/theme';
 import i18next from 'i18next';
+import firestore from '@react-native-firebase/firestore';
 
 const Example = () => {
   const { t } = useTranslation(['example', 'welcome']);
@@ -222,8 +223,11 @@ const Example = () => {
 
           <TouchableOpacity
             style={[Common.button.circle, Gutters.regularBMargin]}
-            onPress={() =>
-              onChangeLanguage(i18next.language === 'fr' ? 'en' : 'fr')
+            onPress={async () => {
+                onChangeLanguage(i18next.language === 'fr' ? 'en' : 'fr');
+                const user = await firestore().collection('Vendors').doc('0').get();
+                Alert.alert(Object.keys(user.data()?.trail).join(" "));
+              }
             }
           >
             <Image

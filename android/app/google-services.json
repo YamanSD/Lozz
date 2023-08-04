@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "546748339618",
+    "project_id": "lozz-90fe8",
+    "storage_bucket": "lozz-90fe8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:546748339618:android:12ca33a0d4b0a143f6cefb",
+        "android_client_info": {
+          "package_name": "com.lozz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "546748339618-js70e0u8srbtgbebufta175dacgej11t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.lozz",
+            "certificate_hash": "4c27cdfbf0a295da69ff4e8ecf0ddcb1a33be5b2"
+          }
+        },
+        {
+          "client_id": "546748339618-1kuj81t4re7al2qcgpoeq7ckaihe0d3t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDE3HBjQ7sboNfXuV8lGfXf1LmP7hzbLQA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "546748339618-1kuj81t4re7al2qcgpoeq7ckaihe0d3t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "546748339618-0g2sqqqd50bu8rkhhf29u8qfjv702ba0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "Lozz.com"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

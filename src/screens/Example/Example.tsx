@@ -226,7 +226,7 @@ const Example = () => {
             onPress={async () => {
                 onChangeLanguage(i18next.language === 'fr' ? 'en' : 'fr');
                 const user = await firestore().collection('Vendors').doc('0').get();
-                Alert.alert(Object.keys(user.data()?.trail).join(" "));
+                Alert.alert(user.data()?.name);
               }
             }
           >

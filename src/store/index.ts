@@ -1,20 +1,20 @@
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { setupListeners } from '@reduxjs/toolkit/query';
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
 import {
-  persistReducer,
-  persistStore,
   FLUSH,
-  REHYDRATE,
   PAUSE,
   PERSIST,
+  persistReducer,
+  persistStore,
   PURGE,
   REGISTER,
-  Storage,
-} from 'redux-persist';
-import { MMKV } from 'react-native-mmkv';
+  REHYDRATE,
+  Storage
+} from "redux-persist";
+import { MMKV } from "react-native-mmkv";
 
-import { api } from '../services/api';
-import theme from './theme';
+import { api } from "../services/api";
+import theme from "./theme";
 
 const reducers = combineReducers({
   theme,
@@ -48,18 +48,16 @@ const persistedReducer = persistReducer(persistConfig, reducers);
 const store = configureStore({
   reducer: persistedReducer,
   middleware: getDefaultMiddleware => {
-    const middlewares = getDefaultMiddleware({
+    // if (__DEV__ && !process.env.JEST_WORKER_ID) {
+    //   const createDebugger = require('redux-flipper').default;
+    //   middlewares.push(createDebugger());
+    // }
+
+    return getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
     }).concat(api.middleware);
-
-    if (__DEV__ && !process.env.JEST_WORKER_ID) {
-      const createDebugger = require('redux-flipper').default;
-      middlewares.push(createDebugger());
-    }
-
-    return middlewares;
   },
 });
 

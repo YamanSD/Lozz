@@ -40,7 +40,7 @@ export type MonetaryType = [number, number];
  * Used to tag wholesale products in a restocking.
  * Used iff the restocking is linked with an order.
  */
-export const wholesale_tag = "_WHOLE";
+export const WHOLESALE_TAG = "_WHOLE";
 
 /**
  * Values can be:
@@ -236,7 +236,7 @@ export type courier = {
  *   Either all quantities are positive or all are negative.
  *   Zeroes must be automatically removed before upload.
  *   Wholesale values of a product are tagged at the end with
- *   `_{wholesale_tag}`.
+ *   `_{WHOLESALE_TAG}`.
  *   Given by user.
  *
  * - employee_id: string representing the ID of the employee that made
@@ -663,7 +663,7 @@ export type orderProperties = {
  * - provinces: contains a list of available provinces & a trail
  *   of updates.
  *
- * - rate: contains exchange rate from LBP to USD and back, & a trail
+ * - rate: contains exchange rate for buying and selling USD, & a trail
  *   of updates.
  */
 export type informationProperties = {
@@ -672,8 +672,10 @@ export type informationProperties = {
     trail: TrailType
   },
   rate: {
-    lbpToUsd: number,
-    usdToLbp: number,
+    buyUsdRate: number,
+    sellUsdRate: number,
+    roundToNearestLbp: number,
+    roundToNearestUsd: number,
     trail: TrailType
   }
 }

@@ -74,6 +74,27 @@ export default class Vendor implements BaseModel {
   }
 
   /**
+   * @param value new name of the vendor
+   */
+  public set name(value) {
+    this.data.name = value;
+  }
+
+  /**
+   * @param value new list of phone numbers for the vendor
+   */
+  public set phone_numbers(value) {
+    this.data.phone_numbers = value;
+  }
+
+  /**
+   * @param value new list of emails for the vendor
+   */
+  public set emails(value) {
+    this.data.emails = value;
+  }
+
+  /**
    * @returns whether the object is deactivated
    */
   public get isDeactivated(): boolean {

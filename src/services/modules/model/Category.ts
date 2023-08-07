@@ -1,6 +1,6 @@
 import BaseModel from "./BaseModel";
-import { category, TrailType } from "./types";
 import Monetary from "./Monetary";
+import { category, TrailType } from "./types";
 
 
 /**
@@ -95,6 +95,20 @@ export default class Category implements BaseModel {
    */
   public set trail(value: TrailType) {
     this.data.trail = value;
+  }
+
+  /**
+   * @param value new name of the category
+   */
+  public set name(value) {
+    this.data.name = value;
+  }
+
+  /**
+   * @param value new added prices object for the category
+   */
+  public set added_price(value) {
+    this.data.added_price = value;
   }
 
   /**

@@ -32,14 +32,13 @@ export default class Monetary {
   private static roundToNearestLbpValue: number;
 
   /**
-   * @param usd USD portion of the money, can be negative or float.
-   *            Automatically rounded to 2 decimal places.
-   * @param lbp LBP portion of the money, can be negative or float.
-   *            Automatically rounded to the nearest 5000.
+   * @param data MonetaryValue raw data.
+   *
+   * Values are automatically rounded based on user preferences.
    */
-  public constructor(usd: number, lbp: number) {
-    this.lbpValue = lbp;
-    this.usdValue = usd;
+  public constructor(data: MonetaryType) {
+    this.lbpValue = data[1];
+    this.usdValue = data[0];
     this.applyRounding();
   }
 
@@ -205,7 +204,7 @@ export default class Monetary {
    * @returns a copy of this instance.
    */
   public copy(): Monetary {
-    return new Monetary(this.usd, this.lbp);
+    return new Monetary(this.data);
   }
 
   /**

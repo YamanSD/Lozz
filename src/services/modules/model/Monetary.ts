@@ -47,7 +47,7 @@ export default class Monetary {
    *
    * @returns a Monetary representing zero value.
    */
-  public static noValue(): Monetary {
+  public static get noValue(): Monetary {
     return new Monetary([0, 0]);
   }
 

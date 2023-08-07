@@ -81,6 +81,8 @@ export const WHOLESALE_TAG = "_WHOLE";
  *      Order has to be cancelled_at_courier.
  *      Order canceled returns its quantities
  *      to their appropriate places in inventory.
+ *
+ * Used to map Codes to their meaning, in the Order class.
  */
 export type OrderStatusType =
   "pending"

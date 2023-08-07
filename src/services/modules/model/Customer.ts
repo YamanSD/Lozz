@@ -1,0 +1,159 @@
+import BaseModel from "./BaseModel";
+import { customer, TrailType } from "./types";
+
+
+/**
+ * Class encapsulating the customer data.
+ */
+export default class Customer implements BaseModel {
+  /* raw data of the customer */
+  private dataValue: customer;
+
+  /**
+   * @param data raw data of the customer
+   */
+  public constructor(data: customer) {
+    this.dataValue = data;
+  }
+
+  /**
+   * @returns the stored raw data
+   */
+  public get data(): customer {
+    return this.dataValue;
+  }
+
+  /**
+   * @param value new value of the raw data
+   */
+  public set data(value: customer) {
+    this.dataValue = value;
+  }
+
+  /**
+   * @returns the ID of the customer
+   */
+  public get id() {
+    return this.data.id;
+  }
+
+  /**
+   * @returns the registered first name of the customer
+   */
+  public get first_name() {
+    return this.data.first_name;
+  }
+
+  /**
+   * @returns the registered middle name of the customer,
+   *          if it exists. Otherwise, undefined
+   */
+  public get middle_name() {
+    return this.data.middle_name;
+  }
+
+  /**
+   * @returns the registered last name of the customer
+   */
+  public get last_name() {
+    return this.data.last_name;
+  }
+
+  /**
+   * @returns the registered phone number of the customer, if exists.
+   *          Otherwise, undefined
+   */
+  public get phone_number() {
+    return this.data.phone_number;
+  }
+
+  /**
+   * @returns the registered email of the customer, if exists.
+   *          Otherwise, undefined
+   */
+  public get email() {
+    return this.data.email;
+  }
+
+  /**
+   * @returns the gender of the customer
+   */
+  public get gender() {
+    return this.data.gender;
+  }
+
+  /**
+   * @returns the birthday of the customer
+   */
+  public get birthday() {
+    return this.data.birthday;
+  }
+
+  /**
+   * @returns the age of the customer in years if they have a birthday.
+   *          Otherwise, undefined.
+   */
+  public get age(): number | undefined {
+    if (this.birthday === undefined) {
+      return undefined;
+    }
+
+    // Convert milliseconds to years, then floor the result
+    return Math.floor((
+      new Date().getTime() - this.birthday.getTime()
+    ) / 31_536_000_000);
+  }
+
+  /**
+   * @returns the full name of the employee
+   */
+  public get full_name() {
+    return [
+      this.first_name,
+      this.middle_name ?? '',
+      this.last_name
+    ].join(' ');
+  }
+
+  /**
+   * @returns boolean representing whether the customer is banned
+   */
+  public get is_banned() {
+    return this.data.is_banned;
+  }
+
+  /**
+   * @returns the list of orders created by the customer
+   */
+  public get orders() {
+    return this.data.orders;
+  }
+
+  /**
+   * @returns the trail
+   */
+  public get trail(): TrailType {
+    return this.data.trail;
+  }
+
+  /**
+   * @param value new value of the trail
+   */
+  public set trail(value: TrailType) {
+    this.data.trail = value;
+  }
+
+  /**
+   * @returns whether the object is deactivated
+   */
+  public get isDeactivated(): boolean {
+    return BaseModel.isDeactivated(this.trail);
+  }
+
+  /**
+   * @returns whether the object is deleted
+   */
+  public get isDeleted(): boolean {
+    return BaseModel.isDeleted(this.trail);
+  }
+}

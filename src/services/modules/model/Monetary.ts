@@ -272,6 +272,31 @@ export default class Monetary {
   }
 
   /**
+   * @param discount amount deducted from this instance.
+   * @returns array containing 2 numbers, first is USD percentage of deduction,
+   *          second is LBP percentage of deduction
+   */
+  public discountPercent(discount: Monetary) {
+    const temp = this.subtractCopy(discount).percent(this);
+
+    return {
+      usd: 1 - temp.usd,
+      lbp: 1 - temp.lbp
+    }
+  }
+
+  /**
+   * @param other value to compare against.
+   * @returns what percentage is this instance of the given instance.
+   */
+  public percent(other: Monetary) {
+    return {
+      usd: this.usd / other.usd,
+      lbp: this.lbp / other.lbp
+    };
+  }
+
+  /**
    * @returns the LBP value as a string.
    */
   public get lbpString(): string {

@@ -1,17 +1,6 @@
 /**
- * Describes the trail object type.
- *
- * - timestamp: number representing the date of the action.
- *   Consists the date string concatenated to the nanosecond, &
- *   two random digits (yyyymmddssnnndd).
- *   Auto-generated on addition.
- *
- * - employee_id: string representing the id of the employee that made
- *   the action.
- *   Auto-detected on addition.
- *
- * - nature: string representing the nature of the action.
- *   Can be any of (CRUDE):
+ * Enum class for the nature type of Trails.
+ * Can be any of (CRUDE):
  *   >- C: Employee created the object, first in any trail, only 1.
  *   >- R: Employee reactivated the object, multiple can exist.
  *   >- U: Employee updated the object, multiple can exist.
@@ -21,10 +10,32 @@
  *         Cannot be undone, and all data except trail associated
  *         with object are completely erased.
  */
+export enum TrailNature {
+  C = 0,
+  R,
+  U,
+  D,
+  E
+}
+
+/**
+ * Describes the trail object type.
+ *
+ * - timestamp: string representing the date of the action.
+ *   Consists the date string concatenated to the nanosecond, &
+ *   two random digits (yyyymmddhhMMssnnndd).
+ *   Auto-generated on addition.
+ *
+ * - employee_id: string representing the id of the employee that made
+ *   the action.
+ *   Auto-detected on addition.
+ *
+ * - nature: enum representing the nature of the action.
+ */
 export type TrailType = {
-    [timestamp: number]: {
+    [timestamp: string]: {
       employee_id: string,
-      nature: string
+      nature: TrailNature
     }
 };
 
@@ -214,7 +225,7 @@ export type category = {
 /**
  * - id: string representing the ID of the expense.
  *   Auto-generated using the current datetime
- *   & two random digits (yyyymmddssnnndd).
+ *   & two random digits (yyyymmddhhMMssnnndd).
  *
  * - description: string representing the description of the
  *   expense.
@@ -277,7 +288,7 @@ export type courier = {
 /**
  * - id: string representing the ID of the restocking operation.
  *   Auto-generated using the current datetime and
- *   two random digits (yyyymmddssnnndd).
+ *   two random digits (yyyymmddhhMMssnnndd).
  *   Represents the creation date of the restocking.
  *
  * - note?: string representing a note regarding the restocking
@@ -320,7 +331,7 @@ export type restock = {
 /**
  * - id: string representing the ID of the employee.
  *   Auto-generated using the current datetime and
- *   two random digits (yyyymmddssnnndd).
+ *   two random digits (yyyymmddhhMMssnnndd).
  *   Represents the join-date of the employee.
  *
  * - first_name: string, legal first name of the employee.
@@ -387,7 +398,7 @@ export type employee = {
 /**
  * - id: string representing the ID of the customer.
  *   Auto-generated using the current datetime and
- *   three random digits (yyyymmddssnnnddd).
+ *   three random digits (yyyymmddhhMMssnnnddd).
  *   Represents the join-date of the customer.
  *
  * - first_name: string, first name of the customer.
@@ -450,8 +461,8 @@ export type customer = {
  *   product.
  *   Images given by user, urls generated on upload.
  *
- * - images?: list of strings, each representing the url of a product image.
- *   Number of images and definition varies, based on user tier.
+ * - images?: object mapping USPs to their image urls.
+ *   Number of images and dimensions varies, based on user tier.
  *   Given by user.
  *
  * - quantities: object mapping USPs to the quantity of the product
@@ -522,7 +533,9 @@ export type product = {
   name: string,
   vendor_id: string,
   category_id: string,
-  images?: [...string[]],
+  images?: {
+    [usp: string]: [...string[]]
+  },
   quantities: {
     [usp: string]: number
   },
@@ -557,9 +570,71 @@ export type product = {
 };
 
 /**
+ * - usd: number representing the percentage of discount given for the
+ *   USD portion of the MonetaryValue.
+ *
+ * - lbp: number representing the percentage of discount given for the
+ *   LBP portion of the MonetaryValue.
+ */
+export type MonetaryDiscountType = {
+  usd: number,
+  lbp: number
+};
+
+/**
+ * - usi: string representing the chosen USI of the product.
+ *   Generated based on user choices.
+ *
+ * - name: string representing the name of the product.
+ *   Copied from product.
+ *
+ * - vendor_name: string representing the name of the vendor for the product.
+ *   Copied from product.
+ *
+ * - category_name: string representing the name of the
+ *   category for the product.
+ *
+ * - image?: string representing the display image for the product.
+ *   Generated based on USI.
+ *
+ * - quantity: number representing the chosen amount of the product.
+ *   Given by user.
+ *
+ * - total_price: MonetaryValue representing the final price of a unit,
+ *   after applying discounts and added price.
+ *
+ * - discount: discount percentages given on the product.
+ *   Automatically calculated on creation.
+ *
+ * - description?: string representing the description of the product.
+ *   Copied from product.
+ *
+ * - increment: number representing the increase or decrease in the
+ *   quantity on each button press.
+ *   Primarily used with wholesale quantities.
+ *   Copied from product.
+ *
+ * - is_wholesale: if true the cartProduct is for wholesale, otherwise
+ *   normal.
+ */
+export type cartProduct = {
+  usi: string,
+  name: string,
+  vendor_name: string,
+  category_name: string,
+  image?: string,
+  quantity: number,
+  total_price: MonetaryType,
+  discount: MonetaryDiscountType,
+  description?: string,
+  increment: number,
+  is_wholesale: boolean
+}
+
+/**
  * - id: string representing the ID of the order.
  *   Auto-generated using the current datetime and
- *   four random digits (yyyymmddssnnndddd).
+ *   four random digits (yyyymmddhhMMssnnndddd).
  *   Represents the creation date of the order.
  *
  * - note?: string representing a note about the order.
@@ -633,8 +708,8 @@ export type order = {
 };
 
 /**
- * - timestamp: number representing the last modification on the restocking.
- *   (yyyymmddssnnn).
+ * - timestamp: string representing the last modification on the restocking.
+ *   (yyyymmddhhMMssnnn).
  *
  * - order_id?: string representing the ID of the order related to the
  *   restocking operation.
@@ -643,78 +718,78 @@ export type order = {
  */
 export type restockProperties = {
   [restock_id: string]: {
-    timestamp: number,
+    timestamp: string,
     order_id?: string
   }
 };
 
 /**
- * - category_id: contains a timestamp (yyyymmddssnnn) for the
+ * - category_id: contains a timestamp (yyyymmddhhMMssnnn) for the
  *   category and product IDs mapped to their own timestamps.
  */
 export type productProperties = {
   [category_id: string]: {
     [product_id: string]: {
-      timestamp: number
+      timestamp: string
     }
   } & {
-    timestamp: number,
+    timestamp: string,
   }
 };
 
 /**
- * - employee_id: contains a timestamp (yyyymmddssnnn) for the employee,
+ * - employee_id: contains a timestamp (yyyymmddhhMMssnnn) for the employee,
  *   & a tag to indicate whether an employee is online or offline.
  */
 export type employeeProperties = {
   [employee_id: string]: {
-    timestamp: number,
+    timestamp: string,
     is_online: boolean
   }
 };
 
 /**
- * - courier_id: contains a timestamp (yyyymmddssnnn) for the courier.
+ * - courier_id: contains a timestamp (yyyymmddhhMMssnnn) for the courier.
  */
 export type courierProperties = {
   [courier_id: string]: {
-    timestamp: number
+    timestamp: string
   }
 }
 
 /**
- * - vendor_id: contains a timestamp (yyyymmddssnnn) for the vendor.
+ * - vendor_id: contains a timestamp (yyyymmddhhMMssnnn) for the vendor.
  */
 export type vendorProperties = {
   [vendor_id: string]: {
-    timestamp: number
+    timestamp: string
   }
 }
 
 /**
- * - customer_id: contains a timestamp (yyyymmddssnnn) for the customer.
+ * - customer_id: contains a timestamp (yyyymmddhhMMssnnn) for the customer.
  */
 export type customerProperties = {
   [customer_id: string]: {
-    timestamp: number
+    timestamp: string
   }
 }
 
 /**
- * - expense_id: contains a timestamp (yyyymmddssnnn) for the expense.
+ * - expense_id: contains a timestamp (yyyymmddhhMMssnnn) for the expense.
  */
 export type expenseProperties = {
   [expense_id: string]: {
-    timestamp: number
+    timestamp: string
   }
 }
 
 /**
- * - order_id: contains a timestamp (yyyymmddssnnn) for the order.
+ * - order_id: contains a timestamp (yyyymmddhhMMssnnn) for the order.
  */
 export type orderProperties = {
   [order_id: string]: {
-    timestamp: number
+    timestamp: string
   }
 }
 

@@ -1,0 +1,103 @@
+import BaseModel from "./BaseModel";
+import { courier, TrailType } from "./types";
+import Monetary from "./Monetary";
+
+
+/**
+ * Class encapsulating the courier data.
+ */
+export default class Courier implements BaseModel {
+  /* raw data of the courier */
+  private dataValue: courier;
+
+  /**
+   * @param data raw data of the courier
+   */
+  public constructor(data: courier) {
+    this.dataValue = data;
+  }
+
+  /**
+   * @returns the stored raw data
+   */
+  public get data(): courier {
+    return this.dataValue;
+  }
+
+  /**
+   * @param value new value of the raw data
+   */
+  public set data(value: courier) {
+    this.dataValue = value;
+  }
+
+  /**
+   * @returns the ID of the courier
+   */
+  public get id() {
+    return this.data.id;
+  }
+
+  /**
+   * @returns the name of the courier
+   */
+  public get name() {
+    return this.data.name;
+  }
+
+  /**
+   * @returns the shipping fees object
+   */
+  public get shipping_fees() {
+    return this.data.shipping_fees;
+  }
+
+  /**
+   * @returns list of order IDs that are at the courier
+   */
+  public get orders() {
+    return this.data.orders;
+  }
+
+  /**
+   * @param province province to get shipping fees for
+   * @throws Error if the given province is not in the courier shipping fees
+   *         object
+   * @returns the Monetary value of the shipping fees
+   */
+  public getShippingFees(province: string): Monetary {
+    if (!(province in this.shipping_fees)) {
+      throw new Error(`Invalid province ${province} with courier ${this.id}`);
+    }
+
+    return new Monetary(this.shipping_fees[province]);
+  }
+
+  /**
+   * @returns the trail
+   */
+  public get trail(): TrailType {
+    return this.data.trail;
+  }
+
+  /**
+   * @param value new value of the trail
+   */
+  public set trail(value: TrailType) {
+    this.data.trail = value;
+  }
+
+  /**
+   * @returns whether the object is deactivated
+   */
+  public get isDeactivated(): boolean {
+    return BaseModel.isDeactivated(this.trail);
+  }
+
+  /**
+   * @returns whether the object is deleted
+   */
+  public get isDeleted(): boolean {
+    return BaseModel.isDeleted(this.trail);
+  }
+}

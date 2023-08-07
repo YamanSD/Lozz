@@ -22,7 +22,7 @@ export enum TrailNature {
  * Describes the trail object type.
  *
  * - timestamp: string representing the date of the action.
- *   Consists the date string concatenated to the nanosecond, &
+ *   Consists the date string concatenated to the millisecond (n), &
  *   two random digits (yyyymmddhhMMssnnndd).
  *   Auto-generated on addition.
  *

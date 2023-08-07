@@ -88,6 +88,45 @@ export default class Courier implements BaseModel {
   }
 
   /**
+   * @param value new name of the courier
+   */
+  public set name(value) {
+    this.data.name = value;
+  }
+
+  /**
+   * @param value new value for the shipping fees
+   */
+  public set shipping_fees(value) {
+    this.data.shipping_fees = value;
+  }
+
+  /**
+   * @param value new value of the orders array
+   */
+  public set orders(value) {
+    this.data.orders = value;
+  }
+
+  /**
+   * @param id appended to the orders array
+   */
+  public appendOrder(id: string) {
+    this.orders.push(id);
+  }
+
+  /**
+   * @param id of the order to be removed
+   */
+  public remove_order(id: string) {
+    const index = this.orders.indexOf(id);
+
+    if (-1 < index) {
+      this.orders.splice(index, 1);
+    }
+  }
+
+  /**
    * @returns whether the object is deactivated
    */
   public get isDeactivated(): boolean {

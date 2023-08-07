@@ -17,6 +17,11 @@ import { changeTheme, ThemeState } from '../../store/theme';
 import i18next from 'i18next';
 import firestore from '@react-native-firebase/firestore';
 
+enum test {
+  a = 0,
+  b
+}
+
 const Example = () => {
   const { t } = useTranslation(['example', 'welcome']);
   const {

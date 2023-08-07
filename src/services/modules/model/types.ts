@@ -84,22 +84,72 @@ export const WHOLESALE_TAG = "_WHOLE";
  *
  * Used to map Codes to their meaning, in the Order class.
  */
-export type OrderStatusType =
-  "pending"
-  | "confirmed"
-  | "packaged"
-  | "sent_to_courier"
-  | "delivered"
-  | "canceled"
-  | "canceled_at_courier"
-  | "received_from_courier";
+export enum OrderStatus {
+  pending = 0,
+  confirmed,
+  packaged,
+  sent_to_courier,
+  delivered,
+  canceled,
+  canceled_at_courier,
+  received_from_courier
+}
 
 /**
- * Represents the OrderStatusType, in order to preserve space.
- * Mapping is respective with the OrderStatusType order of definition.
- * (i.e. 0 -> pending, 1 -> confirmed, etc...)
+ * Values can be:
+ * - unrelated:
+ *     >- These employees do not have any privileges, as they do physical
+ *        activities unrelated to sales, such as (cleaning, packaging, etc...).
+ *     >- Do not have commission
+ * - regular:
+ *    >- able to read:
+ *    >>- product information, except vendor, costs, and wholesale;
+ *    >>- the orders;
+ *    >>- the restocks;
+ *    >>- customer information;
+ *    >>- courier information;
+ *    >>- category information;
+ *    >>- their own information;
+ *    >>- information properties;
+ *    >- cannot access deactivated entities.
+ *    >- able to create:
+ *    >>- new orders;
+ *    >- able to update:
+ *    >>- their orders;
+ *    >>- customer information;
+ *    >- unable to delete, deactivate, or reactivate.
+ *    >- cannot access profits and expenses, or other reports.
+ * - manager:
+ *    In addition to `regular` privileges.
+ *    >- able to read:
+ *    >>- all information;
+ *    >- able to create:
+ *    >>- new products;
+ *    >>- new employees;
+ *    >>- new categories;
+ *    >>- new vendors;
+ *    >>- new couriers;
+ *    >- able to update:
+ *    >>- all information except owner other managers or admin and owner.
+ *    >- can deactivate and reactivate products, but not delete.
+ *    >- can see profits, expenses, and other reports.
+ * - admin:
+ *    In addition to `manager` privileges.
+ *    >- can delete any entity except owner or other admin employees.
+ *    >- can update all information except admin or owner.
+ *    >- cannot create more admins, but managers and lower.
+ *    >- cannot change company tier.
+ * - owner:
+ *    In addition to `admin` privileges.
+ *    >- can perform any possible task.
  */
-export type OrderStatusCode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export enum EmployeeRole {
+  unrelated = 0,
+  regular,
+  manager,
+  admin,
+  owner,
+}
 
 /**
  * - id: string representing the ID of the vendor.
@@ -288,8 +338,8 @@ export type restock = {
  * - email?: string, email of the employee (personal or company)
  *   Given by user.
  *
- * - role: string representing the role of the employee.
- *   Roles are defined in the employee properties and can be modified.
+ * - role: enum representing the role of the employee.
+ *   Roles are pre-determined.
  *   Given by user.
  *
  * - commission_percent?: number representing the percentage, given
@@ -324,7 +374,7 @@ export type employee = {
   last_name: string,
   phone_number?: string,
   email?: string,
-  role: string,
+  role: EmployeeRole,
   commission_percent?: number,
   salary: MonetaryType,
   gender?: boolean,
@@ -519,9 +569,8 @@ export type product = {
  * - discount?: MonetaryValue representing a discount value given on the order.
  *   Given by user.
  *
- * - status: number representing the status of an order.
- *   Actual status Belongs to OrderStatusType.
- *   Mapping is defined in the Order class.
+ * - status: enum representing the status of an order.
+ *   Mapping to strings is defined in the Order class.
  *   Automatically modified and added on order modification.
  *
  * - total?: MonetaryType value of the total price of all products
@@ -568,7 +617,7 @@ export type order = {
   id: string,
   note?: string,
   discount?: MonetaryType,
-  status: OrderStatusCode,
+  status: OrderStatus,
   total?: MonetaryType,
   province?: string,
   address?: string,

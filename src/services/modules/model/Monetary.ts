@@ -43,6 +43,15 @@ export default class Monetary {
   }
 
   /**
+   * Factory method for zero value instances.
+   *
+   * @returns a Monetary representing zero value.
+   */
+  public static noValue(): Monetary {
+    return new Monetary([0, 0]);
+  }
+
+  /**
    * @returns the nearest round value for LBP.
    */
   public static get roundLbpNumber(): number {

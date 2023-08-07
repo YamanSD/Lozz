@@ -1,3 +1,4 @@
+import auth from '@react-native-firebase/auth';
 import { TrailNature, TrailType } from "./types";
 
 
@@ -39,5 +40,53 @@ export default abstract class BaseModel {
     timestamps.sort();
 
     return trail[timestamps[timestamps.length - 1]].nature === TrailNature.E;
+  }
+
+  /**
+   * @returns the current datetime in the following format (yyyymmddhhMMssnnn)
+   */
+  public static get currentTimestamp(): string {
+    const temp = new Date();
+
+    return [
+      temp.getFullYear(),
+      temp.getMonth().toString().padStart(2, '0'),
+      temp.getDate().toString().padStart(2, '0'),
+      temp.getHours().toString().padStart(2, '0'),
+      temp.getMinutes().toString().padStart(2, '0'),
+      temp.getSeconds().toString().padStart(2, '0'),
+      temp.getMilliseconds().toString().padStart(3, '0')
+    ].join('');
+  }
+
+  /**
+   * @param n number of random digits
+   * @returns a string containing n random digits
+   */
+  public static getRandomNumber(n: number): string {
+    return Math.round(Math.random() * (10 ** n)).toString();
+  }
+
+  /**
+   * @param trail trail to be stamped
+   * @param nature nature of the action
+   * @param randomDigits number of random digits to be appended
+   *
+   * Used to update trails
+   */
+  public static stamp(trail: TrailType,
+                      nature: TrailNature,
+                      randomDigits: number = 0): void {
+    const id = auth().tenantId;
+
+    if (id === null) {
+      throw new Error("Invalid user");
+    }
+
+    trail[BaseModel.currentTimestamp
+        + BaseModel.getRandomNumber(randomDigits)] = {
+      nature: nature,
+      employee_id: id
+    }
   }
 }

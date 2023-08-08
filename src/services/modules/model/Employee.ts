@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import { employee, TrailType } from "./types";
+import { employee, EmployeeRole, TrailType } from "./types";
 
 
 /**
@@ -162,6 +162,123 @@ export default class Employee implements BaseModel {
    */
   public set trail(value: TrailType) {
     this.data.trail = value;
+  }
+
+  /**
+   * @param value new first name of the employee
+   */
+  public set first_name(value) {
+    this.data.first_name = value;
+  }
+
+  /**
+   * @param value new middle name of the employee
+   */
+  public set middle_name(value) {
+    this.data.middle_name = value;
+  }
+
+  /**
+   * @param value new last name of the employee
+   */
+  public set last_name(value) {
+    this.data.last_name = value;
+  }
+
+  /**
+   * @param value new phone number of the employee
+   */
+  public set phone_number(value) {
+    this.data.phone_number = value;
+  }
+
+  /**
+   * @param value new email of the employee
+   */
+  public set email(value) {
+    this.data.email = value;
+  }
+
+  /**
+   * @param value new role of the employee
+   */
+  public set role(value) {
+    this.data.role = value;
+  }
+
+  /**
+   * @param value new commission percent of the employee
+   */
+  public set commission_percent(value) {
+    if (value === undefined || value < 0 || 1 < value) {
+      throw new RangeError(`Invalid commission ${value}`);
+    }
+
+    this.data.commission_percent = value;
+  }
+
+  /**
+   * @param value new salary of the employee
+   */
+  public set salary(value) {
+    this.data.salary = value;
+  }
+
+  /**
+   * @param value new gender of the employee
+   */
+  public set gender(value) {
+    this.data.gender = value;
+  }
+
+  /**
+   * @param value new birthday of the employee
+   */
+  public set birthday(value) {
+    this.data.birthday = value;
+  }
+
+  /**
+   * @param value new orders of the employee
+   */
+  public set orders(value) {
+    this.data.orders = value;
+  }
+
+  /**
+   * @param id appended to the list of orders
+   */
+  public appendOrder(id: string) {
+    if (this.orders === undefined) {
+      this.orders = [];
+    }
+
+    this.orders.push(id);
+  }
+
+  /**
+   * @param id removes from the list of orders
+   */
+  public removeOrder(id: string) {
+    if (this.orders === undefined) {
+      return;
+    }
+
+    const index = this.orders.indexOf(id);
+
+    if (-1 < index) {
+      this.orders.splice(index, 1);
+    }
+  }
+
+  /**
+   * Fires the employee from the company.
+   * Role becomes past.
+   * Trail unaffected.
+   */
+  public fire(): void {
+    this.data.end_date = new Date();
+    this.role = EmployeeRole.past;
   }
 
   /**

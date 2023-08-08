@@ -108,6 +108,9 @@ export enum OrderStatus {
 
 /**
  * Values can be:
+ * - past:
+ *    >- Old employee in the company.
+ *    >- Left or was fired, reason is not specified.
  * - unrelated:
  *     >- These employees do not have any privileges, as they do physical
  *        activities unrelated to sales, such as (cleaning, packaging, etc...).
@@ -155,7 +158,8 @@ export enum OrderStatus {
  *    >- can perform any possible task.
  */
 export enum EmployeeRole {
-  unrelated = 0,
+  past = 0,
+  unrelated,
   regular,
   manager,
   admin,

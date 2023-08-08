@@ -63,8 +63,15 @@ export default abstract class BaseModel {
    * @param n number of random digits
    * @returns a string containing n random digits
    */
-  public static getRandomNumber(n: number): string {
+  private static getRandomNumber(n: number): string {
     return Math.round(Math.random() * (10 ** n)).toString();
+  }
+
+  /**
+   * @param digits number of random digits at the end, zero by default
+   */
+  public static getRandomTimestamp(digits: number = 0): string {
+    return `${BaseModel.currentTimestamp}${BaseModel.getRandomNumber(digits)}`;
   }
 
   /**
@@ -83,8 +90,7 @@ export default abstract class BaseModel {
       throw new Error("Invalid user");
     }
 
-    trail[BaseModel.currentTimestamp
-        + BaseModel.getRandomNumber(randomDigits)] = {
+    trail[BaseModel.getRandomTimestamp(randomDigits)] = {
       nature: nature,
       employee_id: id
     }

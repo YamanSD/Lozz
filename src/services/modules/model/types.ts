@@ -48,12 +48,6 @@ export type TrailType = {
 export type MonetaryType = [number, number];
 
 /**
- * Used to tag wholesale products in a restocking.
- * Used iff the restocking is linked with an order.
- */
-export const WHOLESALE_TAG = "_WHOLE";
-
-/**
  * Values can be:
  *   >- pending:
  *      Pending orders are orders that are still being constructed.
@@ -310,7 +304,7 @@ export type courier = {
  *   Either all quantities are positive or all are negative.
  *   Zeroes must be automatically removed before upload.
  *   Wholesale values of a product are tagged at the end with
- *   `_{WHOLESALE_TAG}`.
+ *   `_{Product.WHOLESALE_TAG}`.
  *   Given by user.
  *
  * - employee_id: string representing the ID of the employee that made

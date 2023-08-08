@@ -105,7 +105,7 @@ export default class Customer implements BaseModel {
   }
 
   /**
-   * @returns the full name of the employee
+   * @returns the full name of the customer
    */
   public get full_name() {
     return [
@@ -141,6 +141,95 @@ export default class Customer implements BaseModel {
    */
   public set trail(value: TrailType) {
     this.data.trail = value;
+  }
+
+  /**
+   * @param value new first name of the customer
+   */
+  public set first_name(value) {
+    this.data.first_name = value;
+  }
+
+  /**
+   * @param value new middle name of the customer
+   */
+  public set middle_name(value) {
+    this.data.middle_name = value;
+  }
+
+  /**
+   * @param value new last name of the customer
+   */
+  public set last_name(value) {
+    this.data.last_name = value;
+  }
+
+  /**
+   * @param value new phone number of the customer
+   */
+  public set phone_number(value) {
+    this.data.phone_number = value;
+  }
+
+  /**
+   * @param value new email of the customer
+   */
+  public set email(value) {
+    this.data.email = value;
+  }
+
+  /**
+   * @param value new gender of the customer
+   */
+  public set gender(value) {
+    this.data.gender = value;
+  }
+
+  /**
+   * @param value new birthday of the customer
+   */
+  public set birthday(value) {
+    this.data.birthday = value;
+  }
+
+  /**
+   * @param value new orders of the customer
+   */
+  public set orders(value) {
+    this.data.orders = value;
+  }
+
+  /**
+   * @param value user becomes banned or unbanned
+   */
+  public set is_banned(value) {
+    this.data.is_banned = value;
+  }
+
+  /**
+   * @param id appended to the list of orders
+   */
+  public appendOrder(id: string) {
+    if (this.orders === undefined) {
+      this.orders = [];
+    }
+
+    this.orders.push(id);
+  }
+
+  /**
+   * @param id removes from the list of orders
+   */
+  public removeOrder(id: string) {
+    if (this.orders === undefined) {
+      return;
+    }
+
+    const index = this.orders.indexOf(id);
+
+    if (-1 < index) {
+      this.orders.splice(index, 1);
+    }
   }
 
   /**

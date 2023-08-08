@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import { TrailType, vendor } from "./types";
+import { TrailNature, TrailType, vendor } from "./types";
 
 
 /**
@@ -106,5 +106,12 @@ export default class Vendor implements BaseModel {
    */
   public get isDeleted(): boolean {
     return BaseModel.isDeleted(this.trail);
+  }
+
+  /**
+   * @param nature type of action done by the current employee
+   */
+  public stamp(nature: TrailNature): void {
+    BaseModel.stamp(this.trail, nature);
   }
 }

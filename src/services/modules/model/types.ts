@@ -451,6 +451,15 @@ export type customer = {
 };
 
 /**
+ * Shortcut for typing.
+ *
+ * - usp: USP of the product mapped to its number.
+ */
+export type QuantityType = {
+  [usp: string]: number
+};
+
+/**
  * - id: string representing the ID of the product.
  *   Given by user.
  *
@@ -540,24 +549,18 @@ export type product = {
   images?: {
     [usp: string]: [...string[]]
   },
-  quantities: {
-    [usp: string]: number
-  },
+  quantities: QuantityType,
   wholesale_price?: MonetaryType,
   wholesale_increment?: number,
   added_wholesale_price?: {
     [usp: string]: MonetaryType
   },
-  minimum_wholesale_quantity?: {
-    [usp: string]: number
-  },
+  minimum_wholesale_quantity?: QuantityType,
   price: MonetaryType,
   added_price?: {
     [usp: string]: MonetaryType
   },
-  inventory_quantities: {
-    [usp: string]: number
-  },
+  inventory_quantities: QuantityType,
   instructions?: string,
   cost: MonetaryType,
   added_costs?: {

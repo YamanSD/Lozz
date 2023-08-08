@@ -84,10 +84,10 @@ export default abstract class BaseModel {
   public static stamp(trail: TrailType,
                       nature: TrailNature,
                       randomDigits: number = 0): void {
-    const id = auth().tenantId;
+    const id = auth().currentUser?.uid;
 
-    if (id === null) {
-      throw new Error("Invalid user");
+    if (id === undefined) {
+      throw new Error("Invalid user cannot stamp");
     }
 
     trail[BaseModel.getRandomTimestamp(randomDigits)] = {

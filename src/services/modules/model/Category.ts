@@ -1,6 +1,6 @@
 import BaseModel from "./BaseModel";
 import Monetary from "./Monetary";
-import { category, TrailType } from "./types";
+import { category, TrailNature, TrailType } from "./types";
 
 
 /**
@@ -123,5 +123,12 @@ export default class Category implements BaseModel {
    */
   public get isDeleted(): boolean {
     return BaseModel.isDeleted(this.trail);
+  }
+
+  /**
+   * @param nature type of action done by the current employee
+   */
+  public stamp(nature: TrailNature): void {
+    BaseModel.stamp(this.trail, nature);
   }
 }

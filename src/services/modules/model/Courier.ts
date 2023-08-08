@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import { courier, TrailType } from "./types";
+import { courier, TrailNature, TrailType } from "./types";
 import Monetary from "./Monetary";
 
 
@@ -138,5 +138,12 @@ export default class Courier implements BaseModel {
    */
   public get isDeleted(): boolean {
     return BaseModel.isDeleted(this.trail);
+  }
+
+  /**
+   * @param nature type of action done by the employee
+   */
+  public stamp(nature: TrailNature): void {
+    BaseModel.stamp(this.trail, nature);
   }
 }

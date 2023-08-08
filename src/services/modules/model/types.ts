@@ -311,6 +311,11 @@ export type courier = {
  *   the restocking operation directly or indirectly (i.e. by an order).
  *   Auto-detected on creation.
  *
+ * - order_id?: string representing the ID of the order related to the
+ *   restocking operation.
+ *   When present, allows the restocking instance to be deleted.
+ *   Auto-added when an order is created.
+ *
  * - item_count: number representing the sum of the quantities of
  *   all items.
  *   Auto-generated on creation.
@@ -323,6 +328,7 @@ export type restock = {
     [usi: string]: number
   },
   item_count: number,
+  order_id?: string,
   employee_id: string,
 };
 
@@ -703,16 +709,10 @@ export type order = {
 /**
  * - timestamp: string representing the last modification on the restocking.
  *   (yyyymmddhhMMssnnn).
- *
- * - order_id?: string representing the ID of the order related to the
- *   restocking operation.
- *   When present, allows the restocking instance to be deleted.
- *   Auto-added when an order is created.
  */
 export type restockProperties = {
   [restock_id: string]: {
     timestamp: string,
-    order_id?: string
   }
 };
 

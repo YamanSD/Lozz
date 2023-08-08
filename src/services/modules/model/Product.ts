@@ -1,12 +1,12 @@
 import BaseModel from "./BaseModel";
+import CartProduct from "./CartProduct";
 import Category from "./Category";
+import Monetary from "./Monetary";
 import Vendor from "./Vendor";
 import {
   cartProduct, category, product, QuantityType,
   TrailNature, TrailType, vendor
 } from "./types";
-import Monetary from "./Monetary";
-import CartProduct from "./CartProduct";
 
 
 /**

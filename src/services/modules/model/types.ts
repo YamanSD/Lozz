@@ -589,12 +589,6 @@ export type MonetaryDiscountType = {
  * - name: string representing the name of the product.
  *   Copied from product.
  *
- * - vendor_name: string representing the name of the vendor for the product.
- *   Copied from product.
- *
- * - category_name: string representing the name of the
- *   category for the product.
- *
  * - image?: string representing the display image for the product.
  *   Generated based on USI.
  *
@@ -621,8 +615,6 @@ export type MonetaryDiscountType = {
 export type cartProduct = {
   usi: string,
   name: string,
-  vendor_name: string,
-  category_name: string,
   image?: string,
   quantity: number,
   total_price: MonetaryType,

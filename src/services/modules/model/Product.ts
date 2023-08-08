@@ -1,9 +1,12 @@
 import BaseModel from "./BaseModel";
 import Category from "./Category";
 import Vendor from "./Vendor";
-import { category, product, QuantityType,
-  TrailNature, TrailType, vendor } from "./types";
+import {
+  cartProduct, category, product, QuantityType,
+  TrailNature, TrailType, vendor
+} from "./types";
 import Monetary from "./Monetary";
+import CartProduct from "./CartProduct";
 
 
 /**
@@ -29,7 +32,7 @@ export default class Product implements BaseModel {
    * Used to tag wholesale products in a restocking.
    * Used iff the restocking is linked with an order.
    */
-  private static WHOLESALE_TAG = "_WHOLE";
+  public static readonly WHOLESALE_TAG = "_WHOLE";
 
   /**
    * @param data raw data of the product
@@ -733,7 +736,39 @@ export default class Product implements BaseModel {
     delete this.added_wholesale_price[usp];
   }
 
-  // public detachSelection(options_)
+  /**
+   * Factory method for CartProducts.
+   *
+   * @param option_values selected option values
+   * @param quantity selected quantity
+   * @param is_wholesale indicate if the product is wholesale
+   * @returns CartProduct instance with proper data
+   */
+  public detachSelection(
+    option_values: [...string[]],
+    quantity: number,
+    is_wholesale: boolean
+  ) {
+    const usp = Product.createUsp(option_values);
+    let data: cartProduct = {
+      usi: this.uspToUsi(usp),
+      name: this.name,
+      quantity: quantity,
+      total_price: this.getTotalPrice(usp).multiplyCopy(quantity).data,
+      discount: this.getDiscount(usp),
+      description: this.description,
+      increment: this.wholesale_increment,
+      is_wholesale: is_wholesale
+    };
+
+    if (this.images !== undefined
+      && this.images[usp] !== undefined
+      && 0 < this.images[usp].length) {
+      data.image = this.images[usp][0];
+    }
+
+    return new CartProduct(data, this.category, this.vendor);
+  }
 
   /**
    * @param value new value of the vendor ID

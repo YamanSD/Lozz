@@ -399,6 +399,22 @@ export default class Monetary {
   }
 
   /**
+   * @param other Monetary value to compare against
+   * @return true if the given monetary value is less than the current one,
+   *         after converting both to USD.
+   */
+  public lessThan(other: Monetary): boolean {
+    return this.transformToUsdCopy().usd < other.transformToUsdCopy().usd;
+  }
+
+  /**
+   * @returns true if the USD is negative or the LBP is negative
+   */
+  public get isNegative(): boolean {
+    return this.usd < 0 || this.lbp < 0;
+  }
+
+  /**
    * @returns the MonetaryType data of the class.
    */
   public get data(): MonetaryType {

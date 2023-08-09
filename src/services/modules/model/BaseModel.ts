@@ -1,5 +1,6 @@
 import auth from '@react-native-firebase/auth';
 import { TrailNature, TrailType } from "./types";
+import { cloneDeep } from "lodash";
 
 
 /**
@@ -94,5 +95,13 @@ export default abstract class BaseModel {
       nature: nature,
       employee_id: id
     }
+  }
+
+  /**
+   * @param data to be copied
+   * @returns a deep copy of the data
+   */
+  public static copy<T>(data: T): T {
+    return cloneDeep(data);
   }
 }

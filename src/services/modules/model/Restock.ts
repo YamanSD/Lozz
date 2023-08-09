@@ -99,4 +99,18 @@ export default class Restock implements BaseModel {
   public get deletable(): boolean {
     return this.order_id !== undefined;
   }
+
+  /**
+   * @returns a deep copy of the raw data
+   */
+  public get dataCopy() {
+    return BaseModel.copy(this.data);
+  }
+
+  /**
+   * @returns a copy of the object
+   */
+  public get copy() {
+    return new Restock(this.dataCopy);
+  }
 }

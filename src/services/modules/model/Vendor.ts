@@ -114,4 +114,18 @@ export default class Vendor implements BaseModel {
   public stamp(nature: TrailNature): void {
     BaseModel.stamp(this.trail, nature);
   }
+
+  /**
+   * @returns a deep copy of the raw data
+   */
+  public get dataCopy() {
+    return BaseModel.copy(this.data);
+  }
+
+  /**
+   * @returns a copy of the object
+   */
+  public get copy() {
+    return new Vendor(this.dataCopy);
+  }
 }

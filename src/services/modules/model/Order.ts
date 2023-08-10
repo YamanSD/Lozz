@@ -23,20 +23,32 @@ export default class Order implements BaseModel {
   /* customer instance representing the customer of the order */
   private readonly customerInstance: Customer;
 
+  /* parent order of this exchange order */
+  private readonly parentInstance?: Order;
+
   /**
    * @param data raw order data
    * @param restock representing the order
    * @param customer of the order
    * @param courier of the order
+   * @param parent associated Parent order
    */
   public constructor(data: order,
                      restock: Restock,
                      customer: Customer,
-                     courier?: Courier) {
+                     courier?: Courier,
+                     parent?: Order) {
     this.dataValue = data;
     this.restockInstance = restock;
     this.customerInstance = customer;
     this.courierInstance = courier;
+
+    if (data.parent_id !== parent?.id) {
+      throw new EvalError(`Parent ID mismatch, expected ${data.parent_id}
+      , got ${parent?.id}`);
+    }
+
+    this.parentInstance = parent;
   }
 
   /**
@@ -178,6 +190,20 @@ export default class Order implements BaseModel {
    */
   public get email() {
     return this.data.email;
+  }
+
+  /**
+   * @returns the associated parent order of this instance
+   */
+  public get parent() {
+    return this.parentInstance;
+  }
+
+  /**
+   * @returns the ID of the parent exchange order
+   */
+  public get exchange_id() {
+    return this.data.parent_id;
   }
 
   /**

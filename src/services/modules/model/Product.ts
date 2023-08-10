@@ -438,6 +438,27 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param usp of a product
+   * @returns option values array of the USP
+   */
+  public static invertUsp(usp: string) {
+    return usp.split(Product.SEPARATOR);
+  }
+
+  /**
+   * @param usi of a product
+   * @returns object containing product ID & option_values array
+   */
+  public static invertUsi(usi: string) {
+    const temp = usi.split(Product.SEPARATOR);
+
+    return {
+      id: temp[0],
+      option_values: temp.splice(1)
+    };
+  }
+
+  /**
    * @param option_values to generate the USI for
    * @returns the generated USI for this product according to the option values
    */
@@ -539,6 +560,29 @@ export default class Product implements BaseModel {
    */
   public set instructions(value) {
     this.data.instructions = value;
+  }
+
+  /**
+   * @param title of the instruction
+   * @param body actual instructions
+   */
+  public addInstruction(title: string, body: string): void {
+    if (this.instructions === undefined) {
+      this.instructions = {};
+    }
+
+    this.instructions[title] = body;
+  }
+
+  /**
+   * @param title of the instruction
+   */
+  public removeInstruction(title: string): void {
+    if (this.instructions === undefined || !(title in this.instructions)) {
+      return;
+    }
+
+    delete this.instructions[title];
   }
 
   /**

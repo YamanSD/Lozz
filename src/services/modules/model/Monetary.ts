@@ -408,6 +408,32 @@ export default class Monetary {
   }
 
   /**
+   * @param value of the percentage of discount [0, 1]
+   *
+   * Applies the discount percent on the values of this instance
+   */
+  public applyDiscountPercent(value: number): void {
+    if (value < 0 || 1 < value) {
+      throw new EvalError("Invalid discount");
+    }
+
+    this.multiply(1 - value);
+  }
+
+  /**
+   * @param value of the percentage of discount [0, 1]
+   *
+   * Applies the discount percent on the values of a copy of
+   * this instance.
+   */
+  public applyDiscountPercentCopy(value: number): Monetary {
+    let temp = this.copy();
+    temp.applyDiscountPercent(value);
+
+    return temp;
+  }
+
+  /**
    * @returns true if the USD is negative or the LBP is negative
    */
   public get isNegative(): boolean {

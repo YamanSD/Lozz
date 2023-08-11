@@ -1,4 +1,10 @@
 /**
+ * File contains the core type definitions of the application
+ */
+
+import { Schema } from "@orama/orama";
+
+/**
  * Enum class for the nature type of Trails.
  * Can be any of (CRUDE):
  *   >- C: Employee created the object, first in any trail, only 1.
@@ -801,3 +807,121 @@ export type informationProperties = {
     trail: TrailType
   }
 }
+
+/**
+ * Defines the search schema for the Vendor collection
+ */
+export const VendorSearchSchema: Schema = {
+  name: 'string',
+  phone_numbers: 'string[]',
+  emails: 'string[]'
+};
+
+/**
+ * Defines the search schema for the Category collection
+ */
+export const CategorySearchSchema: Schema = {
+  name: 'string',
+  options_keys: 'string[]'
+};
+
+/**
+ * Defines the search schema for the Expense collection
+ */
+export const ExpenseSearchSchema: Schema = {
+  description: 'string',
+  value: 'number[]',
+  date: 'string',  // (yyyymmdd) format
+  vendor_id: 'string', // Can be empty
+  employee_id: 'string', // Can be empty
+  courier_id: 'string' // Can be empty
+};
+
+/**
+ * Defines the search schema for the Courier collection
+ */
+export const CourierSearchSchema: Schema = {
+  name: 'string',
+  orders: 'string[]'
+};
+
+/**
+ * Defines the search schema for the Restocks collection
+ */
+export const RestockSearchSchema: Schema = {
+  date: 'string', // restock ID
+  note: 'string', // Can be empty
+  to_inventory: 'boolean',
+  item_count: 'number',
+  order_id: 'string', // Can be empty
+  employee_id: 'string',
+  quantities: 'string[]' // Only USIs
+};
+
+/**
+ * Defines the search schema for the Employee collection
+ */
+export const EmployeeSearchSchema: Schema = {
+  first_name: 'string',
+  middle_name: 'string', // Can be empty
+  last_name: 'string',
+  phone_number: 'string', // Can be empty
+  email: 'string', // Can be empty
+  role: 'number',
+  commission_percent: 'number', // Can be empty
+  salary: 'number[]',
+  gender: 'boolean', // Can be empty
+  birthday: 'string', // Can be empty, (yyyymmdd)
+  orders: 'string[]', // Can be empty
+  end_date: 'string', // Can be empty
+  join_date: 'string' // (yyyymmdd), same as ID
+};
+
+/**
+ * Defines the search schema for the Customer collection
+ */
+export const CustomerSearchSchema: Schema = {
+  first_name: 'string',
+  middle_name: 'string', // Can be empty
+  last_name: 'string',
+  phone_number: 'string', // Can be empty
+  email: 'string', // Can be empty
+  gender: 'boolean', // Can be empty
+  birthday: 'string', // Can be empty, (yyyymmdd)
+  orders: 'string[]', // Can be empty
+  is_banned: 'boolean'
+};
+
+/**
+ * Defines the search schema for the Product collection
+ */
+export const ProductSearchSchema: Schema = {
+  id: 'string',
+  name: 'string',
+  vendor_id: 'string',
+  category_id: 'string',
+  price: 'number[]',
+  cost: 'number[]',
+  discounted: 'boolean',
+  description: 'string'
+};
+
+/**
+ * Defines the search schema for the Order collection
+ */
+export const OrderSearchSchema: Schema = {
+  id: 'string',
+  note: 'string', // Can be empty
+  discounted: 'boolean',
+  status: 'number',
+  total: 'number[]',
+  province: 'string', // Can be empty
+  address: 'string', // Can be empty
+  courier_id: 'string', // Can be empty
+  customer_id: 'string',
+  payed: 'boolean', // Can be empty
+  commission_percent: 'number', // Can be empty
+  phone_number: 'string',
+  email: 'string',
+  exchange_id: 'string' // Can be empty
+};

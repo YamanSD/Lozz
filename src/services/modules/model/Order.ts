@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import CartProduct from "./CartProduct";
+import CartProduct from "../local_model/CartProduct";
 import Courier from "./Courier";
 import Customer from "./Customer";
 import Monetary from "./Monetary";
@@ -357,16 +357,12 @@ export default class Order implements BaseModel {
   /**
    * @param usi USI of the product
    * @param value price value of the product
-   * @param is_wholesale true indicates that the USI is for a wholesale product
    */
-  public addToPrices(usi: string,
-                     value: Monetary,
-                     is_wholesale?: boolean): void {
-    const temp = is_wholesale ? Restock.usiToWholesale(usi) : usi;
+  public addToPrices(usi: string, value: Monetary): void {
+    this.prices[usi] = value.data;
 
-    this.prices[temp] = value.data;
-    if (this.getQuantity(usi, is_wholesale) === 0) {
-      delete this.prices[temp];
+    if (this.getQuantity(usi) === 0) {
+      delete this.prices[usi];
     }
   }
 
@@ -376,23 +372,18 @@ export default class Order implements BaseModel {
    * @param usi to add quantity for
    * @param quantity value to be added
    * @param value price of the product
-   * @param is_wholesale true indicates that the USI is for a wholesale product
    */
-  public add(usi: string,
-             quantity: number,
-             value: Monetary,
-             is_wholesale?: boolean): void {
-    this.restock.add(usi, quantity, is_wholesale);
+  public add(usi: string, quantity: number, value: Monetary): void {
+    this.restock.add(usi, quantity);
     this.addToTotal(value, quantity);
-    this.addToPrices(usi, value, is_wholesale);
+    this.addToPrices(usi, value);
   }
 
   /**
    * @param usi to check quantity for
-   * @param is_wholesale true indicates that the USI is for a wholesale product
    */
-  public getQuantity(usi: string, is_wholesale?: boolean): number {
-    return this.restock.getQuantity(usi, is_wholesale);
+  public getQuantity(usi: string): number {
+    return this.restock.getQuantity(usi);
   }
 
   /**
@@ -401,8 +392,7 @@ export default class Order implements BaseModel {
    * Adds the given cart product to the order
    */
   public addCartProduct(product: CartProduct): void {
-    this.add(product.usi, product.quantity,
-      product.total_price, product.is_wholesale);
+    this.add(product.usi, product.quantity, product.total_price);
   }
 
   /**

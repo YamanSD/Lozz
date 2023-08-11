@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import CartProduct from "./CartProduct";
+import CartProduct from "../local_model/CartProduct";
 import Category from "./Category";
 import Monetary from "./Monetary";
 import Vendor from "./Vendor";
@@ -27,12 +27,6 @@ export default class Product implements BaseModel {
 
   /* separator used in USPs & USIs */
   private static readonly SEPARATOR = '_';
-
-  /*
-   * Used to tag wholesale products in a restocking.
-   * Used iff the restocking is linked with an order.
-   */
-  public static readonly WHOLESALE_TAG = "_WHOLE";
 
   /**
    * @param data raw data of the product
@@ -118,35 +112,17 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @returns the base wholesale price for the product
+   * @returns the increment for the product
    */
-  public get wholesale_price() {
-    if (this.data.wholesale_price === undefined) {
-      return undefined;
-    }
-
-    return new Monetary(this.data.wholesale_price);
+  public get increment() {
+    return this.data.increment ?? 1;
   }
 
   /**
-   * @returns the wholesale increment for the product
+   * @returns the minimum sale quantities for each USI of the product
    */
-  public get wholesale_increment() {
-    return this.data.wholesale_increment ?? 1;
-  }
-
-  /**
-   * @returns the added wholesale price object for the product
-   */
-  public get added_wholesale_price() {
-    return this.data.added_wholesale_price;
-  }
-
-  /**
-   * @returns the minimum wholesale quantity for the product
-   */
-  public get minimum_wholesale_quantity() {
-    return this.data.minimum_wholesale_quantity;
+  public get minimum_quantity() {
+    return this.data.minimum_quantity;
   }
 
   /**
@@ -199,13 +175,6 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @returns the wholesale discount object of the product
-   */
-  public get wholesale_discount() {
-    return this.data.wholesale_discount;
-  }
-
-  /**
    * @returns the description of the product
    */
   public get description() {
@@ -245,6 +214,19 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @returns the total quantity of the product
+   */
+  public get totalQuantity(): number {
+    let result: number = 0;
+
+    for (let usp of Object.keys(this.quantities)) {
+      result += this.getQuantity(usp);
+    }
+
+    return result;
+  }
+
+  /**
    * @param usp USP to get the inventory quantity for
    * @returns the inventory quantity for the given USP
    */
@@ -267,69 +249,6 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param usp USP to get the wholesale discount for
-   * @returns the added wholesale discount for the given USP
-   */
-  public getWholesaleDiscount(usp?: string): Monetary {
-    if (this.wholesale_discount === undefined
-      || usp === undefined
-      || !(usp in this.wholesale_discount)) {
-      return Monetary.noValue();
-    }
-
-    return new Monetary(this.wholesale_discount[usp]);
-  }
-
-  /**
-   * @param quantities quantities to test against
-   * @returns true if the quantities are valid for wholesale
-   */
-  public isValidWholesale(quantities: QuantityType): boolean {
-    // Avoid long name repetition
-    let temp = this.minimum_wholesale_quantity;
-
-    if (temp === undefined) {
-      return false;
-    }
-
-    /* check that the quantities are available */
-    for (let usp of Object.keys(temp)) {
-      if (!(usp in quantities) || quantities[usp] < temp[usp]) {
-        return false;
-      } else if ((quantities[usp] - temp[usp])
-        % this.wholesale_increment !== 0) {
-        return false; // Check if it matches with increment
-      }
-
-      temp[usp] -= quantities[usp];
-      quantities[usp] = 0;
-    }
-
-    /* check for any remains, if exist return false */
-    for (let quantity of Object.values(quantities)) {
-      if (quantity !== 0) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * @param usp USP to get the wholesale price for
-   * @returns the added wholesale price for the given USP
-   */
-  public getAddedWholesalePrice(usp?: string): Monetary {
-    if (this.added_wholesale_price === undefined
-      || usp === undefined
-      || !(usp in this.added_wholesale_price)) {
-      return Monetary.noValue();
-    }
-
-    return new Monetary(this.added_wholesale_price[usp]);
-  }
-
-  /**
    * @param usp USP to get the total price for
    * @returns the total price for the given USP
    */
@@ -345,16 +264,40 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param usp USP to get the total wholesale price for
-   * @returns the total wholesale price for the given USP
+   * @param usp to get minimum quantity for
+   * @returns the minimum quantity for the given USP
    */
-  public getTotalWholesalePrice(usp?: string): typeof this.wholesale_price {
-    if (usp === undefined || this.wholesale_price === undefined) {
-      return this.wholesale_price;
+  public getMinimumQuantity(usp: string): number {
+    if (this.minimum_quantity === undefined
+      || !(usp in this.minimum_quantity)) {
+      return 0;
     }
 
-    return this.wholesale_price.addCopy(this.getAddedWholesalePrice(usp))
-      .subtractCopy(this.getWholesaleDiscount());
+    return this.minimum_quantity[usp];
+  }
+
+  /**
+   * @param usp to add minimum quantity for
+   * @param value new value of the USP
+   */
+  public addMinimumQuantity(usp: string, value: number) {
+    if (this.minimum_quantity === undefined) {
+      this.minimum_quantity = {};
+    }
+
+    this.minimum_quantity[usp] = value;
+  }
+
+  /**
+   * @param usp to be removed from the minimum quantities
+   */
+  public removeMinimumQuantity(usp: string): void {
+    if (this.minimum_quantity === undefined
+      || !(usp in this.minimum_quantity)) {
+      return;
+    }
+
+    delete this.minimum_quantity[usp];
   }
 
   /**
@@ -521,24 +464,10 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param value new wholesale price
-   */
-  public set wholesale_price(value) {
-    this.data.wholesale_price = value?.data;
-  }
-
-  /**
    * @param value new price of the product
    */
   public set price(value) {
     this.data.price = value.data;
-  }
-
-  /**
-   * @param value new added wholesale price object
-   */
-  public set added_wholesale_price(value) {
-    this.data.added_wholesale_price = value;
   }
 
   /**
@@ -607,13 +536,6 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param value new wholesale discount object of the product
-   */
-  public set wholesale_discount(value) {
-    this.data.wholesale_discount = value;
-  }
-
-  /**
    * @param value new description of the product
    */
   public set description(value) {
@@ -621,10 +543,10 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param value new minimum wholesale quantity
+   * @param value new minimum sale quantities
    */
-  public set minimum_wholesale_quantity(value) {
-    this.data.minimum_wholesale_quantity = value;
+  public set minimum_quantity(value) {
+    this.data.minimum_quantity = value;
   }
 
   /**
@@ -641,18 +563,6 @@ export default class Product implements BaseModel {
     }
 
     this.images[usp].push(url);
-  }
-
-  /**
-   * @param usp USP of the product
-   * @param value new added wholesale value for the USP
-   */
-  public addAddedWholesalePrice(usp: string, value: Monetary): void {
-    if (this.added_wholesale_price === undefined) {
-      this.added_wholesale_price = {};
-    }
-
-    this.added_wholesale_price[usp] = value.data;
   }
 
   /**
@@ -692,18 +602,6 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param usp USP of the product
-   * @param value new added wholesale discount for the USP
-   */
-  public addAddedWholesaleDiscount(usp: string, value: Monetary): void {
-    if (this.wholesale_discount === undefined) {
-      this.wholesale_discount = {};
-    }
-
-    this.wholesale_discount[usp] = value.data;
-  }
-
-  /**
    * @param url URL to be removed from all USPs
    */
   public removeImage(url: string): void {
@@ -718,18 +616,6 @@ export default class Product implements BaseModel {
         this.images[usp].splice(index, 1);
       }
     }
-  }
-
-  /**
-   * @param usp to be removed from the added wholesale prices
-   */
-  public removeAddedWholesalePrice(usp: string): void {
-    if (this.added_wholesale_price === undefined
-      || !(usp in this.added_wholesale_price)) {
-      return;
-    }
-
-    delete this.added_wholesale_price[usp];
   }
 
   /**
@@ -769,29 +655,15 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param usp to be removed from the wholesale discounts
-   */
-  public removeAddedWholesaleDiscount(usp: string): void {
-    if (this.added_wholesale_price === undefined
-      || !(usp in this.added_wholesale_price)) {
-      return;
-    }
-
-    delete this.added_wholesale_price[usp];
-  }
-
-  /**
    * Factory method for CartProducts.
    *
    * @param option_values selected option values
    * @param quantity selected quantity
-   * @param is_wholesale indicate if the product is wholesale
    * @returns CartProduct instance with proper data
    */
   public detachSelection(
     option_values: [...string[]],
     quantity: number,
-    is_wholesale: boolean
   ) {
     const usp = Product.createUsp(option_values);
     let data: cartProduct = {
@@ -801,8 +673,9 @@ export default class Product implements BaseModel {
       total_price: this.getTotalPrice(usp).multiplyCopy(quantity).data,
       discount: this.getDiscount(usp),
       description: this.description,
-      increment: this.wholesale_increment,
-      is_wholesale: is_wholesale
+      increment: this.increment,
+      max_quantity: this.getQuantity(usp),
+      min_quantity: this.getMinimumQuantity(usp)
     };
 
     if (this.images !== undefined

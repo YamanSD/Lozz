@@ -112,7 +112,7 @@ export enum OrderStatus {
  *     >- Do not have commission
  * - regular:
  *    >- able to read:
- *    >>- product information, except vendor, costs, and wholesale;
+ *    >>- product information, except vendor, & costs;
  *    >>- the orders;
  *    >>- the restocks;
  *    >>- customer information;
@@ -304,8 +304,6 @@ export type courier = {
  *   generality.
  *   Either all quantities are positive or all are negative.
  *   Zeroes must be automatically removed before upload.
- *   Wholesale values of a product are tagged at the end with
- *   `_{Product.WHOLESALE_TAG}`.
  *   Given by user.
  *
  * - employee_id: string representing the ID of the employee that made
@@ -484,24 +482,10 @@ export type QuantityType = {
  *   Given by user.
  *   Modified automatically on orders and restocking operations.
  *
- * - wholesale_price?: MonetaryValue representing the base wholesale
- *   price of the product.
- *   Given by user.
- *
- * - added_wholesale_price?: object mapping USPs to added prices on
- *   products falling under the USP.
- *   Given by user.
- *
- * - minimum_wholesale_quantity?: object mapping USPs to quantities.
- *   All these quantities must be fulfilled for a successful wholesale
- *   operation.
- *   Given by user.
- *
- * - wholesale_increment?: number of units of increase for the wholesale
- *   quantity.
+ * - increment?: number of units of increase for the quantity.
  *   For example, if the increment is 12, the employees can only sell
- *   wholesale products in multiples of 12 (12, 24, 36, ...) for all USPs
- *   in the minimum_wholesale_quantity.
+ *   products in multiples of 12 (12, 24, 36, ...) for all USPs
+ *   in the minimum_quantity.
  *
  * - price: Monetary value representing the sell price of the product.
  *   Given by user.
@@ -531,12 +515,7 @@ export type QuantityType = {
  *
  * - discount?: object mapping USPs to added discount on the
  *   price of products falling under the USP.
- *   This discount applies for the price of a product, not the wholesale
- *   price or the cost.
- *   Given by user.
- *
- * - wholesale_discount?: object mapping USPs to added discount on the
- *   wholesale price of products falling under the USP.
+ *   This discount applies for the price of a product.
  *   Given by user.
  *
  * - description?: string representing the description of the product.
@@ -553,12 +532,8 @@ export type product = {
     [usp: string]: [...string[]]
   },
   quantities: QuantityType,
-  wholesale_price?: MonetaryType,
-  wholesale_increment?: number,
-  added_wholesale_price?: {
-    [usp: string]: MonetaryType
-  },
-  minimum_wholesale_quantity?: QuantityType,
+  increment?: number,
+  minimum_quantity?: QuantityType,
   price: MonetaryType,
   added_price?: {
     [usp: string]: MonetaryType
@@ -572,9 +547,6 @@ export type product = {
     [usp: string]: MonetaryType
   },
   discount?: {
-    [usp: string]: MonetaryType
-  },
-  wholesale_discount?: {
     [usp: string]: MonetaryType
   },
   description?: string,
@@ -609,7 +581,7 @@ export type MonetaryDiscountType = {
  * - total_price: MonetaryValue representing the final price of a unit,
  *   after applying discounts and added price.
  *
- * - discount: discount percentages given on the product.
+ * - discount?: discount percentages given on the product.
  *   Automatically calculated on creation.
  *
  * - description?: string representing the description of the product.
@@ -617,11 +589,15 @@ export type MonetaryDiscountType = {
  *
  * - increment: number representing the increase or decrease in the
  *   quantity on each button press.
- *   Primarily used with wholesale quantities.
  *   Copied from product.
  *
- * - is_wholesale: if true the cartProduct is for wholesale, otherwise
- *   normal.
+ * - max_quantity?: number representing the maximum possible quantity that
+ *   can be added to cart.
+ *   Copy of the total number products for the given USI.
+ *
+ * - min_quantity?: number representing the minimum possible quantity that
+ *   can be added to cart.
+ *   Copy of the minimum quantity for the USI.
  */
 export type cartProduct = {
   usi: string,
@@ -629,10 +605,11 @@ export type cartProduct = {
   image?: string,
   quantity: number,
   total_price: MonetaryType,
-  discount: MonetaryDiscountType,
+  discount?: MonetaryDiscountType,
   description?: string,
   increment: number,
-  is_wholesale: boolean
+  max_quantity?: number,
+  min_quantity?: number
 }
 
 /**

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   ActivityIndicator,
@@ -16,6 +16,8 @@ import { useLazyFetchOneQuery } from '../../services/modules/users';
 import { changeTheme, ThemeState } from '../../store/theme';
 import i18next from 'i18next';
 import firestore from '@react-native-firebase/firestore';
+
+const [st, setter] = useState(false);
 
 enum test {
   a = 0,

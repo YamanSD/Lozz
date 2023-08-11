@@ -224,6 +224,7 @@ export type category = {
   added_price?: {
     [usp: string]: MonetaryType
   },
+  products: [string, ...string[]],
   trail: TrailType
 };
 
@@ -708,93 +709,13 @@ export type order = {
 };
 
 /**
- * - timestamp: string representing the last modification on the restocking.
- *   (yyyymmddhhMMssnnn).
- */
-export type restockProperties = {
-  [restock_id: string]: {
-    timestamp: string,
-  }
-};
-
-/**
- * - category_id: contains a timestamp (yyyymmddhhMMssnnn) for the
- *   category and product IDs mapped to their own timestamps.
- */
-export type productProperties = {
-  [category_id: string]: {
-    [product_id: string]: {
-      timestamp: string
-    }
-  } & {
-    timestamp: string,
-  }
-};
-
-/**
- * - employee_id: contains a timestamp (yyyymmddhhMMssnnn) for the employee,
- *   & a tag to indicate whether an employee is online or offline.
- */
-export type employeeProperties = {
-  [employee_id: string]: {
-    timestamp: string,
-    is_online: boolean
-  }
-};
-
-/**
- * - courier_id: contains a timestamp (yyyymmddhhMMssnnn) for the courier.
- */
-export type courierProperties = {
-  [courier_id: string]: {
-    timestamp: string
-  }
-}
-
-/**
- * - vendor_id: contains a timestamp (yyyymmddhhMMssnnn) for the vendor.
- */
-export type vendorProperties = {
-  [vendor_id: string]: {
-    timestamp: string
-  }
-}
-
-/**
- * - customer_id: contains a timestamp (yyyymmddhhMMssnnn) for the customer.
- */
-export type customerProperties = {
-  [customer_id: string]: {
-    timestamp: string
-  }
-}
-
-/**
- * - expense_id: contains a timestamp (yyyymmddhhMMssnnn) for the expense.
- */
-export type expenseProperties = {
-  [expense_id: string]: {
-    timestamp: string
-  }
-}
-
-/**
- * - order_id: contains a timestamp (yyyymmddhhMMssnnn) for the order.
- */
-export type orderProperties = {
-  [order_id: string]: {
-    timestamp: string
-  }
-}
-
-/**
  * - provinces: contains a list of available provinces & a trail
  *   of updates.
  *
  * - rate: contains exchange rate for buying and selling USD, & a trail
  *   of updates.
  */
-export type informationProperties = {
+export type properties = {
   provinces: {
     names: [string, ...string[]],
     trail: TrailType

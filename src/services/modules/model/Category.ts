@@ -84,6 +84,38 @@ export default class Category implements BaseModel {
   }
 
   /**
+   * @returns the list of product IDs belonging to the category
+   */
+  public get products() {
+    return this.data.products;
+  }
+
+  /**
+   * @param value new product ID list
+   */
+  public set products(value) {
+    this.data.products = value;
+  }
+
+  /**
+   * @param id to be added to the category
+   */
+  public addProduct(id: string): void {
+    this.products.push(id);
+  }
+
+  /**
+   * @param id to be removed from the category
+   */
+  public removeProduct(id: string): void {
+    const index = this.products.indexOf(id);
+
+    if (index !== -1) {
+      this.products.splice(index, 1);
+    }
+  }
+
+  /**
    * @returns the trail
    */
   public get trail(): TrailType {

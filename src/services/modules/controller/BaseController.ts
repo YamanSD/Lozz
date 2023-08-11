@@ -1,8 +1,8 @@
 import { Dispatch, SetStateAction } from "react";
-import PropertiesController from "./PropertiesController";
 import firestore from "@react-native-firebase/firestore";
 import { MMKV } from "react-native-mmkv";
-
+import { create, Orama, ProvidedTypes, Schema } from "@orama/orama";
+import { NoDeleteError, NoUpdateError } from "./Errors";
 
 /* type alias for the RN update hook */
 export type HookType = {
@@ -11,7 +11,7 @@ export type HookType = {
 };
 
 /* Flags to specify the capabilities of a controller */
-export enum Flags {
+export enum ControllerFlag {
   requires_id =     0b00001,
   has_trail =       0b00010,
   can_deactivate =  0b00100,
@@ -19,10 +19,12 @@ export enum Flags {
   can_update =      0b10000,
 }
 
+/**
+ * Class responsible for handling raw data storage & retrieval
+ * from the cache and database.
+ * Forms the base class for the rest of the controllers.
+ */
 export default class BaseController {
-  /* properties controller of the collection */
-  private readonly propertiesInstance?: PropertiesController;
-
   /* collection name */
   private readonly collection_name: string;
 
@@ -38,19 +40,30 @@ export default class BaseController {
   /* update hook used to trigger front-end updates */
   private readonly update_hook: HookType;
 
+  /* search engine instance for the controller */
+  public searchEngine?: Orama<ProvidedTypes>;
+
   /**
    * @param collection_name name of the controlled collection
    * @param server firestore instance for the database
    * @param update_hook RN update hook for front-end updates
+   * @param search_schema for the search engine
    * @param flags number representing capabilities of controller
-   * @param properties properties controller for the collection
    */
   public constructor(collection_name: string,
               server: typeof firestore,
               update_hook: HookType,
               flags: number = 0,
-              properties?: PropertiesController) {
-    this.propertiesInstance = properties;
+              search_schema?: Schema) {
+    if (search_schema !== undefined) {
+      create({
+        schema: search_schema,
+        id: collection_name
+      }).then((value) => {
+        this.searchEngine = value;
+      });
+    }
+
     this.collection_name = collection_name;
     this.serverInstance = server;
     this.flags = flags;
@@ -59,13 +72,6 @@ export default class BaseController {
       id: `${firestore.name}-${collection_name}-mmkv`,
       encryptionKey: collection_name
     });
-  }
-
-  /**
-   * @returns PropertiesController of the controller
-   */
-  public get properties() {
-    return this.propertiesInstance;
   }
 
   /**
@@ -79,14 +85,28 @@ export default class BaseController {
    * @returns the firestore instance
    */
   public get server() {
+    return this.serverInstance();
+  }
+
+  /**
+   * @returns the firestore wrapper instance
+   */
+  public get metaServer() {
     return this.serverInstance;
+  }
+
+  /**
+   * @returns the firestore collection
+   */
+  public get collection() {
+    return this.server.collection(this.collectionName);
   }
 
   /**
    * @returns the MMKV storage instance
    */
   public get storage() {
-    return this.serverInstance;
+    return this.storageInstance;
   }
 
   /**
@@ -100,34 +120,136 @@ export default class BaseController {
    * @returns true if the controller requires IDs
    */
   public get requiresId(): boolean {
-    return (this.flags & Flags.requires_id) !== 0;
+    return (this.flags & ControllerFlag.requires_id) !== 0;
   }
 
   /**
    * @returns true if the controller requires a trail
    */
   public get hasTrail(): boolean {
-    return (this.flags & Flags.has_trail) !== 0;
+    return (this.flags & ControllerFlag.has_trail) !== 0;
   }
 
   /**
    * @returns true if the controller can deactivate entities
    */
   public get canDeactivate(): boolean {
-    return (this.flags & Flags.can_deactivate) !== 0;
+    return (this.flags & ControllerFlag.can_deactivate) !== 0;
   }
 
   /**
    * @returns true if the controller can delete entities
    */
   public get canDelete(): boolean {
-    return (this.flags & Flags.can_delete) !== 0;
+    return (this.flags & ControllerFlag.can_delete) !== 0;
   }
 
   /**
    * @returns true if the controller can update entities
    */
   public get canUpdate(): boolean {
-    return (this.flags & Flags.can_update) !== 0;
+    return (this.flags & ControllerFlag.can_update) !== 0;
+  }
+
+  protected async getServer(id: string) {
+    const entity = await this.collection.doc(id).get();
+
+    if (!this.checkCache(id) && entity.exists) {
+      this.setCache(id, entity.data());
+    }
+
+    return entity;
+  }
+
+  protected async createServer(data: any, id?: string) {
+    if (id === undefined) {
+      const document = await this.collection.add(data);
+
+      this.setCache(document.id, data);
+
+      return document.id;
+    } else {
+      await this.collection.doc(id).set(data);
+    }
+  }
+
+  protected async updateServer(data: any, id: string) {
+    if (!this.canUpdate) {
+      throw new NoUpdateError();
+    }
+
+    await this.server.runTransaction(
+      async (transaction) => {
+      transaction.update(this.collection.doc(id), data);
+    });
+  }
+
+  protected async removeServer(id: string) {
+    if (!this.canDelete) {
+      throw new NoDeleteError();
+    }
+
+    await this.collection.doc(id).delete();
+  }
+
+  protected async isIdAvailable(id: string) {
+    if (this.checkCache(id)) {
+      return false;
+    }
+
+    return (await this.getServer(id)).exists;
+  }
+
+  private async activateListener() {
+
+  }
+
+  protected triggerHook(): void {
+    this.hook.setter(!this.hook.variable);
+  }
+
+  protected checkCache(id: string): boolean {
+    return this.storage.contains(id);
+  }
+
+  protected getCache(id: string): any | undefined {
+    if (this.checkCache(id)) {
+      return JSON.parse(this.storage.getString(id) as string);
+    }
+
+    return undefined;
+  }
+
+  protected setCache(id: string, data: any): void {
+    this.storage.set(id, JSON.stringify(data));
+    this.triggerHook();
+  }
+
+  protected updateCache(id: string, data: any): void {
+    let oldData = this.getCache(id) ?? {};
+
+    for (let key of Object.keys(data)) {
+      oldData[key] = data[key];
+    }
+
+    this.setCache(id, oldData);
+    this.triggerHook();
+  }
+
+  protected removeCache(id: string): void {
+    this.storage.delete(id);
+    this.triggerHook();
+  }
+
+  protected getDocument(id: string) {
+    if (this.checkCache(id)) {
+      return this.getCache(id);
+    }
+
+    return this.getServer(id);
+  }
+
+  public clearCache(): void {
+    this.storage.clearAll();
   }
 }

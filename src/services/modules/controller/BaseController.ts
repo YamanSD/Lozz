@@ -243,7 +243,7 @@ export default class BaseController<RawData extends Generic> {
    *
    * @private
    */
-  private activateListener() {
+  protected activateListener() {
     this.collection.onSnapshot(snapshot => {
       snapshot.docChanges().forEach(change => {
         const data: RawData = change.doc.data() as RawData;

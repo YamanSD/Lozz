@@ -1,5 +1,5 @@
-import { Dispatch, SetStateAction } from "react";
 import firestore from "@react-native-firebase/firestore";
+import { Dispatch, SetStateAction } from "react";
 import { MMKV } from "react-native-mmkv";
 import { create, Orama, ProvidedTypes, Schema } from "@orama/orama";
 import { NoDeleteError, NoUpdateError } from "./Errors";
@@ -238,11 +238,25 @@ export default class BaseController<RawData extends Generic> {
   /**
    * Activates the listener for the collection.
    * Handles update processing between documents.
+   * This is the default implementation of the listener activation.
+   * Child classes will need to override it.
    *
    * @private
    */
-  private async activateListener() {
+  private activateListener() {
+    this.collection.onSnapshot(snapshot => {
+      snapshot.docChanges().forEach(change => {
+        const data: RawData = change.doc.data() as RawData;
 
+        if (change.type === "added") {
+          this.setCache(data.id, data);
+        } else if (change.type === "modified") {
+          this.updateCache(data.id, data);
+        } else if (change.type === "removed") {
+          this.removeCache(data.id);
+        }
+      });
+    });
   }
 
   /**

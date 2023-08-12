@@ -32,13 +32,6 @@ export default class Courier implements BaseModel {
   }
 
   /**
-   * @returns the ID of the courier
-   */
-  public get id() {
-    return this.data.id;
-  }
-
-  /**
    * @returns the name of the courier
    */
   public get name() {
@@ -67,7 +60,7 @@ export default class Courier implements BaseModel {
    */
   public getShippingFees(province: string): Monetary {
     if (!(province in this.shipping_fees)) {
-      throw new Error(`Invalid province ${province} with courier ${this.id}`);
+      throw new Error(`Invalid province ${province} with courier ${this.name}`);
     }
 
     return new Monetary(this.shipping_fees[province]);

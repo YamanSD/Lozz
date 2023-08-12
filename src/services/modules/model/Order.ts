@@ -315,7 +315,7 @@ export default class Order implements BaseModel {
   public set courier(value) {
     if (value !== undefined) {
       this.courierInstance = value;
-      this.data.courier_id = value.id;
+      this.data.courier_id = value.name;
     }
   }
 

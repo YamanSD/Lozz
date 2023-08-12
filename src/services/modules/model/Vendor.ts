@@ -31,13 +31,6 @@ export default class Vendor implements BaseModel {
   }
 
   /**
-   * @returns the ID of the vendor
-   */
-  public get id() {
-    return this.data.id;
-  }
-
-  /**
    * @returns the name of the vendor
    */
   public get name() {

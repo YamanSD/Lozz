@@ -32,13 +32,6 @@ export default class Category implements BaseModel {
   }
 
   /**
-   * @returns the ID of the category
-   */
-  public get id() {
-    return this.data.id;
-  }
-
-  /**
    * @returns the name of the category
    */
   public get name() {

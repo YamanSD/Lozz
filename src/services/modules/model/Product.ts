@@ -446,7 +446,7 @@ export default class Product implements BaseModel {
    */
   public set vendor(value) {
     this.vendorInstance = value;
-    this.vendor_id = value.id;
+    this.vendor_id = value.name;
   }
 
   /**

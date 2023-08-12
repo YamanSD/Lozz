@@ -844,5 +844,5 @@ export const OrderSearchSchema: Schema = {
   commission_percent: 'number', // Can be empty
   phone_number: 'string',
   email: 'string',
-  exchange_id: 'string' // Can be empty
+  parent_id: 'string' // Can be empty
 };

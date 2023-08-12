@@ -2,8 +2,9 @@
   "include": ["./node_modules/redux-persist/types"],
   "extends": "@tsconfig/react-native/tsconfig.json",
   "compilerOptions": {
+    "moduleResolution": "NodeNext",
 //    "experimentalDecorators": true,
-    "target": "ES6",
+//    "target": "ES6",
     "types": ["react-native", "jest", "node"],
     "typeRoots": [
       "@types",

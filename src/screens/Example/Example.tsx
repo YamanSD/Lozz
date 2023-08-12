@@ -16,8 +16,8 @@ import { useLazyFetchOneQuery } from '../../services/modules/users';
 import { changeTheme, ThemeState } from '../../store/theme';
 import i18next from 'i18next';
 import firestore from '@react-native-firebase/firestore';
+import VendorController from "../../services/modules/controller/VendorController";
 
-const [st, setter] = useState(false);
 
 enum test {
   a = 0,
@@ -220,7 +220,19 @@ const Example = () => {
 
           <TouchableOpacity
             style={[Common.button.circle, Gutters.regularBMargin]}
-            onPress={() => onChangeTheme({ darkMode: !isDark })}
+            onPress={async () => {
+              onChangeTheme({ darkMode: !isDark });
+              const controller = new VendorController();
+              Alert.alert("HERE");
+
+              await controller?.create({
+                name: "Demo",
+                phone_numbers: ["+97176522347"],
+                emails: ["Yolo@gmail.com"]
+              });
+
+              Alert.alert("DONE");
+            }}
           >
             <Image
               source={Images.icons.colors}

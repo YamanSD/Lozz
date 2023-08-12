@@ -4,4 +4,4 @@ export class NoDeleteError extends Error {}
 
 export class NoDeactivateError extends Error {}
 
-export class NoDataException extends Error {}
+export class NoDataError extends Error {}

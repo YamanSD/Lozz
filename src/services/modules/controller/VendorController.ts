@@ -4,6 +4,7 @@ import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Vendor from "../model/Vendor";
 import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
+import { isEqual } from "lodash";
 
 
 export default class VendorController extends BaseController<vendor> {
@@ -69,6 +70,12 @@ export default class VendorController extends BaseController<vendor> {
 
     const currentData: Generic | undefined = this.getCache(model.name);
     const data: Generic | undefined = model.data;
+
+    for (let key of Object.keys(data)) {
+      if (isEqual(data[key], [])) {
+        delete data[key];
+      }
+    }
 
     if (currentData === undefined) {
       await this.updateServer(data, model.name);

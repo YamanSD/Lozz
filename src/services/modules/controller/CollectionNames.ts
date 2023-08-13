@@ -1,4 +1,8 @@
 export default {
-  vendor: "Vendors",
+  ids: "Identifiers",
+  vendor: {
+    name: "Vendors",
+    id: "name"
+  },
 
 };

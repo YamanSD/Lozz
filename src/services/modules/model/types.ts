@@ -195,8 +195,8 @@ export type vendor = {
  */
 export type basicVendor = {
   name: string,
-  phone_numbers?: [...string[]],
-  emails?: [...string[]],
+  phone_numbers?: [string, ...string[]],
+  emails?: [string, ...string[]],
 }
 
 /**

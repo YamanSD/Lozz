@@ -1,29 +1,28 @@
 import BaseController, { ControllerFlag, Generic } from "./BaseController";
-import { basicVendor, vendor, VendorSearchSchema } from "../model/types";
+import { basicCategory, category, CategorySearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
-import Vendor from "../model/Vendor";
+import Category from "../model/category";
 import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
 import { isEqual } from "lodash";
 
 
-export default class VendorController extends BaseController<vendor> {
+export default class categoryController extends BaseController<category> {
   private static readonly flag: number =
     ControllerFlag.can_deactivate
     | ControllerFlag.can_update
-    | ControllerFlag.has_trail
-    | ControllerFlag.can_delete;
+    | ControllerFlag.has_trail;
 
   /**
    * @param server firestore instance for the database
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.vendor.name,
-      CollectionNames.vendor.id,
+      CollectionNames.category.name,
+      CollectionNames.category.id,
       server ?? firestore,
-      VendorController.flag,
-      VendorSearchSchema
+      categoryController.flag,
+      CategorySearchSchema
     );
 
     this.loadSearchData().then(() => {
@@ -32,9 +31,9 @@ export default class VendorController extends BaseController<vendor> {
   }
 
   /**
-   * @param name of the vendor to be fetched
-   * @returns Vendor data
-   * @throws IdDoesNotExistError if the name does not belong to a vendor
+   * @param name of the category to be fetched
+   * @returns category data
+   * @throws IdDoesNotExistError if the name does not belong to a category
    */
   public async get(name: string) {
     const data = await this.getData(name);
@@ -43,14 +42,14 @@ export default class VendorController extends BaseController<vendor> {
       throw new IdDoesNotExistError();
     }
 
-    return new Vendor(data);
+    return new Category(data);
   }
 
   /**
-   * @param data basic raw data to create a vendor
-   * @throws IdAlreadyExistsError if the name of the vendor is taken
+   * @param data basic raw data to create a category
+   * @throws IdAlreadyExistsError if the name of the category is taken
    */
-  public async create(data: basicVendor) {
+  public async create(data: basicCategory) {
     if (!(await this.isIdAvailable(data.name))) {
       throw new IdAlreadyExistsError();
     }
@@ -60,22 +59,16 @@ export default class VendorController extends BaseController<vendor> {
   }
 
   /**
-   * @param model new model of the vendor
-   * @throws IdDoesNotExistError if the vendor does not exist
+   * @param model new model of the category
+   * @throws IdDoesNotExistError if the category does not exist
    */
-  public async update(model: Vendor) {
+  public async update(model: Category) {
     if (await this.isIdAvailable(model.name)) {
       throw new IdDoesNotExistError();
     }
 
     const currentData: Generic | undefined = this.getCache(model.name);
     const data: Generic | undefined = model.data;
-
-    for (let key of Object.keys(data)) {
-      if (isEqual(data[key], [])) {
-        delete data[key];
-      }
-    }
 
     if (currentData === undefined) {
       await this.updateServer(data, model.name);
@@ -92,15 +85,17 @@ export default class VendorController extends BaseController<vendor> {
   }
 
   /**
-   * @param data basic vendor data
-   * @returns vendor data suitable for upload
+   * @param data basic category data
+   * @returns category data suitable for upload
    * @protected
    */
-  protected fillDataGaps(data: basicVendor): vendor {
+  protected fillDataGaps(data: basicCategory): category {
     return super.fillDataGaps({
       name: data.name,
-      phone_numbers: data.phone_numbers,
-      emails: data.emails,
+      options_keys: data.option_keys,
+      options_sets: data.options_sets,
+      added_price: data.added_price,
+      products: [],
       trail: this.generateInitialTrail()
     });
   }

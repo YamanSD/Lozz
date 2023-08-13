@@ -4,5 +4,8 @@ export default {
     name: "vendors",
     id: "name"
   },
-
+  category: {
+    name: "categories",
+    id: "name"
+  },
 };

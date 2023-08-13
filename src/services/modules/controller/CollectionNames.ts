@@ -8,4 +8,12 @@ export default {
     name: "categories",
     id: "name"
   },
+  expense: {
+    name: "expenses",
+    id: "id"
+  },
+  courier: {
+    name: "couriers",
+    id: "name"
+  },
 };

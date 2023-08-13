@@ -17,6 +17,7 @@ import { changeTheme, ThemeState } from '../../store/theme';
 import i18next from 'i18next';
 import firestore from '@react-native-firebase/firestore';
 import VendorController from "../../services/modules/controller/VendorController";
+import { conformsTo } from "lodash";
 
 
 enum test {
@@ -223,15 +224,10 @@ const Example = () => {
             onPress={async () => {
               onChangeTheme({ darkMode: !isDark });
               const controller = new VendorController();
-              Alert.alert("HERE");
 
-              await controller?.create({
-                name: "Demo",
-                phone_numbers: ["+97176522347"],
-                emails: ["Yolo@gmail.com"]
-              });
+              const hanin = await controller.get("Saleh");
 
-              Alert.alert("DONE");
+              Alert.alert(hanin.name);
             }}
           >
             <Image
@@ -244,7 +240,7 @@ const Example = () => {
             style={[Common.button.circle, Gutters.regularBMargin]}
             onPress={async () => {
                 onChangeLanguage(i18next.language === 'fr' ? 'en' : 'fr');
-                const user = await firestore().collection('Vendors').doc('0').get();
+                const user = await firestore().collection('Vendors').doc('Demo').get();
                 Alert.alert(user.data()?.name);
               }
             }

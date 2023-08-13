@@ -1,17 +1,10 @@
-import BaseController, { ControllerFlag } from "./BaseController";
-import { TrailNature, vendor, VendorSearchSchema } from "../model/types";
+import BaseController, { ControllerFlag, Generic } from "./BaseController";
+import { basicVendor, vendor, VendorSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Vendor from "../model/Vendor";
-import { NoDataError } from "./Errors";
-import BaseModel from "../model/BaseModel";
+import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
 
-
-export type vendorInput = {
-  name: string,
-  phone_numbers?: [...string[]],
-  emails?: [...string[]]
-};
 
 export default class VendorController extends BaseController<vendor> {
   private static readonly flag: number =
@@ -25,7 +18,8 @@ export default class VendorController extends BaseController<vendor> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.vendor,
+      CollectionNames.vendor.name,
+      CollectionNames.vendor.id,
       server ?? firestore,
       VendorController.flag,
       VendorSearchSchema
@@ -36,30 +30,53 @@ export default class VendorController extends BaseController<vendor> {
     });
   }
 
-  public setCache(id: string, data: vendor): void {
-    this.updateSearchEngine(data).then(() => {
-      super.setCache(id, data);
-    });
-  }
-
   public async get(id: string) {
-    const data = await this.getDocument(id);
+    const data = await this.getData(id);
 
     if (data === undefined) {
-      throw new NoDataError();
+      throw new IdDoesNotExistError();
     }
 
     return new Vendor(data);
   }
 
-  public async create(data: vendorInput) {
-    const finalData = {
-      ...data,
-      trail: {}
-    };
+  public async create(data: basicVendor) {
+    if (!(await this.isIdAvailable(data.name))) {
+      throw new IdAlreadyExistsError();
+    }
 
-    BaseModel.stamp(finalData.trail, TrailNature.C);
+    await this.createServer(data.name, this.fillDataGaps(data));
+    await this.uploadIds();
+  }
 
-    return await this.createServer(finalData as vendor);
+  public async update(model: Vendor) {
+    if (await this.isIdAvailable(model.name)) {
+      throw new IdDoesNotExistError();
+    }
+
+    const currentData: Generic | undefined = this.getCache(model.name);
+    const data: Generic | undefined = model.data;
+
+    if (currentData === undefined) {
+      await this.updateServer(data, model.name);
+      return;
+    }
+
+    for (let key of Object.keys(currentData)) {
+      if (currentData[key] === data[key] || data[key] === undefined) {
+        delete data[key];
+      }
+    }
+
+    await this.updateServer(data, model.name);
+  }
+
+  protected fillDataGaps(data: basicVendor): vendor {
+    return super.fillDataGaps({
+      name: data.name,
+      phone_numbers: data.phone_numbers,
+      emails: data.emails,
+      trail: this.generateInitialTrail()
+    });
   }
 }

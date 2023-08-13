@@ -1,7 +1,7 @@
 export default {
-  ids: "Identifiers",
+  ids: "identifiers",
   vendor: {
-    name: "Vendors",
+    name: "vendors",
     id: "name"
   },
 

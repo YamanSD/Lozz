@@ -30,8 +30,13 @@ export default class VendorController extends BaseController<vendor> {
     });
   }
 
-  public async get(id: string) {
-    const data = await this.getData(id);
+  /**
+   * @param name of the vendor to be fetched
+   * @returns Vendor data
+   * @throws IdDoesNotExistError if the name does not belong to a vendor
+   */
+  public async get(name: string) {
+    const data = await this.getData(name);
 
     if (data === undefined) {
       throw new IdDoesNotExistError();
@@ -40,6 +45,10 @@ export default class VendorController extends BaseController<vendor> {
     return new Vendor(data);
   }
 
+  /**
+   * @param data basic raw data to create a vendor
+   * @throws IdAlreadyExistsError if the name of the vendor is taken
+   */
   public async create(data: basicVendor) {
     if (!(await this.isIdAvailable(data.name))) {
       throw new IdAlreadyExistsError();
@@ -49,6 +58,10 @@ export default class VendorController extends BaseController<vendor> {
     await this.uploadIds();
   }
 
+  /**
+   * @param model new model of the vendor
+   * @throws IdDoesNotExistError if the vendor does not exist
+   */
   public async update(model: Vendor) {
     if (await this.isIdAvailable(model.name)) {
       throw new IdDoesNotExistError();
@@ -71,6 +84,11 @@ export default class VendorController extends BaseController<vendor> {
     await this.updateServer(data, model.name);
   }
 
+  /**
+   * @param data basic vendor data
+   * @returns vendor data suitable for upload
+   * @protected
+   */
   protected fillDataGaps(data: basicVendor): vendor {
     return super.fillDataGaps({
       name: data.name,

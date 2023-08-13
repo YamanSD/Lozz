@@ -8,7 +8,7 @@ import { isEqual } from "lodash";
 import BaseModel from "../model/BaseModel";
 
 
-export default class expenseController extends BaseController<expense> {
+export default class RxpenseController extends BaseController<expense> {
   private static readonly flag: number =
     ControllerFlag.can_delete
     | ControllerFlag.can_update
@@ -22,7 +22,7 @@ export default class expenseController extends BaseController<expense> {
       CollectionNames.expense.name,
       CollectionNames.expense.id,
       server ?? firestore,
-      expenseController.flag,
+      RxpenseController.flag,
       ExpenseSearchSchema
     );
 

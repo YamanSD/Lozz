@@ -1,13 +1,13 @@
 import BaseController, { ControllerFlag, Generic } from "./BaseController";
-import { basicCategory, category, CategorySearchSchema } from "../model/types";
+import { basicCourier, courier, CourierSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
-import Category from "../model/category";
+import Courier from "../model/courier";
 import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
 import { isEqual } from "lodash";
 
 
-export default class CategoryController extends BaseController<category> {
+export default class CourierController extends BaseController<courier> {
   private static readonly flag: number =
     ControllerFlag.can_deactivate
     | ControllerFlag.can_update
@@ -18,11 +18,11 @@ export default class CategoryController extends BaseController<category> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.category.name,
-      CollectionNames.category.id,
+      CollectionNames.courier.name,
+      CollectionNames.courier.id,
       server ?? firestore,
-      CategoryController.flag,
-      CategorySearchSchema
+      CourierController.flag,
+      CourierSearchSchema
     );
 
     this.loadSearchData().then(() => {
@@ -31,9 +31,9 @@ export default class CategoryController extends BaseController<category> {
   }
 
   /**
-   * @param name of the category to be fetched
-   * @returns category data
-   * @throws IdDoesNotExistError if the name does not belong to a category
+   * @param name of the courier to be fetched
+   * @returns courier data
+   * @throws IdDoesNotExistError if the name does not belong to a courier
    */
   public async get(name: string) {
     const data = await this.getData(name);
@@ -42,14 +42,14 @@ export default class CategoryController extends BaseController<category> {
       throw new IdDoesNotExistError();
     }
 
-    return new Category(data);
+    return new Courier(data);
   }
 
   /**
-   * @param data basic raw data to create a category
-   * @throws IdAlreadyExistsError if the name of the category is taken
+   * @param data basic raw data to create a courier
+   * @throws IdAlreadyExistsError if the name of the courier is taken
    */
-  public async create(data: basicCategory) {
+  public async create(data: basicCourier) {
     if (!(await this.isIdAvailable(data.name))) {
       throw new IdAlreadyExistsError();
     }
@@ -59,10 +59,10 @@ export default class CategoryController extends BaseController<category> {
   }
 
   /**
-   * @param model new model of the category
-   * @throws IdDoesNotExistError if the category does not exist
+   * @param model new model of the courier
+   * @throws IdDoesNotExistError if the courier does not exist
    */
-  public async update(model: Category) {
+  public async update(model: Courier) {
     if (await this.isIdAvailable(model.name)) {
       throw new IdDoesNotExistError();
     }
@@ -85,17 +85,15 @@ export default class CategoryController extends BaseController<category> {
   }
 
   /**
-   * @param data basic category data
-   * @returns category data suitable for upload
+   * @param data basic courier data
+   * @returns courier data suitable for upload
    * @protected
    */
-  protected fillDataGaps(data: basicCategory): category {
+  protected fillDataGaps(data: basicCourier): courier {
     return super.fillDataGaps({
       name: data.name,
-      options_keys: data.option_keys,
-      options_sets: data.options_sets,
-      added_price: data.added_price,
-      products: [],
+      shipping_fees: data.shipping_fees,
+      orders: [],
       trail: this.generateInitialTrail()
     });
   }

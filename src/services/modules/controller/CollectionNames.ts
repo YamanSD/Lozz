@@ -16,4 +16,8 @@ export default {
     name: "couriers",
     id: "name"
   },
+  restock: {
+    name: "restocks",
+    id: "id"
+  },
 };

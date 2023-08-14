@@ -68,7 +68,7 @@ export default class CustomerController extends BaseController<customer> {
     }
 
     const currentData: Generic | undefined = this.getCache(model.phone_number);
-    const data: Generic | undefined = model.data;
+    const data: Generic | undefined = model.dataCopy;
 
     if (currentData === undefined) {
       await this.updateServer(data, model.phone_number);

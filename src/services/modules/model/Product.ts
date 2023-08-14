@@ -28,6 +28,10 @@ export default class Product implements BaseModel {
   /* separator used in USPs & USIs */
   private static readonly SEPARATOR = '_';
 
+  /* name that can be used for properties */
+  public static readonly exclusiveName =
+    `${Product.SEPARATOR}${Product.SEPARATOR}$DATA_PROPERTIES`;
+
   /**
    * @param data raw data of the product
    * @param vendorData raw data for the vendor of the product

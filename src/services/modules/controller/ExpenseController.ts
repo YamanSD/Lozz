@@ -67,7 +67,7 @@ export default class RxpenseController extends BaseController<expense> {
     }
 
     const currentData: Generic | undefined = this.getCache(model.id);
-    const data: Generic | undefined = model.data;
+    const data: Generic | undefined = model.dataCopy;
 
     if (currentData === undefined) {
       await this.updateServer(data, model.id);

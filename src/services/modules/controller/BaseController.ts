@@ -217,18 +217,18 @@ export default abstract class BaseController<RawData extends Generic> {
    *
    * @param data updated data of the document
    * @param id of the document to be updated
-   * @param activation boolean flag, true indicates that the update
+   * @param noStamp boolean flag, true indicates that the update
    *        is for deactivation.
    * @protected
    */
-  protected async updateServer(data: Generic, id: string, activation?: boolean) {
-    activation = activation ?? false;
+  protected async updateServer(data: Generic, id: string, noStamp?: boolean) {
+    noStamp = noStamp ?? false;
 
-    if (!(this.canUpdate || activation)) {
+    if (!(this.canUpdate || noStamp)) {
       throw new NoUpdateError();
     }
 
-    if (!activation) {
+    if (!noStamp) {
       BaseModel.stamp(data.trail, TrailNature.U);
     }
 

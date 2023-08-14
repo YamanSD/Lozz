@@ -69,7 +69,7 @@ export default class CategoryController extends BaseController<category> {
     }
 
     const currentData: Generic | undefined = this.getCache(model.name);
-    const data: Generic | undefined = model.data;
+    const data: Generic | undefined = model.dataCopy;
 
     if (currentData === undefined) {
       await this.updateServer(data, model.name);

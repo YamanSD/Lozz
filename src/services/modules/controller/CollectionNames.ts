@@ -28,5 +28,9 @@ export default {
     name: "employees",
     id: "id"
   },
-
+  product: {
+    name: "products",
+    id: "id",
+    properties: "productProperties"
+  }
 };

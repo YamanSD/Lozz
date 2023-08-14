@@ -70,7 +70,7 @@ export default class VendorController extends BaseController<vendor> {
     }
 
     const currentData: Generic | undefined = this.getCache(model.name);
-    const data: Generic | undefined = model.data;
+    const data: Generic | undefined = model.dataCopy;
 
     for (let key of Object.keys(data)) {
       if (isEqual(data[key], [])) {

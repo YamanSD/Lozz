@@ -375,6 +375,7 @@ export type restock = {
  * Used for the creation of restocks
  */
 export type basicRestock = {
+  id?: string,
   note?: string,
   to_inventory: boolean,
   quantities: {
@@ -653,7 +654,6 @@ export type basicProduct = {
   added_price?: {
     [usp: string]: MonetaryType
   },
-  inventory_quantities: QuantityType,
   instructions?: {
     [title: string]: string
   },

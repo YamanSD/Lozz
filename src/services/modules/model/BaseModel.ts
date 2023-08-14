@@ -1,6 +1,7 @@
 import auth from '@react-native-firebase/auth';
 import { TrailNature, TrailType } from "./types";
 import { cloneDeep } from "lodash";
+import { reduxStorage } from "../../../store";
 
 
 /**
@@ -64,7 +65,7 @@ export default abstract class BaseModel {
    * @param n number of random digits
    * @returns a string containing n random digits
    */
-  private static getRandomNumber(n: number): string {
+  public static getRandomNumber(n: number): string {
     return Math.round(Math.random() * (10 ** n)).toString();
   }
 
@@ -73,6 +74,13 @@ export default abstract class BaseModel {
    */
   public static getRandomTimestamp(digits: number = 0): string {
     return `${BaseModel.currentTimestamp}${BaseModel.getRandomNumber(digits)}`;
+  }
+
+  /**
+   * @returns the ID of the current employee if logged in, otherwise undefined
+   */
+  public static get currentEmployee() {
+    return auth().currentUser?.uid
   }
 
   /**
@@ -85,12 +93,14 @@ export default abstract class BaseModel {
   public static stamp(trail: TrailType,
                       nature: TrailNature,
                       randomDigits: number = 0): void {
-    let id = auth().currentUser?.uid;
+    let id = BaseModel.currentEmployee;
 
     if (id === undefined) {
-      // TODO REMOVE THIS IS FOR TESTING PURPOSES
-      id = "1234";
-      // throw new Error("Invalid user cannot stamp");
+      if (reduxStorage.getItem("Testing")) {
+        id = "TESTING_ID";
+      } else {
+        throw new Error("Guest user cannot stamp");
+      }
     }
 
     trail[BaseModel.getRandomTimestamp(randomDigits)] = {

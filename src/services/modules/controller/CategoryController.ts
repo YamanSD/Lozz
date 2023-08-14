@@ -95,7 +95,6 @@ export default class CategoryController extends BaseController<category> {
       options_keys: data.option_keys,
       options_sets: data.options_sets,
       added_price: data.added_price,
-      products: [],
       trail: this.generateInitialTrail()
     });
   }

@@ -20,4 +20,8 @@ export default {
     name: "restocks",
     id: "id"
   },
+  customer: {
+    name: "customers",
+    id: "phone_number"
+  },
 };

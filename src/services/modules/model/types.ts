@@ -226,7 +226,6 @@ export type category = {
   added_price?: {
     [usp: string]: MonetaryType
   },
-  products: [string, ...string[]],
   trail: TrailType
 };
 
@@ -468,11 +467,6 @@ export type basicEmployee = {
 };
 
 /**
- * - id (Doc ID): string representing the ID of the customer.
- *   Auto-generated using the current datetime and
- *   three random digits (yyyymmddhhMMssnnnddd).
- *   Represents the join-date of the customer.
- *
  * - first_name: string, first name of the customer.
  *   Given by user.
  *
@@ -493,7 +487,7 @@ export type basicEmployee = {
  *   making an order for the customer.
  *   By default, it is false.
  *
- * - phone_number?: string, phone number of the customer.
+ * - phone_number: string, phone number of the customer.
  *   Given be user.
  *
  * - email?: string, email of the customer.
@@ -505,14 +499,13 @@ export type basicEmployee = {
  * - trail: Auto-generated and auto-modified on actions.
  */
 export type customer = {
-  id: string,
   first_name: string,
   middle_name?: string,
   last_name: string,
   birthday?: Date,
   gender?: boolean,
   is_banned: boolean,
-  phone_number?: string,
+  phone_number: string,
   email?: string,
   orders: [...string[]],
   trail: TrailType
@@ -527,7 +520,7 @@ export type basicCustomer = {
   last_name: string,
   birthday?: Date,
   gender?: boolean,
-  phone_number?: string,
+  phone_number: string,
   email?: string,
 };
 
@@ -633,6 +626,14 @@ export type product = {
   },
   description?: string,
   trail: TrailType
+};
+
+/**
+ * Used to listen to product property changes.
+ * This reduces the number of reads required for updating product quantities.
+ */
+export type productProperties = {
+  [id: string]: string
 };
 
 /**

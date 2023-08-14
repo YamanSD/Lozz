@@ -31,13 +31,6 @@ export default class Customer implements BaseModel {
   }
 
   /**
-   * @returns the ID of the customer
-   */
-  public get id() {
-    return this.data.id;
-  }
-
-  /**
    * @returns the registered first name of the customer
    */
   public get first_name() {
@@ -162,13 +155,6 @@ export default class Customer implements BaseModel {
    */
   public set last_name(value) {
     this.data.last_name = value;
-  }
-
-  /**
-   * @param value new phone number of the customer
-   */
-  public set phone_number(value) {
-    this.data.phone_number = value;
   }
 
   /**

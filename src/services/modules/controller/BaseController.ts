@@ -639,7 +639,9 @@ export default abstract class BaseController<RawData extends Generic> {
    * @private
    */
   private cleanData(data: Generic) {
-    delete data[this.collectionId];
+    if (this.collectionId in data) {
+      delete data[this.collectionId];
+    }
   }
 
   /**

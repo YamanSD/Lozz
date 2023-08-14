@@ -27,6 +27,7 @@ export default class CategoryController extends BaseController<category> {
 
     this.loadSearchData().then(() => {
       this.activateListener();
+      this.injectDependency();
     });
   }
 

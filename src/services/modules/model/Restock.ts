@@ -118,6 +118,13 @@ export default class Restock implements BaseModel {
   }
 
   /**
+   * @returns the creation date of the restock
+   */
+  public get creationDate(): Date {
+    return BaseModel.extractDate(this.id);
+  }
+
+  /**
    * @returns a deep copy of the raw data
    */
   public get dataCopy() {

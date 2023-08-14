@@ -110,6 +110,22 @@ export default abstract class BaseModel {
   }
 
   /**
+   * @param id that has the form yyyymmddhhMMssnnnd*
+   * @returns the date in the ID
+   */
+  public static extractDate(id: string): Date {
+    const year = Number.parseInt(id.substring(0, 4)),
+      month = Number.parseInt(id.substring(4, 6)),
+      day = Number.parseInt(id.substring(6, 8)),
+      hour = Number.parseInt(id.substring(8, 10)),
+      minute = Number.parseInt(id.substring(10, 12)),
+      second = Number.parseInt(id.substring(12, 14)),
+      millis = Number.parseInt(id.substring(14, 17));
+
+    return new Date(year, month, day, hour, month, second, millis);
+  }
+
+  /**
    * @param data to be copied
    * @returns a deep copy of the data
    */

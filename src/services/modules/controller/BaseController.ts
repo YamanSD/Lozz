@@ -6,6 +6,7 @@ import { TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
 import CollectionNames from "./CollectionNames";
 import { identity, pickBy } from "lodash";
+import { reduxStorage } from "../../../store";
 
 
 /* Flags to specify the capabilities of a controller */
@@ -85,7 +86,7 @@ export default abstract class BaseController<RawData extends Generic> {
     this.serverInstance = server;
     this.flags = flags;
     this.storageInstance = new MMKV({
-      id: `${firestore.name}-${collection_name}-mmkv`,
+      id: `${this.uniqueId(this.collectionName)}-mmkv`,
       encryptionKey: collection_name
     });
 
@@ -642,6 +643,28 @@ export default abstract class BaseController<RawData extends Generic> {
     if (this.collectionId in data) {
       delete data[this.collectionId];
     }
+  }
+
+  /**
+   * @returns a unique application ID for the controller
+   */
+  public uniqueId(collection_name: string) {
+    return `${this.metaServer.name}-${collection_name}`;
+  }
+
+  /**
+   * Injects the controller into redux to be used by other components
+   */
+  public injectDependency(): void {
+    reduxStorage.setItem(this.uniqueId(this.collectionName), this);
+  }
+
+  /**
+   * @param collection_name to be taken from dependency
+   * @returns the controller responsible for the collection
+   */
+  public getDependency(collection_name: string): any {
+    return reduxStorage.getItem(this.uniqueId(collection_name));
   }
 
   /**

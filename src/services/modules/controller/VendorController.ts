@@ -28,6 +28,7 @@ export default class VendorController extends BaseController<vendor> {
 
     this.loadSearchData().then(() => {
       this.activateListener();
+      this.injectDependency();
     });
   }
 

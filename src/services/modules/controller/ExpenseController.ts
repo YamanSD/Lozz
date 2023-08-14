@@ -28,6 +28,7 @@ export default class RxpenseController extends BaseController<expense> {
 
     this.loadSearchData().then(() => {
       this.activateListener();
+      this.injectDependency();
     });
   }
 

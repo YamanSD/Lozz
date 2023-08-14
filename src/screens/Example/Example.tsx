@@ -18,6 +18,7 @@ import i18next from 'i18next';
 import firestore from '@react-native-firebase/firestore';
 import VendorController from "../../services/modules/controller/VendorController";
 import { conformsTo } from "lodash";
+import { reduxStorage } from "../../store";
 
 
 enum test {
@@ -45,6 +46,10 @@ const Example = () => {
       Alert.alert(t('example:helloUser', { name: data.name }));
     }
   }, [isSuccess, data]);
+
+  useEffect(() => {
+    reduxStorage.setItem("Testing", true);
+  }, []);
 
   const onChangeTheme = ({ theme, darkMode }: Partial<ThemeState>) => {
     dispatch(changeTheme({ theme, darkMode }));
@@ -225,9 +230,11 @@ const Example = () => {
               onChangeTheme({ darkMode: !isDark });
               const controller = new VendorController();
 
-              const hanin = await controller.get("Saleh");
+              console.log(controller.idSet.values());
 
-              Alert.alert(hanin.name);
+              const temp = await controller.get("Demo");
+
+              Alert.alert(temp.data.toString());
             }}
           >
             <Image

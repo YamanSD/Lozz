@@ -27,6 +27,7 @@ export default class CourierController extends BaseController<courier> {
 
     this.loadSearchData().then(() => {
       this.activateListener();
+      this.injectDependency();
     });
   }
 

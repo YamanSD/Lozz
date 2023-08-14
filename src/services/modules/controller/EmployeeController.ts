@@ -1,13 +1,13 @@
 import BaseController, { ControllerFlag, Generic } from "./BaseController";
-import { basicCustomer, customer, CustomerSearchSchema } from "../model/types";
+import { basicEmployee, employee, EmployeeSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
-import Customer from "../model/customer";
+import Employee from "../model/employee";
 import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
 import { isEqual } from "lodash";
 
 
-export default class CustomerController extends BaseController<customer> {
+export default class EmployeeController extends BaseController<employee> {
   private static readonly flag: number =
     ControllerFlag.can_update
     | ControllerFlag.has_trail;
@@ -17,11 +17,11 @@ export default class CustomerController extends BaseController<customer> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.customer.name,
-      CollectionNames.customer.id,
+      CollectionNames.employee.name,
+      CollectionNames.employee.id,
       server ?? firestore,
-      CustomerController.flag,
-      CustomerSearchSchema
+      EmployeeController.flag,
+      EmployeeSearchSchema
     );
 
     this.loadSearchData().then(() => {
@@ -31,9 +31,9 @@ export default class CustomerController extends BaseController<customer> {
   }
 
   /**
-   * @param phone_number of the customer to be fetched
-   * @returns customer data
-   * @throws IdDoesNotExistError if the phone_number does not belong to a customer
+   * @param phone_number of the employee to be fetched
+   * @returns employee data
+   * @throws IdDoesNotExistError if the phone_number does not belong to a employee
    */
   public async get(phone_number: string) {
     const data = await this.getData(phone_number);
@@ -42,14 +42,14 @@ export default class CustomerController extends BaseController<customer> {
       throw new IdDoesNotExistError();
     }
 
-    return new Customer(data);
+    return new Employee(data);
   }
 
   /**
-   * @param data basic raw data to create a customer
-   * @throws IdAlreadyExistsError if the name of the customer is taken
+   * @param data basic raw data to create a employee
+   * @throws IdAlreadyExistsError if the name of the employee is taken
    */
-  public async create(data: basicCustomer) {
+  public async create(data: basicEmployee) {
     if (!(await this.isIdAvailable(data.phone_number))) {
       throw new IdAlreadyExistsError();
     }
@@ -59,19 +59,19 @@ export default class CustomerController extends BaseController<customer> {
   }
 
   /**
-   * @param model new model of the customer
-   * @throws IdDoesNotExistError if the customer does not exist
+   * @param model new model of the employee
+   * @throws IdDoesNotExistError if the employee does not exist
    */
-  public async update(model: Customer) {
-    if (await this.isIdAvailable(model.phone_number)) {
+  public async update(model: Employee) {
+    if (await this.isIdAvailable(model.id)) {
       throw new IdDoesNotExistError();
     }
 
-    const currentData: Generic | undefined = this.getCache(model.phone_number);
+    const currentData: Generic | undefined = this.getCache(model.id);
     const data: Generic | undefined = model.data;
 
     if (currentData === undefined) {
-      await this.updateServer(data, model.phone_number);
+      await this.updateServer(data, model.id);
       return;
     }
 
@@ -81,25 +81,29 @@ export default class CustomerController extends BaseController<customer> {
       }
     }
 
-    await this.updateServer(data, model.phone_number);
+    await this.updateServer(data, model.id);
   }
 
   /**
-   * @param data basic customer data
-   * @returns customer data suitable for upload
+   * @param data basic employee data
+   * @returns employee data suitable for upload
    * @protected
    */
-  protected fillDataGaps(data: basicCustomer): customer {
+  protected fillDataGaps(data: basicEmployee): employee {
     return super.fillDataGaps({
+      id: data.phone_number,
       first_name: data.first_name,
       middle_name: data.middle_name,
       last_name: data.last_name,
       phone_number: data.phone_number,
       email: data.email,
+      role: data.role,
+      commission_percent: data.commission_percent,
+      salary: data.salary,
       gender: data.gender,
       birthday: data.birthday,
-      is_banned: false,
       orders: [],
+      join_date: new Date(),
       trail: this.generateInitialTrail()
     });
   }

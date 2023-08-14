@@ -385,9 +385,7 @@ export type basicRestock = {
 
 /**
  * - id (Doc ID): string representing the ID of the employee.
- *   Auto-generated using the current datetime and
- *   two random digits (yyyymmddhhMMssnnndd).
- *   Represents the join-date of the employee.
+ *   Auto-generated using the initial employee phone number.
  *
  * - first_name: string, legal first name of the employee.
  *   Given by user.
@@ -434,7 +432,7 @@ export type basicRestock = {
  * - trail: Auto-generated and auto-modified on actions.
  */
 export type employee = {
-  id: string,
+  id: string
   first_name: string,
   middle_name?: string,
   last_name: string,
@@ -446,6 +444,7 @@ export type employee = {
   gender?: boolean,
   birthday?: Date,
   orders?: [...string[]],
+  join_date: Date,
   end_date?: Date,
   trail: TrailType
 };
@@ -457,7 +456,7 @@ export type basicEmployee = {
   first_name: string,
   middle_name?: string,
   last_name: string,
-  phone_number?: string,
+  phone_number: string,
   email?: string,
   role: EmployeeRole,
   commission_percent?: number,
@@ -487,7 +486,7 @@ export type basicEmployee = {
  *   making an order for the customer.
  *   By default, it is false.
  *
- * - phone_number: string, phone number of the customer.
+ * - phone_number (Doc ID): string, phone number of the customer.
  *   Given be user.
  *
  * - email?: string, email of the customer.

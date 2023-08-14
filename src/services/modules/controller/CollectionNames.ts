@@ -24,4 +24,9 @@ export default {
     name: "customers",
     id: "phone_number"
   },
+  employee: {
+    name: "employees",
+    id: "id"
+  },
+
 };

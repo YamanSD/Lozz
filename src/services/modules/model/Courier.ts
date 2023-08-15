@@ -1,6 +1,7 @@
 import BaseModel from "./BaseModel";
 import { courier, TrailNature, TrailType } from "./types";
 import Monetary from "./Monetary";
+import { NoProvincesError } from "../controller/Errors";
 
 
 /**
@@ -9,6 +10,9 @@ import Monetary from "./Monetary";
 export default class Courier implements BaseModel {
   /* raw data of the courier */
   private dataValue: courier;
+
+  /* set of available province names */
+  private static provinceSet: Set<string> = new Set<string>();
 
   /**
    * @param data raw data of the courier
@@ -29,6 +33,20 @@ export default class Courier implements BaseModel {
    */
   public set data(value: courier) {
     this.dataValue = value;
+  }
+
+  /**
+   * @returns the province set
+   */
+  public static get provinces() {
+    return Courier.provinceSet;
+  }
+
+  /**
+   * @param value of the new province set
+   */
+  public static set provinces(value) {
+    Courier.provinceSet = value;
   }
 
   /**
@@ -64,6 +82,31 @@ export default class Courier implements BaseModel {
     }
 
     return new Monetary(this.shipping_fees[province]);
+  }
+
+  /**
+   * @param province to be checked
+   * @returns true if the province is valid
+   * @throws NoProvincesError if there are no provinces
+   */
+  public static isValidProvince(province: string) {
+    if (Courier.provinces.size === 0) {
+      throw new NoProvincesError();
+    }
+
+    return province in Courier.provinces;
+  }
+
+  /**
+   * @param province to be added to the shipping fees
+   * @param value new shipping fee of the province
+   */
+  public setShippingFees(province: string, value: Monetary): void {
+    if (!Courier.isValidProvince(province)) {
+      throw new Error(`Invalid province does not exist`);
+    }
+
+    this.shipping_fees[province] = value.data;
   }
 
   /**

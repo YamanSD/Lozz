@@ -70,7 +70,7 @@ export default class ProductController extends BaseController<product> {
    * Creates the properties document on server in the products' collection,
    * if it does not exist.
    * Initially empty.
-   * This method should be called from loop-2 of the application
+   * This method should be called from layer-2 of the application
    */
   public async checkOnProperties() {
     let document = await this.propertiesDocument.get();

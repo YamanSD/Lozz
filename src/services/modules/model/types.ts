@@ -877,6 +877,34 @@ export type properties = {
 }
 
 /**
+ * Provinces information type
+ */
+export type provinceInformation = properties["provinces"];
+
+/**
+ * Rate information type
+ */
+export type rateInformation = properties["rate"];
+
+/**
+ * type alias for the information type
+ */
+export type InformationKey = "provinces" | "rate";
+
+/**
+ * General type for the information fragments.
+ *
+ * - type: current values,
+ * >- provinces
+ * >- rate
+ * - data: data of the fragment.
+ */
+export type information = {
+  type: InformationKey,
+  data: provinceInformation | rateInformation
+}
+
+/**
  * Defines the search schema for the Vendor collection
  */
 export const VendorSearchSchema: Schema = {

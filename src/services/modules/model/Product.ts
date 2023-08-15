@@ -7,6 +7,7 @@ import {
   cartProduct, category, product, QuantityType,
   TrailNature, TrailType, vendor
 } from "./types";
+import { IllegalStateError } from "../controller/Errors";
 
 
 /**
@@ -52,7 +53,7 @@ export default class Product implements BaseModel {
    */
   public static generateWrapper(id: string, data: product): Product {
     data.id = id;
-    return new Product(data, {}, {});
+    return new Product(data, {} as vendor, {} as category);
   }
 
   /**
@@ -345,6 +346,12 @@ export default class Product implements BaseModel {
    * @returns true if the USP is valid, otherwise false
    */
   public isValidUsp(usp: string): boolean {
+    if (this.category.option_keys === undefined) {
+      return usp === Product.NO_OPTIONS_MARK;
+    } else if (this.category.option_sets === undefined) {
+      throw new IllegalStateError();
+    }
+
     const selectedOptionValues = Product.invertUsp(usp);
     const optionKeys = this.category.option_keys;
 

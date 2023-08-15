@@ -856,6 +856,19 @@ export type basicOrder = {
 }
 
 /**
+ * Enum class for the information types.
+ *
+ * - provinces: Information about the available provinces to sell products
+ *
+ * - rate: Information about the exchange rate between USD & LBP.
+ *         In addition, contains information about rounding currencies.
+ */
+export enum InformationType {
+  provinces = "provinces",
+  rate = "rate"
+}
+
+/**
  * - provinces: contains a list of available provinces & a trail
  *   of updates.
  *
@@ -863,11 +876,11 @@ export type basicOrder = {
  *   of updates.
  */
 export type properties = {
-  provinces: {
+  [InformationType.provinces]: {
     names: [string, ...string[]],
     trail: TrailType
   },
-  rate: {
+  [InformationType.rate]: {
     buyUsdRate: number,
     sellUsdRate: number,
     roundToNearestLbp: number,
@@ -879,17 +892,12 @@ export type properties = {
 /**
  * Provinces information type
  */
-export type provinceInformation = properties["provinces"];
+export type provinceInformation = properties[InformationType.provinces];
 
 /**
  * Rate information type
  */
-export type rateInformation = properties["rate"];
-
-/**
- * type alias for the information type
- */
-export type InformationKey = "provinces" | "rate";
+export type rateInformation = properties[InformationType.rate];
 
 /**
  * General type for the information fragments.
@@ -900,7 +908,7 @@ export type InformationKey = "provinces" | "rate";
  * - data: data of the fragment.
  */
 export type information = {
-  type: InformationKey,
+  type: InformationType,
   data: provinceInformation | rateInformation
 }
 

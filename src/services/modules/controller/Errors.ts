@@ -19,3 +19,5 @@ export class ProductNotFoundError extends Error {}
 export class NoTrailError extends Error {}
 
 export class NoProvincesError extends Error {}
+
+export class InvalidInputError extends Error {}

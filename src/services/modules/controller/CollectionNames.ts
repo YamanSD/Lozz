@@ -39,6 +39,6 @@ export default {
   },
   information: {
     name: "informationProperties",
-    id: "type"
+    id: "type",
   }
 };

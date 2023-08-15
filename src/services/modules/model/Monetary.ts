@@ -1,4 +1,5 @@
 import { MonetaryType } from "./types";
+import { isInteger } from "lodash";
 
 
 /**
@@ -19,9 +20,9 @@ export default class Monetary {
   /* USD buy to LBP rate, set by InformationPropertiesManager */
   private static buyUsdRateValue: number;
 
-  /* Nearest decimal rounding for USD,
+  /* Nearest number rounding for USD,
    *  set by InformationPropertiesManager.
-   *  Must be in [0, 100].
+   *  Must be a positive number
    */
   private static roundToNearestUsdValue: number;
 
@@ -59,9 +60,9 @@ export default class Monetary {
   }
 
   /**
-   * @returns the nearest rounding decimal for USD.
+   * @returns the nearest rounding number for USD.
    */
-  public static get roundUsdDecimal(): number {
+  public static get roundUsdNumber(): number {
     return Monetary.roundToNearestUsdValue;
   }
 
@@ -81,14 +82,14 @@ export default class Monetary {
   }
 
   /**
-   * @param value new decimal value for rounding USD values.
+   * @param value new number value for rounding USD values.
    * @throws RangeError if the given value is less than 0 or
    *         greater than 100.
    */
-  public static set roundUsdDecimal(value) {
+  public static set roundUsdNumber(value) {
     if (value < 0 || 100 < value) {
       throw new RangeError(
-        "Rounding decimal must an integer between 0 and 100"
+        "Rounding number must an integer between 0 and 100"
       );
     }
 
@@ -124,15 +125,30 @@ export default class Monetary {
   }
 
   /**
+   * @param value to be rounded
+   * @param roundingValue nearest-to rounding value
+   * @private
+   */
+  private static round(value: number, roundingValue: number): number {
+    if (roundingValue <= 0) {
+      return value;
+    }
+
+    const result = Math.round(value / roundingValue) * roundingValue;
+    const degree = Math.abs(Math.floor(Math.log10(roundingValue % 1)));
+
+    return isInteger(roundingValue)
+      ? Math.round(result)
+      : Number(result.toFixed(degree));
+  }
+
+  /**
    * Applies the rounding on this instance, to USD and LBP.
-   * The rounding is based on the roundLbpNumber and roundUsdDecimal.
+   * The rounding is based on the roundLbpNumber and roundUsdNumber.
    */
   public applyRounding(): void {
-    this.lbp = Math.round(
-      Math.round(this.lbp / Monetary.roundLbpNumber) * Monetary.roundLbpNumber
-    );
-
-    this.usd = Number(this.usd.toFixed(Monetary.roundUsdDecimal));
+    this.lbp = Monetary.round(this.lbp, Monetary.roundLbpNumber);
+    this.usd = Monetary.round(this.usd, Monetary.roundUsdNumber);
   }
 
   /**

@@ -1,12 +1,13 @@
-import firestore from "@react-native-firebase/firestore";
+import firestore, { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { MMKV } from "react-native-mmkv";
 import { create, insert, Orama, ProvidedTypes, remove, Schema } from "@orama/orama";
 import { IdDoesNotExistError, NoDataError, NoDeactivateError, NoDeleteError, NoUpdateError } from "./Errors";
-import { TrailNature, TrailType } from "../model/types";
+import { Generic, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
 import CollectionNames from "./CollectionNames";
 import { identity, pickBy } from "lodash";
 import { reduxStorage } from "../../../store";
+import Transaction = FirebaseFirestoreTypes.Transaction;
 
 
 /* Flags to specify the capabilities of a controller */
@@ -16,11 +17,6 @@ export enum ControllerFlag {
   can_delete =      0b0100,
   can_update =      0b1000,
 }
-
-/* Generic Object type */
-export type Generic = {
-  [id: string]: any
-};
 
 /**
  * Class responsible for handling raw data storage & retrieval
@@ -234,7 +230,7 @@ export default abstract class BaseController<RawData extends Generic> {
 
     this.cleanData(data);
 
-    await this.server.runTransaction(
+    await this.runTransaction(
       async (transaction) => {
       transaction.update(this.collection.doc(id), data);
     });
@@ -540,14 +536,24 @@ export default abstract class BaseController<RawData extends Generic> {
   }
 
   /**
+   * Performs the given transaction function to the server.
+   * Returns its result.
+   *
+   * @param body transaction function to be run
+   * @returns transaction result if any
+   */
+  public async runTransaction(body: (transaction: Transaction) => any) {
+    return await this.server.runTransaction(body);
+  }
+
+  /**
    * Updates the ID set of the collection on server
    */
   public async uploadIds() {
-    await this.server.runTransaction(
-      async (transaction) => {
-        transaction.set(this.idSetDocument, {
-          data: this.idSetUpload
-        });
+    await this.runTransaction(async (transaction) => {
+      transaction.set(this.idSetDocument, {
+        data: this.idSetUpload
+      });
     });
   }
 

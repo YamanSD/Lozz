@@ -46,6 +46,29 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param id ID of the product, not present in data
+   * @param data raw data of the product
+   * @returns a wrapper instance used by the restocks manager
+   */
+  public static generateWrapper(id: string, data: product): Product {
+    data.id = id;
+    return new Product(data, {}, {});
+  }
+
+  /**
+   * @param to_inventory if the quantities are for the inventory
+   * @returns an object containing only the suitable quantities
+   */
+  public suitableQuantities(to_inventory: boolean) {
+    return to_inventory ? {
+      inventory_quantities: this.inventory_quantities,
+      quantities: this.quantities
+    } : {
+      quantities: this.quantities
+    };
+  }
+
+  /**
    * @returns the stored raw data
    */
   public get data(): product {
@@ -317,6 +340,26 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param usp to be checked if it can be formed according to the
+   *        category model
+   * @returns true if the USP is valid, otherwise false
+   */
+  public isValidUsp(usp: string): boolean {
+    const selectedOptionValues = Product.invertUsp(usp);
+    const optionKeys = this.category.option_keys;
+
+    for (let i in optionKeys) {
+      const optionValue = selectedOptionValues[i];
+
+      if (!(optionValue in this.category.option_sets[optionKeys[i]])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * @param quantities if the given quantities are invalid in any form,
    *        EvalError is thrown.
    * @param to_inventory if true the quantities target the inventory quantities.
@@ -332,7 +375,7 @@ export default class Product implements BaseModel {
       const current = currentQuantities[usp];
       const added = quantities[usp];
 
-      if (!(usp in currentQuantities)) {
+      if (!this.isValidUsp(usp)) {
         throw new EvalError(`Invalid addition USI: ${this.uspToUsi(usp)}`);
       } else if (added < 0 && current < -added) {
         throw new EvalError(
@@ -354,13 +397,39 @@ export default class Product implements BaseModel {
    */
   public add(quantities: QuantityType, to_inventory: boolean): void {
     this.checkIsValidAdd(quantities, to_inventory);
-    let currentQuantities = to_inventory
-      ? this.inventory_quantities
-      : this.quantities;
 
     for (let usp of Object.keys(quantities)) {
-      currentQuantities[usp] += quantities[usp];
+      const quantity = quantities[usp];
+
+      this.quantities[usp] += quantity;
+
+      if (to_inventory) {
+        this.inventory_quantities[usp] += quantity;
+      }
     }
+  }
+
+  /**
+   * @param usi to be converted
+   * @returns the USP in the USI
+   */
+  public static usiToUsp(usi: string): string {
+    return usi.substring(usi.indexOf(Product.SEPARATOR) + 1);
+  }
+
+  /**
+   * Alias for adding a single USP to the quantities
+   *
+   * @param usi to be added
+   * @param quantity of the given USP
+   * @param to_inventory if true the quantities target the inventory quantities
+   */
+  public addUspQuantity(usi: string,
+                        quantity: number,
+                        to_inventory: boolean): void {
+    this.add({
+      [Product.usiToUsp(usi)]: quantity
+    }, to_inventory);
   }
 
   /**

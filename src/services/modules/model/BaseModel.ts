@@ -122,7 +122,15 @@ export default abstract class BaseModel {
       second = Number.parseInt(id.substring(12, 14)),
       millis = Number.parseInt(id.substring(14, 17));
 
-    return new Date(year, month, day, hour, month, second, millis);
+    return new Date(year, month, day, hour, minute, second, millis);
+  }
+
+  /**
+   * @param data to be copied
+   * @returns a deep copy of the data
+   */
+  public static deepCopy<T>(data: T): T {
+    return cloneDeep(data);
   }
 
   /**
@@ -130,6 +138,6 @@ export default abstract class BaseModel {
    * @returns a deep copy of the data
    */
   public static copy<T>(data: T): T {
-    return cloneDeep(data);
+    return BaseModel.deepCopy(data);
   }
 }

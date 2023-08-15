@@ -534,6 +534,24 @@ export type QuantityType = {
 };
 
 /**
+ * Shortcut for typing.
+ *
+ * - Maps an ID to an object mapping USPs to quantities
+ */
+export type JointQuantityType = {
+  [id: string]: {
+    [usp: string]: number
+  }
+}
+
+/**
+ *  Generic Object type
+ */
+export type Generic<T = any> = {
+  [key: string]: T
+};
+
+/**
  * - id (Doc ID): string representing the ID of the product.
  *   Given by user.
  *

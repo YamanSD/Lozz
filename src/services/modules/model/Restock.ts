@@ -24,6 +24,13 @@ export default class Restock implements BaseModel {
   }
 
   /**
+   * @returns a list of all product USIs in the restocking
+   */
+  public get products() {
+    return Object.keys(this.quantities);
+  }
+
+  /**
    * @param value new value of the raw data
    */
   public set data(value: restock) {
@@ -129,6 +136,19 @@ export default class Restock implements BaseModel {
    */
   public get dataCopy() {
     return BaseModel.copy(this.data);
+  }
+
+  /**
+   * @returns a copy of the quantities, but value signs are inverse
+   */
+  public get negativeQuantities() {
+    let result = BaseModel.deepCopy(this.quantities);
+
+    for (let usi of Object.keys(result)) {
+      result[usi] *= -1;
+    }
+
+    return result;
   }
 
   /**

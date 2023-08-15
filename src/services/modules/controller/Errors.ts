@@ -13,3 +13,5 @@ export class IdDoesNotExistError extends Error {}
 export class InvalidRestockQuantitiesError extends Error {}
 
 export class IllegalStateError extends Error {}
+
+export class ProductNotFoundError extends Error {}

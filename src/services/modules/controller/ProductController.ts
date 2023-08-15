@@ -250,6 +250,13 @@ export default class ProductController extends BaseController<product> {
   }
 
   /**
+   * @param model to be updated in cache
+   */
+  public updateLocal(model: Product) {
+    this.updateCache(model.id, model.data);
+  }
+
+  /**
    * Updates the model on server.
    * Does not trigger a property update.
    * Only updates quantities.

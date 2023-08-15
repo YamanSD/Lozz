@@ -32,5 +32,13 @@ export default {
     name: "products",
     id: "id",
     properties: "productProperties"
+  },
+  order: {
+    name: "orders",
+    id: "id"
+  },
+  information: {
+    name: "informationProperties",
+    id: "type"
   }
 };

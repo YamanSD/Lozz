@@ -1,7 +1,14 @@
 import firestore, { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { MMKV } from "react-native-mmkv";
 import { create, insert, Orama, ProvidedTypes, remove, Schema } from "@orama/orama";
-import { IdDoesNotExistError, NoDataError, NoDeactivateError, NoDeleteError, NoUpdateError } from "./Errors";
+import {
+  IdDoesNotExistError,
+  NoDataError,
+  NoDeactivateError,
+  NoDeleteError,
+  NoTrailError,
+  NoUpdateError
+} from "./Errors";
 import { Generic, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
 import CollectionNames from "./CollectionNames";
@@ -225,7 +232,7 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     if (!noStamp) {
-      BaseModel.stamp(data.trail, TrailNature.U);
+      this.stamp(data.trail, TrailNature.U);
     }
 
     this.cleanData(data);
@@ -254,8 +261,13 @@ export default abstract class BaseController<RawData extends Generic> {
 
   /**
    * @param ids to be completely deleted
+   * @throws NoDeleteError if the controller does not allow deletes
    */
-  public async delete(ids: [string, ...string[]]) {
+  public async removeAllFromServer(ids: [string, ...string[]]) {
+    if (!this.canDelete) {
+      throw new NoDeleteError();
+    }
+
     for (let id of ids) {
       await this.removeServer(id);
     }
@@ -265,11 +277,15 @@ export default abstract class BaseController<RawData extends Generic> {
 
   /**
    * @param id of the document to be marked as deactivated
+   * @throws NoDeactivateError if the controller does not allow deactivation
+   * @throws NoTrailError if the controller does not allow trails
    * @protected
    */
   public async deactivate(id: string) {
     if (!this.canDeactivate) {
       throw new NoDeactivateError();
+    } else if (!this.hasTrail) {
+      throw new NoTrailError();
     }
 
     const data = await this.getData(id);
@@ -278,18 +294,33 @@ export default abstract class BaseController<RawData extends Generic> {
       throw new NoDataError();
     }
 
-    BaseModel.stamp(data.trail, TrailNature.D);
+    this.stamp(data.trail, TrailNature.D);
 
     await this.updateServer(data, id, true);
   }
 
   /**
+   * @param trail to be stamped
+   * @param nature of the action
+   * @protected
+   */
+  protected stamp(trail: TrailType, nature: TrailNature) {
+    if (this.hasTrail) {
+      BaseModel.stamp(trail, nature);
+    }
+  }
+
+  /**
    * @param id of the document to be marked as reactivated
+   * @throws NoDeactivateError if the controller does not allow deactivation
+   * @throws NoTrailError if the controller does not allow trails
    * @protected
    */
   public async reactivate(id: string) {
     if (!this.canDeactivate) {
       throw new NoDeactivateError();
+    } else if (!this.hasTrail) {
+      throw new NoTrailError();
     }
 
     const data = await this.getData(id);
@@ -298,13 +329,15 @@ export default abstract class BaseController<RawData extends Generic> {
       throw new NoDataError();
     }
 
-    BaseModel.stamp(data.trail, TrailNature.R);
+    this.stamp(data.trail, TrailNature.R);
 
     await this.updateServer(data, id, true);
   }
 
   /**
    * @param id of the document to be erased
+   * @throws IdDoesNotExistError if the controller does not allow deactivation
+   * @throws NoTrailError if the controller does not allow trails
    * @protected
    */
   public async erase(id: string) {
@@ -312,6 +345,8 @@ export default abstract class BaseController<RawData extends Generic> {
       throw new NoDeactivateError();
     } else if (await this.isIdAvailable(id)) {
       throw new IdDoesNotExistError();
+    } else if (!this.hasTrail) {
+      throw new NoTrailError();
     }
 
     const data = await this.getData(id);
@@ -324,7 +359,7 @@ export default abstract class BaseController<RawData extends Generic> {
       trail: data.trail
     };
 
-    BaseModel.stamp(newData.trail, TrailNature.E);
+    this.stamp(newData.trail, TrailNature.E);
 
     await this.collection.doc(id).set(newData);
   }
@@ -636,7 +671,7 @@ export default abstract class BaseController<RawData extends Generic> {
   protected generateInitialTrail(): TrailType {
     let result = {};
 
-    BaseModel.stamp(result, TrailNature.C);
+    this.stamp(result, TrailNature.C);
 
     return result;
   }

@@ -1,5 +1,5 @@
-import BaseController, { ControllerFlag, Generic } from "./BaseController";
-import { basicCategory, category, CategorySearchSchema } from "../model/types";
+import BaseController, { ControllerFlag } from "./BaseController";
+import { basicCategory, category, CategorySearchSchema, Generic } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Category from "../model/category";

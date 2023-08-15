@@ -145,7 +145,7 @@ export default class RestockController extends BaseController<restock> {
    * @param id to be deleted completely and its effects revoked
    * @throws NoDeleteError if the restock is not deletable
    */
-  public async revock(id: string) {
+  public async delete(id: string) {
     const restock = await this.get(id);
 
     if (!restock.deletable) {

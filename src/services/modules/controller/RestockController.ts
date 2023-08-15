@@ -296,7 +296,7 @@ export default class RestockController extends BaseController<restock> {
    * @protected
    */
   protected fillDataGaps(data: basicRestock): restock {
-    return super.fillDataGaps({
+    return super.fixDataGaps({
       id: data.id,
       note: data.note,
       to_inventory: data.to_inventory,

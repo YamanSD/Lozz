@@ -1,10 +1,8 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicExpense, expense, ExpenseSearchSchema, Generic } from "../model/types";
+import { basicExpense, expense, ExpenseSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Expense from "../model/expense";
-import { IdDoesNotExistError } from "./Errors";
-import { isEqual } from "lodash";
 import BaseModel from "../model/BaseModel";
 
 
@@ -33,18 +31,12 @@ export default class RxpenseController extends BaseController<expense> {
   }
 
   /**
-   * @param name of the expense to be fetched
+   * @param id of the expense to be fetched
    * @returns expense data
-   * @throws IdDoesNotExistError if the name does not belong to an expense
+   * @throws IdDoesNotExistError if the id does not belong to an expense
    */
-  public async get(name: string) {
-    const data = await this.getData(name);
-
-    if (data === undefined) {
-      throw new IdDoesNotExistError();
-    }
-
-    return new Expense(data);
+  public async get(id: string) {
+    return await this.genericGet(Expense, id);
   }
 
   /**
@@ -52,9 +44,9 @@ export default class RxpenseController extends BaseController<expense> {
    * @throws IdAlreadyExistsError if the name of the expense is taken
    */
   public async create(data: basicExpense) {
-    await this.createServer(BaseModel.getRandomTimestamp(2),
-      this.fillDataGaps(data));
-    await this.uploadIds();
+    const id = BaseModel.getRandomTimestamp(2);
+    await this.genericCreate(data, id);
+    return id;
   }
 
   /**
@@ -62,25 +54,7 @@ export default class RxpenseController extends BaseController<expense> {
    * @throws IdDoesNotExistError if the expense does not exist
    */
   public async update(model: Expense) {
-    if (await this.isIdAvailable(model.id)) {
-      throw new IdDoesNotExistError();
-    }
-
-    const currentData: Generic | undefined = this.getCache(model.id);
-    const data: Generic | undefined = model.dataCopy;
-
-    if (currentData === undefined) {
-      await this.updateServer(data, model.id);
-      return;
-    }
-
-    for (let key of Object.keys(currentData)) {
-      if (isEqual(currentData[key], data[key]) || data[key] === undefined) {
-        delete data[key];
-      }
-    }
-
-    await this.updateServer(data, model.id);
+    return await this.genericUpdate(model, model.id);
   }
 
   /**
@@ -89,7 +63,7 @@ export default class RxpenseController extends BaseController<expense> {
    * @protected
    */
   protected fillDataGaps(data: basicExpense): expense {
-    return super.fillDataGaps({
+    return super.fixDataGaps({
       description: data.description,
       value: data.value,
       date: data.date,

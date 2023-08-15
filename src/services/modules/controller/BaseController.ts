@@ -2,6 +2,7 @@ import firestore, { FirebaseFirestoreTypes } from "@react-native-firebase/firest
 import { MMKV } from "react-native-mmkv";
 import { create, insert, Orama, ProvidedTypes, remove, Schema } from "@orama/orama";
 import {
+  IdAlreadyExistsError,
   IdDoesNotExistError,
   NoDataError,
   NoDeactivateError,
@@ -12,9 +13,8 @@ import {
 import { Generic, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
 import CollectionNames from "./CollectionNames";
-import { identity, pickBy } from "lodash";
+import { identity, isEqual, pickBy } from "lodash";
 import { reduxStorage } from "../../../store";
-import Transaction = FirebaseFirestoreTypes.Transaction;
 
 
 /* Flags to specify the capabilities of a controller */
@@ -54,6 +54,9 @@ export default abstract class BaseController<RawData extends Generic> {
 
   /* search engine instance for the controller */
   public searchEngine?: Orama<ProvidedTypes>;
+
+  /* cached dependencies */
+  private static dependencies = {};
 
   /* maps document IDs to Orama IDs */
   private idToOramaId: {
@@ -250,7 +253,7 @@ export default abstract class BaseController<RawData extends Generic> {
    * @param id to be deleted completely
    * @protected
    */
-  protected async removeServer(id: string) {
+  public async removeServer(id: string) {
     if (!this.canDelete) {
       throw new NoDeleteError();
     }
@@ -577,7 +580,8 @@ export default abstract class BaseController<RawData extends Generic> {
    * @param body transaction function to be run
    * @returns transaction result if any
    */
-  public async runTransaction(body: (transaction: Transaction) => any) {
+  public async runTransaction(body:
+      (transaction: FirebaseFirestoreTypes.Transaction) => any) {
     return await this.server.runTransaction(body);
   }
 
@@ -697,7 +701,8 @@ export default abstract class BaseController<RawData extends Generic> {
    * Injects the controller into redux to be used by other components
    */
   public injectDependency(): void {
-    reduxStorage.setItem(this.uniqueId(this.collectionName), this);
+    // reduxStorage.setItem(this.uniqueId(this.collectionName),
+    //   JSON.stringify(this));
   }
 
   /**
@@ -713,7 +718,7 @@ export default abstract class BaseController<RawData extends Generic> {
    * @returns data that has all undefined fields removed
    * @protected
    */
-  protected fillDataGaps(data: Generic): RawData {
+  protected fixDataGaps(data: Generic): RawData {
     return pickBy(data, identity) as RawData;
   }
 
@@ -724,12 +729,91 @@ export default abstract class BaseController<RawData extends Generic> {
   public abstract get(id: string): Promise<BaseModel>;
 
   /**
-   * @param data new data of the document
+   *
+   * @param model new model of the document
    */
-  public abstract update(data: BaseModel): Promise<any>;
+  public abstract update(model: BaseModel): Promise<any>;
 
   /**
    * @param data basic data of the document
    */
   public abstract create(data: Generic): Promise<any>;
+
+  /**
+   * @param data raw data from user input
+   * @returns raw data suitable for upload
+   * @protected
+   */
+  protected abstract fillDataGaps(data: Generic): RawData;
+
+  /**
+   * This update-function is generalized.
+   * Works for most controllers.
+   *
+   * @param model new model of the document
+   * @param id of the document
+   */
+  protected async genericUpdate(model: BaseModel, id: string): Promise<void> {
+    if (await this.isIdAvailable(id)) {
+      throw new IdDoesNotExistError();
+    }
+
+    const currentData: Generic | undefined = this.getCache(id);
+    const data: Generic = model.dataCopy;
+
+    if (currentData === undefined) {
+      await this.updateServer(data, id);
+      return;
+    }
+
+    for (let key of Object.keys(currentData)) {
+      if (key === "trail") {
+        continue;
+      }
+
+      if (isEqual(currentData[key], data[key]) || data[key] === undefined) {
+        delete data[key];
+      }
+    }
+
+    await this.updateServer(data, id);
+  }
+
+  /**
+   * This get-function is generalized.
+   * Works for most controllers.
+   *
+   * @param ctor BaseModel constructor
+   * @param id of the document
+   * @returns BaseModel instance for the controller
+   * @protected
+   */
+  protected async genericGet<T extends BaseModel>(
+    ctor: new (...arg: any) => T,
+    id: string): Promise<T> {
+    const data = await this.getData(id);
+
+    if (data === undefined) {
+      throw new IdDoesNotExistError();
+    }
+
+    return new ctor(data);
+  }
+
+  /**
+   * This create-function is generalized.
+   * Works for most controllers.
+   *
+   * @param data raw data to be used
+   * @param id new ID of the document
+   * @protected
+   */
+  protected async genericCreate(data: Generic, id: string): Promise<void> {
+    if (!(await this.isIdAvailable(id))) {
+      throw new IdAlreadyExistsError();
+    }
+
+    await this.createServer(id, this.fillDataGaps(data));
+    await this.uploadIds();
+  }
 }

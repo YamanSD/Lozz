@@ -1,10 +1,8 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicVendor, Generic, vendor, VendorSearchSchema } from "../model/types";
+import { basicVendor, vendor, VendorSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Vendor from "../model/Vendor";
-import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
-import { isEqual } from "lodash";
 
 
 export default class VendorController extends BaseController<vendor> {
@@ -38,13 +36,7 @@ export default class VendorController extends BaseController<vendor> {
    * @throws IdDoesNotExistError if the name does not belong to a vendor
    */
   public async get(name: string) {
-    const data = await this.getData(name);
-
-    if (data === undefined) {
-      throw new IdDoesNotExistError();
-    }
-
-    return new Vendor(data);
+    return await this.genericGet(Vendor, name);
   }
 
   /**
@@ -52,12 +44,7 @@ export default class VendorController extends BaseController<vendor> {
    * @throws IdAlreadyExistsError if the name of the vendor is taken
    */
   public async create(data: basicVendor) {
-    if (!(await this.isIdAvailable(data.name))) {
-      throw new IdAlreadyExistsError();
-    }
-
-    await this.createServer(data.name, this.fillDataGaps(data));
-    await this.uploadIds();
+    return await this.genericCreate(data, data.name);
   }
 
   /**
@@ -65,31 +52,7 @@ export default class VendorController extends BaseController<vendor> {
    * @throws IdDoesNotExistError if the vendor does not exist
    */
   public async update(model: Vendor) {
-    if (await this.isIdAvailable(model.name)) {
-      throw new IdDoesNotExistError();
-    }
-
-    const currentData: Generic | undefined = this.getCache(model.name);
-    const data: Generic | undefined = model.dataCopy;
-
-    for (let key of Object.keys(data)) {
-      if (isEqual(data[key], [])) {
-        delete data[key];
-      }
-    }
-
-    if (currentData === undefined) {
-      await this.updateServer(data, model.name);
-      return;
-    }
-
-    for (let key of Object.keys(currentData)) {
-      if (isEqual(currentData[key], data[key]) || data[key] === undefined) {
-        delete data[key];
-      }
-    }
-
-    await this.updateServer(data, model.name);
+    return await this.genericUpdate(model, model.name);
   }
 
   /**
@@ -98,7 +61,7 @@ export default class VendorController extends BaseController<vendor> {
    * @protected
    */
   protected fillDataGaps(data: basicVendor): vendor {
-    return super.fillDataGaps({
+    return super.fixDataGaps({
       name: data.name,
       phone_numbers: data.phone_numbers,
       emails: data.emails,

@@ -290,7 +290,7 @@ export default class ProductController extends BaseController<product> {
    * @protected
    */
   protected fillDataGaps(data: basicProduct): product {
-    return super.fillDataGaps({
+    return super.fixDataGaps({
       id: data.id,
       name: data.name,
       vendor_id: data.vendor_id,

@@ -230,11 +230,22 @@ const Example = () => {
               onChangeTheme({ darkMode: !isDark });
               const controller = new VendorController();
 
-              console.log(controller.idSet.values());
+              // let temp = await controller.get("Hanin");
+              //
+              // // console.log();
+              //
+              // // temp.phone_numbers = ["1231123131311123333"];
+              //
+              // temp.emails = [];
+              //
+              // await controller.erase("Hanin");
 
-              const temp = await controller.get("Demo");
+              await controller.removeServer("Hanin");
 
-              Alert.alert(temp.data.toString());
+              Alert.alert(controller.storage.getAllKeys().toString());
+
+              // Alert.alert(Object.values(temp.data).toString());
+              Alert.alert("DONE");
             }}
           >
             <Image

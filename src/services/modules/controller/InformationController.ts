@@ -2,7 +2,7 @@ import BaseController, { ControllerFlag } from "./BaseController";
 import { Generic, information, InformationType, properties } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
-import { IdDoesNotExistError } from "./Errors";
+import { IdDoesNotExistError, IllegalStateError } from "./Errors";
 import RateInformation from "../model/RateInformation";
 import ProvinceInformation from "../model/ProvinceInformation";
 import { isEqual } from "lodash";
@@ -97,5 +97,14 @@ export default class InformationController
    */
   public async getRate(): Promise<RateInformation> {
     return await this.get(InformationType.rate) as RateInformation;
+  }
+
+  /**
+   * @param data to be fixed
+   * @throws IllegalStateError
+   * @protected
+   */
+  protected fillDataGaps(data: Generic): information {
+    throw new IllegalStateError();
   }
 }

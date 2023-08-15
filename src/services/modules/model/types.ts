@@ -185,8 +185,8 @@ export enum EmployeeRole {
  */
 export type vendor = {
   name: string,
-  phone_numbers?: [string, ...string[]],
-  emails?: [string, ...string[]],
+  phone_numbers?: [...string[]],
+  emails?: [...string[]],
   trail: TrailType
 };
 

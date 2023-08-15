@@ -1,10 +1,8 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicCourier, courier, CourierSearchSchema, Generic } from "../model/types";
+import { basicCourier, courier, CourierSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Courier from "../model/courier";
-import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
-import { isEqual } from "lodash";
 
 
 export default class CourierController extends BaseController<courier> {
@@ -37,13 +35,7 @@ export default class CourierController extends BaseController<courier> {
    * @throws IdDoesNotExistError if the name does not belong to a courier
    */
   public async get(name: string) {
-    const data = await this.getData(name);
-
-    if (data === undefined) {
-      throw new IdDoesNotExistError();
-    }
-
-    return new Courier(data);
+    return await this.genericGet(Courier, name);
   }
 
   /**
@@ -51,12 +43,7 @@ export default class CourierController extends BaseController<courier> {
    * @throws IdAlreadyExistsError if the name of the courier is taken
    */
   public async create(data: basicCourier) {
-    if (!(await this.isIdAvailable(data.name))) {
-      throw new IdAlreadyExistsError();
-    }
-
-    await this.createServer(data.name, this.fillDataGaps(data));
-    await this.uploadIds();
+    return await this.genericCreate(data, data.name);
   }
 
   /**
@@ -64,25 +51,7 @@ export default class CourierController extends BaseController<courier> {
    * @throws IdDoesNotExistError if the courier does not exist
    */
   public async update(model: Courier) {
-    if (await this.isIdAvailable(model.name)) {
-      throw new IdDoesNotExistError();
-    }
-
-    const currentData: Generic | undefined = this.getCache(model.name);
-    const data: Generic | undefined = model.dataCopy;
-
-    if (currentData === undefined) {
-      await this.updateServer(data, model.name);
-      return;
-    }
-
-    for (let key of Object.keys(currentData)) {
-      if (isEqual(currentData[key], data[key]) || data[key] === undefined) {
-        delete data[key];
-      }
-    }
-
-    await this.updateServer(data, model.name);
+    return await this.genericUpdate(model, model.name);
   }
 
   /**
@@ -91,7 +60,7 @@ export default class CourierController extends BaseController<courier> {
    * @protected
    */
   protected fillDataGaps(data: basicCourier): courier {
-    return super.fillDataGaps({
+    return super.fixDataGaps({
       name: data.name,
       shipping_fees: data.shipping_fees,
       orders: [],

@@ -140,4 +140,9 @@ export default abstract class BaseModel {
   public static copy<T>(data: T): T {
     return BaseModel.deepCopy(data);
   }
+
+  /**
+   * @returns a copy of the raw data
+   */
+  public abstract get dataCopy(): any;
 }

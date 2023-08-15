@@ -1,10 +1,8 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicCustomer, customer, CustomerSearchSchema, Generic } from "../model/types";
+import { basicCustomer, customer, CustomerSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Customer from "../model/customer";
-import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
-import { isEqual } from "lodash";
 
 
 export default class CustomerController extends BaseController<customer> {
@@ -36,13 +34,7 @@ export default class CustomerController extends BaseController<customer> {
    * @throws IdDoesNotExistError if the phone_number does not belong to a customer
    */
   public async get(phone_number: string) {
-    const data = await this.getData(phone_number);
-
-    if (data === undefined) {
-      throw new IdDoesNotExistError();
-    }
-
-    return new Customer(data);
+    return await this.genericGet(Customer, phone_number);
   }
 
   /**
@@ -50,12 +42,7 @@ export default class CustomerController extends BaseController<customer> {
    * @throws IdAlreadyExistsError if the name of the customer is taken
    */
   public async create(data: basicCustomer) {
-    if (!(await this.isIdAvailable(data.phone_number))) {
-      throw new IdAlreadyExistsError();
-    }
-
-    await this.createServer(data.phone_number, this.fillDataGaps(data));
-    await this.uploadIds();
+    return await this.genericCreate(data, data.phone_number);
   }
 
   /**
@@ -63,25 +50,7 @@ export default class CustomerController extends BaseController<customer> {
    * @throws IdDoesNotExistError if the customer does not exist
    */
   public async update(model: Customer) {
-    if (await this.isIdAvailable(model.phone_number)) {
-      throw new IdDoesNotExistError();
-    }
-
-    const currentData: Generic | undefined = this.getCache(model.phone_number);
-    const data: Generic | undefined = model.dataCopy;
-
-    if (currentData === undefined) {
-      await this.updateServer(data, model.phone_number);
-      return;
-    }
-
-    for (let key of Object.keys(currentData)) {
-      if (isEqual(currentData[key], data[key]) || data[key] === undefined) {
-        delete data[key];
-      }
-    }
-
-    await this.updateServer(data, model.phone_number);
+    return await this.genericUpdate(model, model.phone_number);
   }
 
   /**
@@ -90,7 +59,7 @@ export default class CustomerController extends BaseController<customer> {
    * @protected
    */
   protected fillDataGaps(data: basicCustomer): customer {
-    return super.fillDataGaps({
+    return super.fixDataGaps({
       first_name: data.first_name,
       middle_name: data.middle_name,
       last_name: data.last_name,

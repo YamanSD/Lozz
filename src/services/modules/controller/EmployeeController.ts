@@ -1,10 +1,8 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicEmployee, employee, EmployeeSearchSchema, Generic } from "../model/types";
+import { basicEmployee, employee, EmployeeSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Employee from "../model/employee";
-import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
-import { isEqual } from "lodash";
 
 
 export default class EmployeeController extends BaseController<employee> {
@@ -31,18 +29,12 @@ export default class EmployeeController extends BaseController<employee> {
   }
 
   /**
-   * @param phone_number of the employee to be fetched
+   * @param id of the employee to be fetched
    * @returns employee data
-   * @throws IdDoesNotExistError if the phone_number does not belong to a employee
+   * @throws IdDoesNotExistError if the id does not belong to a employee
    */
-  public async get(phone_number: string) {
-    const data = await this.getData(phone_number);
-
-    if (data === undefined) {
-      throw new IdDoesNotExistError();
-    }
-
-    return new Employee(data);
+  public async get(id: string) {
+    return await this.genericGet(Employee, id);
   }
 
   /**
@@ -50,12 +42,7 @@ export default class EmployeeController extends BaseController<employee> {
    * @throws IdAlreadyExistsError if the name of the employee is taken
    */
   public async create(data: basicEmployee) {
-    if (!(await this.isIdAvailable(data.phone_number))) {
-      throw new IdAlreadyExistsError();
-    }
-
-    await this.createServer(data.phone_number, this.fillDataGaps(data));
-    await this.uploadIds();
+    return await this.genericCreate(data, data.phone_number);
   }
 
   /**
@@ -63,25 +50,7 @@ export default class EmployeeController extends BaseController<employee> {
    * @throws IdDoesNotExistError if the employee does not exist
    */
   public async update(model: Employee) {
-    if (await this.isIdAvailable(model.id)) {
-      throw new IdDoesNotExistError();
-    }
-
-    const currentData: Generic | undefined = this.getCache(model.id);
-    const data: Generic | undefined = model.dataCopy;
-
-    if (currentData === undefined) {
-      await this.updateServer(data, model.id);
-      return;
-    }
-
-    for (let key of Object.keys(currentData)) {
-      if (isEqual(currentData[key], data[key]) || data[key] === undefined) {
-        delete data[key];
-      }
-    }
-
-    await this.updateServer(data, model.id);
+    return await this.genericUpdate(model, model.id);
   }
 
   /**
@@ -90,7 +59,7 @@ export default class EmployeeController extends BaseController<employee> {
    * @protected
    */
   protected fillDataGaps(data: basicEmployee): employee {
-    return super.fillDataGaps({
+    return super.fixDataGaps({
       id: data.phone_number,
       first_name: data.first_name,
       middle_name: data.middle_name,

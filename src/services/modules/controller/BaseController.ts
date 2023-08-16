@@ -10,7 +10,7 @@ import {
   NoTrailError,
   NoUpdateError
 } from "./Errors";
-import { Generic, TrailNature, TrailType } from "../model/types";
+import { Generic, SpecialFields, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
 import CollectionNames from "./CollectionNames";
 import { identity, isEqual, pickBy } from "lodash";
@@ -56,6 +56,7 @@ export default abstract class BaseController<RawData extends Generic> {
   public searchEngine?: Orama<ProvidedTypes>;
 
   /* cached dependencies */
+
   private static dependencies = {};
 
   /* maps document IDs to Orama IDs */
@@ -747,6 +748,23 @@ export default abstract class BaseController<RawData extends Generic> {
   protected abstract fillDataGaps(data: Generic): RawData;
 
   /**
+   * @param data to be cleaned
+   * @param newData data will be compared to
+   * @protected
+   */
+  protected static clearAlikeFields(data: Generic, newData: Generic): void {
+    for (let key of Object.keys(data)) {
+      if (key === SpecialFields.trail) {
+        continue;
+      }
+
+      if (isEqual(data[key], newData[key]) || newData[key] === undefined) {
+        delete newData[key];
+      }
+    }
+  }
+
+  /**
    * This update-function is generalized.
    * Works for most controllers.
    *
@@ -766,15 +784,7 @@ export default abstract class BaseController<RawData extends Generic> {
       return;
     }
 
-    for (let key of Object.keys(currentData)) {
-      if (key === "trail") {
-        continue;
-      }
-
-      if (isEqual(currentData[key], data[key]) || data[key] === undefined) {
-        delete data[key];
-      }
-    }
+    BaseController.clearAlikeFields(currentData, data);
 
     await this.updateServer(data, id);
   }

@@ -240,9 +240,9 @@ const Example = () => {
               //
               // await controller.erase("Hanin");
 
-              await controller.removeServer("Hanin");
+              // await controller.removeServer("Hanin");
 
-              Alert.alert(controller.storage.getAllKeys().toString());
+              // Alert.alert(controller.storage.getAllKeys().toString());
 
               // Alert.alert(Object.values(temp.data).toString());
               Alert.alert("DONE");

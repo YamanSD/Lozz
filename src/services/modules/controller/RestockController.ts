@@ -93,18 +93,19 @@ export default class RestockController extends BaseController<restock> {
         // undefined if removed
         const data: restock | undefined = document.data() as restock;
         const id = document.id;
+        const productController = this.productController;
         let restock = new Restock(data);
 
         if (change.type === "added") {
           for (let usi of restock.products) {
             const usi_data = Product.invertUsi(usi);
-            let product = await this.productController.get(usi_data.id);
+            let product = await productController.get(usi_data.id);
 
             product.addUspQuantity(
               usi, restock.getQuantity(usi), restock.to_inventory
             );
 
-            this.productController.updateLocal(product);
+            productController.updateLocal(product);
           }
 
           this.setCache(id, restock.data);
@@ -115,13 +116,13 @@ export default class RestockController extends BaseController<restock> {
 
             for (let usi of restock.products) {
               const usi_data = Product.invertUsi(usi);
-              let product = await this.productController.get(usi_data.id);
+              let product = await productController.get(usi_data.id);
 
               product.addUspQuantity(
                 usi, -restock.getQuantity(usi), restock.to_inventory
               );
 
-              this.productController.updateLocal(product);
+              productController.updateLocal(product);
             }
 
             this.removeCache(id);

@@ -5,7 +5,6 @@ import CollectionNames from "./CollectionNames";
 import Product from "../model/product";
 import { IdDoesNotExistError } from "./Errors";
 import BaseModel from "../model/BaseModel";
-import { isEqual } from "lodash";
 import CategoryController from "./CategoryController";
 import VendorController from "./VendorController";
 
@@ -236,11 +235,7 @@ export default class ProductController extends BaseController<product> {
       return;
     }
 
-    for (let key of Object.keys(currentData)) {
-      if (isEqual(currentData[key], data[key]) || data[key] === undefined) {
-        delete data[key];
-      }
-    }
+    BaseController.clearAlikeFields(currentData, data);
 
     delete data.quantities;
     delete data.inventory_quantities;

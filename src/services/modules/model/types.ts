@@ -356,10 +356,6 @@ export type basicCourier = {
  *   Zeroes must be automatically removed before upload.
  *   Given by user.
  *
- * - employee_id: string representing the ID of the employee that made
- *   the restocking operation directly or indirectly (i.e. by an order).
- *   Auto-detected on creation.
- *
  * - order_linked?: boolean indicates that the restocking is for an order
  *   When present, allows the restocking instance to be deleted.
  *   Auto-added when an order is created.
@@ -367,6 +363,8 @@ export type basicCourier = {
  * - item_count: number representing the sum of the quantities of
  *   all items.
  *   Auto-generated on creation.
+ *
+ * - [SpecialFields.trail]: Auto-generated and auto-modified on actions.
  */
 export type restock = {
   id: string,
@@ -377,7 +375,7 @@ export type restock = {
   },
   item_count: number,
   order_linked?: boolean,
-  employee_id: string,
+  [SpecialFields.trail]: TrailType
 };
 
 /**

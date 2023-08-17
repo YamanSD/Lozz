@@ -6,7 +6,9 @@ import Order from "../model/order";
 import {
   IdDoesNotExistError,
   InsufficientQuantitiesError,
+  NoCancelError,
   NotAuthorizedError,
+  OrderNotAtCourierError,
   OrderNotConfirmedNorPendingError,
   OrderNotPendingError
 } from "./Errors";
@@ -206,7 +208,7 @@ export default class OrderController extends BaseController<order> {
     } else if (order.status === OrderStatus.confirmed) {
       order.status = OrderStatus.packaged;
 
-      await this.updateQuantities(order, order.quantities, true);
+      await this.updateQuantities(id, order.quantities, true);
     } else {
       throw new OrderNotConfirmedNorPendingError()
     }
@@ -242,14 +244,55 @@ export default class OrderController extends BaseController<order> {
    * @param id of the order to be canceled
    */
   public async cancel(id: string) {
-    // TODO
+    let order = await this.get(id);
+
+    if (order.status === OrderStatus.pending) {
+      this.removeCache(id);
+      return;
+    }
+
+    switch (order.status) {
+      case OrderStatus.confirmed:
+        order.status = OrderStatus.canceled;
+        order.restock.to_inventory = false;
+        break;
+      case OrderStatus.packaged:
+        order.status = OrderStatus.canceled;
+        order.restock.to_inventory = undefined;
+        break;
+      case OrderStatus.sent_to_courier:
+        order.status = OrderStatus.canceled_at_courier;
+        order.restock.to_inventory = false;
+        break;
+      default:
+        throw new NoCancelError();
+    }
+
+    await this.restockController.revoke(
+      order.restock.id,
+      order.restock.to_inventory
+    );
+    await this.update(order);
   }
 
   /**
-   * @param id of the order to be received
+   * @param id of the order to be received from the courier
    */
   public async receive(id: string) {
-    // TODO
+    let order = await this.get(id);
+
+    if (order.status !== OrderStatus.canceled_at_courier) {
+      throw new OrderNotAtCourierError();
+    }
+
+    await this.updateQuantities(
+      id,
+      order.restock.negativeQuantities,
+      true
+    );
+
+    order.status = OrderStatus.received_from_courier;
+    await this.update(order);
   }
 
   /**
@@ -266,19 +309,6 @@ export default class OrderController extends BaseController<order> {
 
       return newPivot.toString();
     });
-  }
-
-  /**
-   * @param data to be cleaned
-   * @returns fields that change in a quantities update
-   * @private
-   */
-  private cleanQuantitiesData(data: order) {
-    return {
-      id: data.id,
-      restock_id: data.restock_id,
-      status: data.status
-    }
   }
 
   /**
@@ -304,42 +334,21 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
-   * @param model new model of the order
-   * @param quantities new quantities for the order
+   * @param id of the order
+   * @param newQuantities of the order
    * @param to_inventory if true updates only inventory quantities,
    *        if false updates only display quantities,
    *        if undefined updates both
    */
-  public async updateQuantities(model: Order,
-                                quantities: QuantityType,
+  public async updateQuantities(id: string,
+                                newQuantities: QuantityType,
                                 to_inventory: boolean | undefined) {
-    let newQuantities: QuantityType =
-      BaseModel.deepCopy(model.restock.quantities);
-
-    for (let usi of BaseController.joinKeys(quantities, newQuantities)) {
-      if (!(usi in newQuantities)) {
-        newQuantities[usi] = 0;
-      }
-
-      newQuantities[usi] -= quantities[usi] ?? 0;
-    }
+    let order = await this.get(id);
 
     try {
-      const restockId = await this.restockController.create({
-        note: model.restock.note + `\nupdated;`,
-        to_inventory: to_inventory,
-        quantities: newQuantities,
-        order_linked: true
-      });
-
-      let data = model.dataCopy;
-
-      // Delete old restock
-      await this.restockController.delete(data.restock_id);
-
-      data.restock_id = restockId;
-
-      await this.updateServer(this.cleanQuantitiesData(data), data.id);
+      await this.restockController.updateQuantities(
+        order.restock.id, newQuantities, to_inventory
+      );
     } catch (e) {
       if (e instanceof EvalError) {
         throw new InsufficientQuantitiesError();

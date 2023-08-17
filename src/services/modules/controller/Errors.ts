@@ -31,3 +31,9 @@ export class OrderNotPendingError extends Error {}
 export class InvalidOrderCreationStatusError extends Error {}
 
 export class OrderNotConfirmedNorPendingError extends Error {}
+
+export class EmptyRestockError extends Error {}
+
+export class NoCancelError extends Error {}
+
+export class OrderNotAtCourierError extends Error {}

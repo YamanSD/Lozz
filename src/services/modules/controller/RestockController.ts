@@ -11,9 +11,9 @@ import firestore, { FirebaseFirestoreTypes } from "@react-native-firebase/firest
 import CollectionNames from "./CollectionNames";
 import Restock from "../model/restock";
 import {
+  EmptyRestockError,
   IdDoesNotExistError,
   IllegalStateError,
-  NoDeleteError,
   NoUpdateError, ProductNotFoundError
 } from "./Errors";
 import BaseModel from "../model/BaseModel";
@@ -26,7 +26,8 @@ import DocumentReference = FirebaseFirestoreTypes.DocumentReference;
 export default class RestockController extends BaseController<restock> {
   private static readonly flag: number =
     ControllerFlag.can_update
-    | ControllerFlag.has_trail;
+    | ControllerFlag.has_trail
+    | ControllerFlag.can_deactivate;
 
   /**
    * @param server firestore instance for the database
@@ -110,23 +111,29 @@ export default class RestockController extends BaseController<restock> {
           }
 
           this.setCache(id, restock.data);
-        } else if (change.type === "removed") {
+        } else if (change.type === "modified") {
           // If in cache, remove quantities, otherwise ignore.
           if (this.checkCache(id)) {
-            restock = new Restock(this.getCache(id) as restock);
+            let oldRestock = new Restock(this.getCache(id) as restock);
+            const diff = oldRestock.to_inventory !== restock.to_inventory;
 
             for (let usi of restock.products) {
               const usi_data = Product.invertUsi(usi);
               let product = await productController.get(usi_data.id);
 
               product.addUspQuantity(
-                usi, -restock.getQuantity(usi), restock.to_inventory
+                usi,
+                restock.getQuantity(usi)
+                - (diff ? 0 : oldRestock.getQuantity(usi)),
+                restock.to_inventory
               );
 
               productController.updateLocal(product);
             }
 
-            this.removeCache(id);
+            this.updateCache(id, restock.data);
+          } else {
+
           }
         } else {
           throw new IllegalStateError();
@@ -136,30 +143,49 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
-   * @param model new model of the restocking
-   * @throws IdDoesNotExistError if the restocking does not exist
+   * @throws NoUpdateError, restocks do not allow non-quantity updates
    */
   public async update(model: Restock) {
     throw new NoUpdateError();
   }
 
   /**
-   * @param id to be deleted completely and its effects revoked
-   * @throws NoDeleteError if the restocking is not deletable
+   * @param id ID of the restocking to be updated
+   * @param new_quantities new quantities of the restocking
+   * @param to_inventory if false update only display quantities,
+   *        if true update only inventory,
+   *        if undefined update both.
    */
-  public async delete(id: string) {
-    const restock = await this.get(id);
+  public async updateQuantities(
+    id: string,
+    new_quantities: QuantityType,
+    to_inventory: boolean | undefined
+  ) {
+    const oldRestock = await this.get(id);
 
-    if (!restock.order_linked) {
-      throw new NoDeleteError();
-    }
+    let quantities = RestockController.combineQuantities(
+        new_quantities,
+        oldRestock.quantities
+    );
+
+    await this.performQuantityTransaction(quantities, to_inventory, id);
+  }
+
+  /**
+   * @param id of the restocking operation whose effects revoked completely
+   * @param to_inventory if true return values to inventory only,
+   *        if false return values to display only,
+   *        if undefined return to both
+   */
+  public async revoke(id: string, to_inventory: boolean | undefined) {
+    const restock = await this.get(id);
 
     await this.performQuantityTransaction(
       restock.negativeQuantities,
-      restock.to_inventory
+      to_inventory
     );
 
-    await this.removeServer(id);
+    await this.deactivate(id);
   }
 
   /**
@@ -208,17 +234,45 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
+   * @param new_quantities
+   * @param old_quantities
+   * @returns the combined quantities object
+   * @private
+   */
+  private static combineQuantities(new_quantities: QuantityType,
+                                   old_quantities?: QuantityType): QuantityType {
+    if (old_quantities === undefined) {
+      return new_quantities;
+    }
+
+    const usiList = BaseController.joinKeys(new_quantities, old_quantities);
+
+    for (let usi of usiList) {
+      if (!(usi in new_quantities)) {
+        new_quantities[usi] = 0;
+      }
+
+      new_quantities[usi] -= old_quantities[usi] ?? 0;
+    }
+
+    return new_quantities;
+  }
+
+  /**
    * Performs product quantities transaction for the restocking.
    *
    * @param quantities to be added to the product quantities on server
    * @param to_inventory boolean flag to indicate whether the quantities
    *        are for the inventory or not
+   * @param restock_id if present, update the to_inventory field of the
+   *        restock document.
    * @returns null if the transaction worked, otherwise product ID that failed
    * @throws EvalError if the transaction fails due to quantities
    * @private
    */
   private async performQuantityTransaction(quantities: QuantityType,
-                                           to_inventory: boolean | undefined) {
+                                           to_inventory: boolean | undefined,
+                                           restock_id?: string) {
     await this.runTransaction(async (transaction) => {
       let products: Product[] = [];
       let references: Generic<DocumentReference> = {};
@@ -250,6 +304,14 @@ export default class RestockController extends BaseController<restock> {
           product.suitableQuantities(to_inventory)
         );
       }
+
+      if (restock_id !== undefined) {
+        await transaction.update(
+          this.collection.doc(restock_id), {
+            to_inventory: to_inventory ?? firestore.FieldValue.delete()
+          }
+        );
+      }
     });
   }
 
@@ -261,15 +323,28 @@ export default class RestockController extends BaseController<restock> {
    *         positive and negative.
    * @throws ProductNotFoundError if any of the products is deleted
    *         or deactivated.
+   * @throws EmptyRestockError if the restocking has all zero quantities
    * @private
    */
   private async checkQuantities(quantities: QuantityType) {
-    for (let usi of Object.keys(quantities)) {
+    const usiList = Object.keys(quantities);
+
+    for (let usi of usiList) {
       const id = Product.invertUsi(usi).id;
 
       if (await this.productController.isIdAvailable(id)) {
         throw new ProductNotFoundError();
       }
+    }
+
+    for (let usi of usiList) {
+      if (quantities[usi] === 0) {
+        delete quantities[usi];
+      }
+    }
+
+    if (Object.keys(quantities).length === 0) {
+      throw new EmptyRestockError();
     }
   }
 
@@ -295,7 +370,7 @@ export default class RestockController extends BaseController<restock> {
       quantities: data.quantities,
       order_linked: data.order_linked,
       item_count: RestockController.countItems(data.quantities),
-      employee_id: BaseModel.currentEmployee,
+      trail: this.generateInitialTrail()
     });
   }
 }

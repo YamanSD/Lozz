@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import { restock } from "./types";
+import { restock, TrailType } from "./types";
 
 
 /**
@@ -111,10 +111,10 @@ export default class Restock implements BaseModel {
   }
 
   /**
-   * @returns the ID of the employee that created the restocking
+   * @returns true if the restocking belongs to a canceled order
    */
-  public get employee_id() {
-    return this.data.employee_id;
+  public get forCanceledOrder() {
+    return BaseModel.isDeactivated(this.trail);
   }
 
   /**
@@ -142,6 +142,27 @@ export default class Restock implements BaseModel {
     }
 
     return result;
+  }
+
+  /**
+   * @returns the trail
+   */
+  public get trail(): TrailType {
+    return this.data.trail;
+  }
+
+  /**
+   * @param value new to inventory value
+   */
+  public set to_inventory(value: boolean | undefined) {
+    this.data.to_inventory = value;
+  }
+
+  /**
+   * @param value new value of the trail
+   */
+  public set trail(value: TrailType) {
+    this.data.trail = value;
   }
 
   /**

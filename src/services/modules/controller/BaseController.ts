@@ -91,9 +91,6 @@ export default abstract class BaseController<RawData extends Generic> {
       });
     }
 
-    this.idSetInstance = new Set<string>();
-    this.pivotValue = 0;
-
     this.collection_id = collection_id;
     this.collection_name = collection_name;
     this.serverInstance = server;
@@ -103,13 +100,20 @@ export default abstract class BaseController<RawData extends Generic> {
       encryptionKey: collection_name
     });
 
+    this.idSetInstance = new Set<string>(this.storage.getAllKeys());
+    this.pivotValue = this.storage.getNumber(this.cachePivotKey) ?? 0;
+
     if (this.isPivot) {
       this.getPivotServer().then((pivot) => {
-        this.pivot = pivot;
+        if (pivot !== undefined) {
+          this.pivot = pivot;
+        }
       });
     } else {
       this.getIdSetServer().then((list) => {
-        this.idSet = list;
+        if (list !== undefined) {
+          this.idSet = list;
+        }
       });
     }
   }
@@ -259,6 +263,9 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     this.cleanData(data);
+    if (Object.keys(data).length === 0) {
+      return;
+    }
 
     await this.runTransaction(
       async (transaction) => {
@@ -279,6 +286,7 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     this.removeId(id);
+    await this.uploadIds();
     await this.collection.doc(id).delete();
   }
 
@@ -446,12 +454,13 @@ export default abstract class BaseController<RawData extends Generic> {
     this.collection.onSnapshot(snapshot => {
       snapshot.docChanges().forEach(async (change) => {
         const document = change.doc;
-        const data: RawData = document.data() as RawData;
         const id = document.id;
 
         if (change.type === "added") {
+          const data: RawData = document.data() as RawData;
           this.setCache(id, data);
         } else if (change.type === "modified") {
+          const data: RawData = document.data() as RawData;
           this.updateCache(id, data);
         } else if (change.type === "removed") {
           this.removeCache(id);
@@ -551,12 +560,6 @@ export default abstract class BaseController<RawData extends Generic> {
   protected async removeFromSearchEngine(id: string) {
     if (this.searchEngine === undefined) {
       return;
-    }
-
-    const data = this.getCache(id);
-
-    if (data === undefined) {
-      throw new NoDataError();
     }
 
     await remove(this.searchEngine, this.idToOramaId[id]);
@@ -670,10 +673,22 @@ export default abstract class BaseController<RawData extends Generic> {
   }
 
   /**
+   * @returns the cache key for the pivot if stored
+   * @private
+   */
+  private get cachePivotKey() {
+    return `${this.uniqueId(this.collectionName)}-mmkv-pivot`;
+  }
+
+  /**
    * @param value new pivot value
    */
   public set pivot(value) {
     this.pivotValue = value;
+
+    this.storage.set(
+      this.cachePivotKey, value
+    );
   }
 
   /**

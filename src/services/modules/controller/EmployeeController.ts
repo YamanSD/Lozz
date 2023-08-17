@@ -5,9 +5,13 @@ import CollectionNames from "./CollectionNames";
 import Employee from "../model/employee";
 
 
+/**
+ * Class responsible for handling operations on the employees' collection.
+ */
 export default class EmployeeController extends BaseController<employee> {
   private static readonly flag: number =
     ControllerFlag.can_update
+    | ControllerFlag.can_deactivate
     | ControllerFlag.has_trail;
 
   /**

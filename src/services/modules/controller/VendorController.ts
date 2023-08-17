@@ -5,10 +5,12 @@ import CollectionNames from "./CollectionNames";
 import Vendor from "../model/Vendor";
 
 
+/**
+ * Class responsible for handling operations on the vendors' collection.
+ */
 export default class VendorController extends BaseController<vendor> {
   private static readonly flag: number =
-    ControllerFlag.can_deactivate
-    | ControllerFlag.can_update
+    ControllerFlag.can_update
     | ControllerFlag.has_trail
     | ControllerFlag.can_delete;
 

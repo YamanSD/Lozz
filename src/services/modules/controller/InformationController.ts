@@ -13,11 +13,15 @@ import { isEqual } from "lodash";
  */
 export type InformationModels = RateInformation | ProvinceInformation;
 
-
+/**
+ * Class responsible for handling operations on the information collection.
+ */
 export default class InformationController
   extends BaseController<information> {
   private static readonly flag: number =
-    ControllerFlag.can_update | ControllerFlag.has_trail;
+    ControllerFlag.can_update
+    | ControllerFlag.has_trail
+    | ControllerFlag.no_id_list;
 
   /**
    * @param server firestore instance for the database

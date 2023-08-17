@@ -23,6 +23,9 @@ import Product from "../model/Product";
 import DocumentReference = FirebaseFirestoreTypes.DocumentReference;
 
 
+/**
+ * Class responsible for handling operations on the restocks' collection.
+ */
 export default class RestockController extends BaseController<restock> {
   private static readonly flag: number =
     ControllerFlag.can_update

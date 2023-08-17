@@ -5,6 +5,9 @@ import CollectionNames from "./CollectionNames";
 import Courier from "../model/courier";
 
 
+/**
+ * Class responsible for handling operations on the couriers' collection.
+ */
 export default class CourierController extends BaseController<courier> {
   private static readonly flag: number =
     ControllerFlag.can_deactivate

@@ -136,7 +136,11 @@ export default class Employee implements BaseModel {
    * @returns the date when the employee left the company
    */
   public get end_date() {
-    return this.data.end_date;
+    if (BaseModel.isDeactivated(this.trail)) {
+      BaseModel.extractDate(BaseModel.getLastAction(this.trail));
+    } else {
+      return undefined;
+    }
   }
 
   /**
@@ -274,10 +278,10 @@ export default class Employee implements BaseModel {
   /**
    * Fires the employee from the company.
    * Role becomes past.
-   * Trail unaffected.
+   * Trail stamped with deactivated.
    */
   public fire(): void {
-    this.data.end_date = new Date();
+    this.stamp(TrailNature.D);
     this.role = EmployeeRole.past;
   }
 

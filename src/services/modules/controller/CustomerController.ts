@@ -5,6 +5,9 @@ import CollectionNames from "./CollectionNames";
 import Customer from "../model/customer";
 
 
+/**
+ * Class responsible for handling operations on the customers' collection.
+ */
 export default class CustomerController extends BaseController<customer> {
   private static readonly flag: number =
     ControllerFlag.can_update

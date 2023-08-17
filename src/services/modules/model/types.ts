@@ -433,10 +433,6 @@ export type basicRestock = {
  *   This list is cleared whenever the employee is paid.
  *   Auto-modified on order creation and upon payment.
  *
- * - end_date?: Date representing when the user left the company,
- *   or was fired.
- *   Auto-generated.
- *
  * - [SpecialFields.trail]: Auto-generated and auto-modified on actions.
  */
 export type employee = {
@@ -453,7 +449,6 @@ export type employee = {
   birthday?: Date,
   orders?: [...string[]],
   join_date: Date,
-  end_date?: Date,
   [SpecialFields.trail]: TrailType
 };
 

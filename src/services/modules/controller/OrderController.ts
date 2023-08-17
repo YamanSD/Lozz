@@ -7,7 +7,6 @@ import {
   IdDoesNotExistError,
   InsufficientQuantitiesError,
   NoCancelError,
-  NotAuthorizedError,
   OrderNotAtCourierError,
   OrderNotConfirmedNorPendingError,
   OrderNotPendingError
@@ -16,18 +15,18 @@ import RestockController from "./RestockController";
 import CourierController from "./CourierController";
 import CustomerController from "./CustomerController";
 import Monetary from "../model/Monetary";
-import BaseModel from "../model/BaseModel";
-import EmployeeController from "./EmployeeController";
 import Employee from "../model/Employee";
+import { reduxStorage } from "../../../store";
 
 
+/**
+ * Class responsible for handling operations on the orders' collection.
+ */
 export default class OrderController extends BaseController<order> {
   private static readonly flag: number =
     ControllerFlag.can_update
     | ControllerFlag.has_trail
     | ControllerFlag.pivot_not_list;
-
-  private static currentUser: Employee;
 
   /**
    * @param server firestore instance for the database
@@ -42,11 +41,8 @@ export default class OrderController extends BaseController<order> {
     );
 
     this.loadSearchData().then(() => {
-      this.getCurrentEmployee().then((employee) => {
-        OrderController.currentUser = employee;
-        this.activateListener();
-        this.injectDependency();
-      });
+      this.activateListener();
+      this.injectDependency();
     });
   }
 
@@ -67,43 +63,10 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
-   * Activates the listener for the orders' collection &
-   * for employee changes.
-   *
-   * @protected
-   */
-  protected activateListener() {
-
-  }
-
-  /**
-   * @returns the stored  current employee instance
+   * @returns the stored current employee instance
    */
   public get currentEmployee() {
-    return OrderController.currentUser;
-  }
-
-  /**
-   * @returns the employees controller for the server,
-   *          in the injected dependencies
-   */
-  public get employeeController(): EmployeeController {
-    return this.getDependency(CollectionNames.employee.name);
-  }
-
-  /**
-   * Fetches the information of the current employee & returns.
-   *
-   * @returns the current employee
-   */
-  public async getCurrentEmployee(): Promise<Employee> {
-    const id = BaseModel.currentEmployee;
-
-    if (id === undefined) {
-      throw new NotAuthorizedError();
-    }
-
-    return await this.employeeController.get(id);
+    return new Employee(reduxStorage.getItem("currentEmployeeData"));
   }
 
   /**

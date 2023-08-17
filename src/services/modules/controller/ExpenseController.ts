@@ -6,7 +6,10 @@ import Expense from "../model/expense";
 import BaseModel from "../model/BaseModel";
 
 
-export default class RxpenseController extends BaseController<expense> {
+/**
+ * Class responsible for handling operations on the expenses' collection.
+ */
+export default class ExpenseController extends BaseController<expense> {
   private static readonly flag: number =
     ControllerFlag.can_delete
     | ControllerFlag.can_update
@@ -20,7 +23,7 @@ export default class RxpenseController extends BaseController<expense> {
       CollectionNames.expense.name,
       CollectionNames.expense.id,
       server ?? firestore,
-      RxpenseController.flag,
+      ExpenseController.flag,
       ExpenseSearchSchema
     );
 

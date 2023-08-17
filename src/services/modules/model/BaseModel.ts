@@ -142,6 +142,16 @@ export default abstract class BaseModel {
   }
 
   /**
+   * @param trail to get the last action for
+   * @returns the last action's information
+   */
+  public static getLastAction(trail: TrailType): string {
+    return Object.keys(trail).reduce(
+      (a, b) => a > b ? a : b
+    );
+  }
+
+  /**
    * @returns a copy of the raw data
    */
   public abstract get dataCopy(): any;

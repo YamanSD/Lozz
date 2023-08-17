@@ -5,6 +5,9 @@ import CollectionNames from "./CollectionNames";
 import Category from "../model/category";
 
 
+/**
+ * Class responsible for handling operations on the vendors' collection.
+ */
 export default class CategoryController extends BaseController<category> {
   private static readonly flag: number =
     ControllerFlag.can_deactivate

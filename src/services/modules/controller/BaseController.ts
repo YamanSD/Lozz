@@ -19,11 +19,12 @@ import { reduxStorage } from "../../../store";
 
 /* Flags to specify the capabilities of a controller */
 export enum ControllerFlag {
-  pivot_not_list =  0b00001,
-  has_trail =       0b00010,
-  can_deactivate =  0b00100,
-  can_delete =      0b01000,
-  can_update =      0b10000,
+  no_id_list =      0b000001,
+  pivot_not_list =  0b000010,
+  has_trail =       0b000100,
+  can_deactivate =  0b001000,
+  can_delete =      0b010000,
+  can_update =      0b100000,
 }
 
 /**
@@ -177,38 +178,54 @@ export default abstract class BaseController<RawData extends Generic> {
   }
 
   /**
+   * @param flag to check if it is true
+   * @returns the value of the flag
+   * @private
+   */
+  private getAttribute(flag: ControllerFlag): boolean {
+    return (this.flags & flag) !== 0;
+  }
+
+  /**
    * @returns true if the controller requires a trail
    */
   public get hasTrail(): boolean {
-    return (this.flags & ControllerFlag.has_trail) !== 0;
+    return this.getAttribute(ControllerFlag.has_trail);
   }
 
   /**
    * @returns true if the controller uses a pivot instead of ID set
    */
   public get isPivot(): boolean {
-    return (this.flags & ControllerFlag.pivot_not_list) !== 0;
+    return this.getAttribute(ControllerFlag.pivot_not_list);
   }
 
   /**
    * @returns true if the controller can deactivate entities
    */
   public get canDeactivate(): boolean {
-    return (this.flags & ControllerFlag.can_deactivate) !== 0;
+    return this.getAttribute(ControllerFlag.can_deactivate);
   }
 
   /**
    * @returns true if the controller can delete entities
    */
   public get canDelete(): boolean {
-    return (this.flags & ControllerFlag.can_delete) !== 0;
+    return this.getAttribute(ControllerFlag.can_delete);
   }
 
   /**
    * @returns true if the controller can update entities
    */
   public get canUpdate(): boolean {
-    return (this.flags & ControllerFlag.can_update) !== 0;
+    return this.getAttribute(ControllerFlag.can_update);
+  }
+
+  /**
+   * @returns true if the controller does not have a pivot nor an ID set
+   */
+  public get noSet(): boolean {
+    return this.getAttribute(ControllerFlag.no_id_list);
   }
 
   /**
@@ -598,6 +615,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * @param id to be added to the ID list on server
    */
   public addId(id: string) {
+    if (this.noSet) {
+      return;
+    }
+
     if (this.isPivot) {
       if (!isInteger(id)) {
         throw new PivotError();
@@ -613,6 +634,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * @param id to be removed from the ID list on server
    */
   public removeId(id: string) {
+    if (this.noSet) {
+      return;
+    }
+
     if (!this.isPivot) {
       this.idSet.delete(id);
     }
@@ -644,6 +669,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * If the controller uses a pivot system, upload the pivot.
    */
   public async uploadIds() {
+    if (this.noSet) {
+      return;
+    }
+
     await this.runTransaction(async (transaction) => {
       transaction.set(this.idSetDocument, {
         data: this.isPivot ? this.pivot : this.idSetUpload
@@ -696,6 +725,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * @private
    */
   private async getPivotServer(): Promise<number> {
+    if (this.noSet) {
+      return 0;
+    }
+
     const document = await this.idSetDocument.get();
 
     if (!document.exists) {
@@ -709,6 +742,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * @returns a list containing all document IDs in a collection
    */
   private async getIdSetServer(): Promise<Set<string>> {
+    if (this.noSet) {
+      return new Set<string>();
+    }
+
     const document = await this.idSetDocument.get();
 
     if (!document.exists) {

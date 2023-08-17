@@ -9,6 +9,9 @@ import CategoryController from "./CategoryController";
 import VendorController from "./VendorController";
 
 
+/**
+ * Class responsible for handling operations on the products' collection.
+ */
 export default class ProductController extends BaseController<product> {
   private static readonly flag: number =
     ControllerFlag.can_update

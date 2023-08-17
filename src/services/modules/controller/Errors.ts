@@ -1,39 +1,124 @@
-export class NoUpdateError extends Error {}
+/**
+ * File containing error classes.
+ * Names are self-descriptive as to not need any comments.
+ */
 
-export class NoDeleteError extends Error {}
+export class NoUpdateError extends Error {
+  public constructor() {
+    super("NoUpdateError");
+  }
+}
 
-export class NoDeactivateError extends Error {}
+export class NoDeleteError extends Error {
+  public constructor() {
+    super("NoDeleteError");
+  }
+}
 
-export class NoDataError extends Error {}
+export class NoDeactivateError extends Error {
+  public constructor() {
+    super("NoDeactivateError");
+  }
+}
 
-export class IdAlreadyExistsError extends Error {}
+export class NoDataError extends Error {
+  public constructor() {
+    super("NoDataError");
+  }
+}
 
-export class IdDoesNotExistError extends Error {}
+export class IdAlreadyExistsError extends Error {
+  public constructor() {
+    super("IdAlreadyExistsError");
+  }
+}
 
-export class IllegalStateError extends Error {}
+export class IdDoesNotExistError extends Error {
+  public constructor() {
+    super("IdDoesNotExistError");
+  }
+}
 
-export class ProductNotFoundError extends Error {}
+export class IllegalStateError extends Error {
+  public constructor() {
+    super("IllegalStateError");
+  }
+}
 
-export class NoTrailError extends Error {}
+export class ProductNotFoundError extends Error {
+  public constructor() {
+    super("ProductNotFoundError");
+  }
+}
 
-export class NoProvincesError extends Error {}
+export class NoTrailError extends Error {
+  public constructor() {
+    super("NoTrailError");
+  }
+}
 
-export class InvalidInputError extends Error {}
+export class NoProvincesError extends Error {
+  public constructor() {
+    super("NoProvincesError");
+  }
+}
 
-export class PivotError extends Error {}
+export class InvalidInputError extends Error {
+  public constructor() {
+    super("InvalidInputError");
+  }
+}
 
-export class NotAuthorizedError extends Error {}
+export class PivotError extends Error {
+  public constructor() {
+    super("PivotError");
+  }
+}
 
-export class InsufficientQuantitiesError extends Error {}
+export class NotAuthorizedError extends Error {
+  public constructor() {
+    super("NotAuthorizedError");
+  }
+}
 
-export class OrderNotPendingError extends Error {}
+export class InsufficientQuantitiesError extends Error {
+  public constructor() {
+    super("InsufficientQuantitiesError");
+  }
+}
 
-export class InvalidOrderCreationStatusError extends Error {}
+export class OrderNotPendingError extends Error {
+  public constructor() {
+    super("OrderNotPendingError");
+  }
+}
 
-export class OrderNotConfirmedNorPendingError extends Error {}
+export class InvalidOrderCreationStatusError extends Error {
+  public constructor() {
+    super("InvalidOrderCreationStatusError");
+  }
+}
 
-export class EmptyRestockError extends Error {}
+export class OrderNotConfirmedNorPendingError extends Error {
+  public constructor() {
+    super("OrderNotConfirmedNorPendingError");
+  }
+}
 
-export class NoCancelError extends Error {}
+export class EmptyRestockError extends Error {
+  public constructor() {
+    super("EmptyRestockError");
+  }
+}
 
-export class OrderNotAtCourierError extends Error {}
+export class NoCancelError extends Error {
+  public constructor() {
+    super("NoCancelError");
+  }
+}
+
+export class OrderNotAtCourierError extends Error {
+  public constructor() {
+    super("OrderNotAtCourierError");
+  }
+}

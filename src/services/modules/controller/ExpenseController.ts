@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicExpense, expense, ExpenseSearchSchema } from "../model/types";
+import { basicExpense, expense, ExpenseSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Expense from "../model/expense";
@@ -70,7 +70,7 @@ export default class RxpenseController extends BaseController<expense> {
       vendor_id: data.vendor_id,
       employee_id: data.employee_id,
       courier_id: data.courier_id,
-      trail: this.generateInitialTrail()
+      [SpecialFields.trail]: this.generateInitialTrail()
     });
   }
 }

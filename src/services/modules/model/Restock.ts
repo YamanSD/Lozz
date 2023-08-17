@@ -104,10 +104,10 @@ export default class Restock implements BaseModel {
   }
 
   /**
-   * @returns the ID of the associated order, if any
+   * @returns true if the restocking is linked to an order
    */
-  public get order_id() {
-    return this.data.order_id;
+  public get order_linked() {
+    return this.data.order_linked ?? false;
   }
 
   /**
@@ -115,13 +115,6 @@ export default class Restock implements BaseModel {
    */
   public get employee_id() {
     return this.data.employee_id;
-  }
-
-  /**
-   * @returns true if the restocking operation can be indirectly deleted
-   */
-  public get deletable(): boolean {
-    return this.order_id !== undefined;
   }
 
   /**

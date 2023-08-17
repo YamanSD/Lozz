@@ -84,7 +84,7 @@ export type MonetaryType = [number, number];
  *      These orders are sent to the database and are stored locally.
  *      Quantities in these orders have no effect.
  *      Ids of these orders are stored in courier's order list.
- *   >- payed:
+ *   >- paid:
  *      These orders have been delivered to the customer successfully
  *      and a payment is received.
  *      Removed from courier order list.
@@ -110,7 +110,7 @@ export enum OrderStatus {
   confirmed,
   packaged,
   sent_to_courier,
-  payed,
+  paid,
   canceled,
   canceled_at_courier,
   received_from_courier
@@ -343,8 +343,9 @@ export type basicCourier = {
  *   operation.
  *   Given by user.
  *
- * - to_inventory: boolean representing whether the restocking operation
+ * - to_inventory?: boolean representing whether the restocking operation
  *   is to the inventory or the on-display quantities.
+ *   If undefined, both quantities are modified with the same effect.
  *   Given by user.
  *
  * - quantities: object mapping USIs to quantities of these products in
@@ -359,8 +360,7 @@ export type basicCourier = {
  *   the restocking operation directly or indirectly (i.e. by an order).
  *   Auto-detected on creation.
  *
- * - order_id?: string representing the ID of the order related to the
- *   restocking operation.
+ * - order_linked?: boolean indicates that the restocking is for an order
  *   When present, allows the restocking instance to be deleted.
  *   Auto-added when an order is created.
  *
@@ -371,12 +371,12 @@ export type basicCourier = {
 export type restock = {
   id: string,
   note?: string,
-  to_inventory: boolean,
+  to_inventory: boolean | undefined,
   quantities: {
     [usi: string]: number
   },
   item_count: number,
-  order_id?: string,
+  order_linked?: boolean,
   employee_id: string,
 };
 
@@ -386,11 +386,11 @@ export type restock = {
 export type basicRestock = {
   id?: string,
   note?: string,
-  to_inventory: boolean,
+  to_inventory: boolean | undefined,
   quantities: {
     [usi: string]: number
   },
-  order_id?: string
+  order_linked?: boolean
 };
 
 /**
@@ -770,7 +770,7 @@ export type cartProduct = {
  *   Mapping to strings is defined in the Order class.
  *   Automatically modified and added on order modification.
  *
- * - total?: MonetaryType value of the total price of all products
+ * - total: MonetaryType value of the total price of all products
  *   in the order.
  *   Does not include discount or delivery fees.
  *   Automatically generated.
@@ -824,7 +824,7 @@ export type order = {
   note?: string,
   discount?: MonetaryType,
   status: OrderStatus,
-  total?: MonetaryType,
+  total: MonetaryType,
   province?: string,
   address?: string,
   delivery?: MonetaryType,
@@ -844,15 +844,25 @@ export type order = {
 
 /**
  * Used for the creation of orders
+ *
+ * - is_confirmed: If true indicates that the order is to be created
+ *                 as confirmed, otherwise the order is stored locally
+ *                 only as pending.
+ *
+ * - packaged: If true indicates that the order is to be created as packaged,
+ *             otherwise the order is stored according to is_confirmed
  */
 export type basicOrder = {
+  id?: string,
   note?: string,
+  status: OrderStatus,
   discount?: MonetaryType,
   province?: string,
   address?: string,
   delivery?: MonetaryType,
   courier_id?: string,
   customer_id: string,
+  restock_id?: string,
   products: {
     [usi: string]: {
       quantity: number,
@@ -1032,7 +1042,7 @@ export const OrderSearchSchema: Schema = {
   address: 'string', // Can be empty
   courier_id: 'string', // Can be empty
   customer_id: 'string',
-  payed: 'boolean', // Can be empty
+  paid: 'boolean', // Can be empty
   commission_percent: 'number', // Can be empty
   phone_number: 'string',
   email: 'string',

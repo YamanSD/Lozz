@@ -10,8 +10,6 @@ export class IdAlreadyExistsError extends Error {}
 
 export class IdDoesNotExistError extends Error {}
 
-export class InvalidRestockQuantitiesError extends Error {}
-
 export class IllegalStateError extends Error {}
 
 export class ProductNotFoundError extends Error {}
@@ -21,3 +19,15 @@ export class NoTrailError extends Error {}
 export class NoProvincesError extends Error {}
 
 export class InvalidInputError extends Error {}
+
+export class PivotError extends Error {}
+
+export class NotAuthorizedError extends Error {}
+
+export class InsufficientQuantitiesError extends Error {}
+
+export class OrderNotPendingError extends Error {}
+
+export class InvalidOrderCreationStatusError extends Error {}
+
+export class OrderNotConfirmedNorPendingError extends Error {}

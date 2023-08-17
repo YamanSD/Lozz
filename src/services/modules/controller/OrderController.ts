@@ -1,0 +1,444 @@
+import BaseController, { ControllerFlag } from "./BaseController";
+import { basicOrder, Generic, MonetaryType, order, OrderSearchSchema, OrderStatus, QuantityType } from "../model/types";
+import firestore from "@react-native-firebase/firestore";
+import CollectionNames from "./CollectionNames";
+import Order from "../model/order";
+import {
+  IdDoesNotExistError,
+  InsufficientQuantitiesError,
+  NotAuthorizedError,
+  OrderNotConfirmedNorPendingError,
+  OrderNotPendingError
+} from "./Errors";
+import RestockController from "./RestockController";
+import CourierController from "./CourierController";
+import CustomerController from "./CustomerController";
+import Monetary from "../model/Monetary";
+import BaseModel from "../model/BaseModel";
+import EmployeeController from "./EmployeeController";
+import Employee from "../model/Employee";
+
+
+export default class OrderController extends BaseController<order> {
+  private static readonly flag: number =
+    ControllerFlag.can_update
+    | ControllerFlag.has_trail
+    | ControllerFlag.pivot_not_list;
+
+  private static currentUser: Employee;
+
+  /**
+   * @param server firestore instance for the database
+   */
+  public constructor(server?: typeof firestore) {
+    super(
+      CollectionNames.order.name,
+      CollectionNames.order.id,
+      server ?? firestore,
+      OrderController.flag,
+      OrderSearchSchema
+    );
+
+    this.loadSearchData().then(() => {
+      this.getCurrentEmployee().then((employee) => {
+        OrderController.currentUser = employee;
+        this.activateListener();
+        this.injectDependency();
+      });
+    });
+  }
+
+  /**
+   * @returns the restocks controller for the server,
+   *          in the injected dependencies
+   */
+  public get restockController(): RestockController {
+    return this.getDependency(CollectionNames.restock.name);
+  }
+
+  /**
+   * @returns the couriers controller for the server,
+   *          in the injected dependencies
+   */
+  public get courierController(): CourierController {
+    return this.getDependency(CollectionNames.courier.name);
+  }
+
+  /**
+   * Activates the listener for the orders' collection &
+   * for employee changes.
+   *
+   * @protected
+   */
+  protected activateListener() {
+
+  }
+
+  /**
+   * @returns the stored  current employee instance
+   */
+  public get currentEmployee() {
+    return OrderController.currentUser;
+  }
+
+  /**
+   * @returns the employees controller for the server,
+   *          in the injected dependencies
+   */
+  public get employeeController(): EmployeeController {
+    return this.getDependency(CollectionNames.employee.name);
+  }
+
+  /**
+   * Fetches the information of the current employee & returns.
+   *
+   * @returns the current employee
+   */
+  public async getCurrentEmployee(): Promise<Employee> {
+    const id = BaseModel.currentEmployee;
+
+    if (id === undefined) {
+      throw new NotAuthorizedError();
+    }
+
+    return await this.employeeController.get(id);
+  }
+
+  /**
+   * @returns the customers controller for the server,
+   *          in the injected dependencies
+   */
+  public get customerController(): CustomerController {
+    return this.getDependency(CollectionNames.customer.name);
+  }
+
+  /**
+   * @param id of the order to be fetched
+   * @returns order model
+   * @throws IdDoesNotExistError if the id does not belong to an order
+   */
+  public async get(id: string): Promise<Order> {
+    if (await this.isIdAvailable(id)) {
+      throw new IdDoesNotExistError();
+    }
+
+    const orderData = await this.getData(id) as order;
+    const restock = await this.restockController.get(orderData.restock_id);
+
+    let courier = undefined;
+
+    if (orderData.courier_id !== undefined) {
+      courier = await this.courierController.get(orderData.courier_id);
+    }
+
+    const customer = await this.customerController.get(
+      orderData.customer_id
+    );
+
+    let parent = undefined;
+
+    if (orderData.parent_id !== undefined && orderData.parent_id !== id) {
+      parent = await this.get(orderData.parent_id);
+    }
+
+    return new Order(orderData, restock, customer, courier, parent);
+  }
+
+  /**
+   * @param data basic raw data to create an order
+   * @throws InsufficientQuantitiesError if the name of the order is taken
+   */
+  public async create(data: basicOrder) {
+    if (data.status === OrderStatus.pending) {
+      const id = `pending_${this.pivot}`;
+
+      // Pending local
+      await this.setCache(id, this.fillDataGaps(data));
+
+      return id;
+    }
+
+    try {
+      data.restock_id = await this.restockController.create({
+        note: this.generateNote(data),
+        to_inventory: Order.isStatusToInventory(data.status),
+        quantities: this.getQuantities(data),
+        order_linked: true
+      });
+
+      data.id = await this.generateId();
+
+      await this.createServer(data.id, this.fillDataGaps(data));
+    } catch (e) {
+      if (e instanceof EvalError) {
+        throw new InsufficientQuantitiesError();
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * @param id of the order to be confirmed and created.
+   */
+  public async confirm(id: string) {
+    if (!this.checkCache(id)) {
+      throw new OrderNotPendingError();
+    }
+
+    const order = await this.get(id);
+    const oldId = order.id;
+
+    await this.create(order.getBasicData(OrderStatus.confirmed));
+    this.removeCache(oldId);
+  }
+
+  /**
+   * @param id of the order to be packaged.
+   */
+  public async package(id: string) {
+    const order = await this.get(id);
+
+    if (order.status === OrderStatus.pending) {
+      const oldId = order.id;
+      await this.create(order.getBasicData(OrderStatus.packaged));
+      this.removeCache(oldId);
+    } else if (order.status === OrderStatus.confirmed) {
+      order.status = OrderStatus.packaged;
+
+      await this.updateQuantities(order, order.quantities, true);
+    } else {
+      throw new OrderNotConfirmedNorPendingError()
+    }
+  }
+
+  /**
+   * @param id of the order to be sent to the courier
+   */
+  public async sendToCourier(id: string) {
+    let order = await this.get(id);
+    order.status = OrderStatus.sent_to_courier;
+
+    await this.update(order);
+  }
+
+  /**
+   * @param id of the order to be marked as paid
+   * @param payment by the customer for the order
+   * @param delivery charges paid by the customer
+   */
+  public async pay(id: string,
+                   payment: Monetary,
+                   delivery: Monetary) {
+    let order = await this.get(id);
+    order.status = OrderStatus.paid;
+    order.delivery = delivery;
+    order.payment = payment;
+
+    await this.update(order);
+  }
+
+  /**
+   * @param id of the order to be canceled
+   */
+  public async cancel(id: string) {
+    // TODO
+  }
+
+  /**
+   * @param id of the order to be received
+   */
+  public async receive(id: string) {
+    // TODO
+  }
+
+  /**
+   * @returns the ID of an order, based on the current pivot
+   */
+  public async generateId(): Promise<string> {
+    return await this.runTransaction(async (transaction) => {
+      let newPivot =
+        (await transaction.get(this.idSetDocument)).data()?.data + 1;
+
+      await transaction.update(this.idSetDocument, {
+        data: newPivot
+      });
+
+      return newPivot.toString();
+    });
+  }
+
+  /**
+   * @param data to be cleaned
+   * @returns fields that change in a quantities update
+   * @private
+   */
+  private cleanQuantitiesData(data: order) {
+    return {
+      id: data.id,
+      restock_id: data.restock_id,
+      status: data.status
+    }
+  }
+
+  /**
+   * @param model new model of the order
+   * @throws IdDoesNotExistError if the order does not exist
+   */
+  public async update(model: Order) {
+    if (this.pivot < Number(model.id)) {
+      throw new IdDoesNotExistError();
+    }
+
+    const currentData: Generic | undefined = this.getCache(model.id);
+    const data: Generic | undefined = model.dataCopy;
+
+    if (currentData === undefined) {
+      await this.updateServer(data, model.id);
+      return;
+    }
+
+    BaseController.clearAlikeFieldsFromNew(currentData, data);
+
+    await this.updateServer(data, model.id);
+  }
+
+  /**
+   * @param model new model of the order
+   * @param quantities new quantities for the order
+   * @param to_inventory if true updates only inventory quantities,
+   *        if false updates only display quantities,
+   *        if undefined updates both
+   */
+  public async updateQuantities(model: Order,
+                                quantities: QuantityType,
+                                to_inventory: boolean | undefined) {
+    let newQuantities: QuantityType =
+      BaseModel.deepCopy(model.restock.quantities);
+
+    for (let usi of BaseController.joinKeys(quantities, newQuantities)) {
+      if (!(usi in newQuantities)) {
+        newQuantities[usi] = 0;
+      }
+
+      newQuantities[usi] -= quantities[usi] ?? 0;
+    }
+
+    try {
+      const restockId = await this.restockController.create({
+        note: model.restock.note + `\nupdated;`,
+        to_inventory: to_inventory,
+        quantities: newQuantities,
+        order_linked: true
+      });
+
+      let data = model.dataCopy;
+
+      // Delete old restock
+      await this.restockController.delete(data.restock_id);
+
+      data.restock_id = restockId;
+
+      await this.updateServer(this.cleanQuantitiesData(data), data.id);
+    } catch (e) {
+      if (e instanceof EvalError) {
+        throw new InsufficientQuantitiesError();
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * @param data to generate the total for
+   * @returns the total monetary value for the order, not accounting
+   *          for discounts or delivery.
+   */
+  public generateTotal(data: basicOrder): MonetaryType {
+    let result = Monetary.noValue();
+    let temp: Monetary;
+    const products = data.products;
+
+    for (let usi of Object.keys(products)) {
+      temp = new Monetary(products[usi].price);
+      temp.multiply(products[usi].quantity);
+      result.add(temp);
+    }
+
+    return result.data;
+  }
+
+  /**
+   * Extracts prices from data
+   *
+   * @param data whose products object to be separated
+   * @returns the prices object
+   */
+  public getPrices(data: basicOrder): Generic<MonetaryType> {
+    let prices: Generic<MonetaryType> = {};
+    const products = data.products;
+
+    for (let usi of Object.keys(products)) {
+      prices[usi] = products[usi].price;
+    }
+
+    return prices;
+  }
+
+  /**
+   * Extracts quantities from data
+   *
+   * @param data whose products object to be separated
+   * @returns the quantities object
+   */
+  public getQuantities(data: basicOrder): QuantityType {
+    let result: QuantityType = {};
+    const products = data.products;
+
+    for (let usi of Object.keys(products)) {
+      result[usi] = products[usi].quantity;
+    }
+
+    return result;
+  }
+
+  /**
+   * @param data raw basic data of the order
+   * @returns a note for the restocking based on the data
+   */
+  public generateNote(data: basicOrder): string {
+    return `
+      Order linked;
+      customer: ${data.customer_id};
+      ${data.courier_id ? `courier: ${data.courier_id};` : ''}
+      ${data.parent_id ? `parent_order: ${data.parent_id};` : ''}`;
+  }
+
+  /**
+   * @param data basic order data
+   * @returns order data suitable for upload
+   * @protected
+   */
+  protected fillDataGaps(data: basicOrder): order {
+    return super.fixDataGaps({
+      id: data.id,
+      note: data.note,
+      discount: data.discount,
+      status: data.status,
+      total: this.generateTotal(data),
+      province: data.province,
+      address: data.address,
+      delivery: data.delivery,
+      courier_id: data.courier_id,
+      customer_id: data.customer_id,
+      restock_id: data.restock_id, // Added to data by create function
+      prices: this.getPrices(data),
+      payment: undefined,
+      commission_percent: this.currentEmployee.commission_percent,
+      phone_number: data.phone_number,
+      email: data.email,
+      parent_id: data.parent_id,
+      trail: this.generateInitialTrail()
+    });
+  }
+}

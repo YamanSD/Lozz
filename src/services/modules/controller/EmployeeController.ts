@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicEmployee, employee, EmployeeSearchSchema } from "../model/types";
+import { basicEmployee, employee, EmployeeSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Employee from "../model/employee";
@@ -73,7 +73,7 @@ export default class EmployeeController extends BaseController<employee> {
       birthday: data.birthday,
       orders: [],
       join_date: new Date(),
-      trail: this.generateInitialTrail()
+      [SpecialFields.trail]: this.generateInitialTrail()
     });
   }
 }

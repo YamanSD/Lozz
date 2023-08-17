@@ -13,7 +13,6 @@ import Restock from "../model/restock";
 import {
   IdDoesNotExistError,
   IllegalStateError,
-  InvalidRestockQuantitiesError,
   NoDeleteError,
   NoUpdateError, ProductNotFoundError
 } from "./Errors";
@@ -52,9 +51,9 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
-   * @param id of the restock to be fetched
+   * @param id of the restocking to be fetched
    * @returns restock data
-   * @throws IdDoesNotExistError if the id does not belong to a restock
+   * @throws IdDoesNotExistError if the id does not belong to a restocking
    */
   public async get(id: string) {
     const data = await this.getData(id);
@@ -67,8 +66,8 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
-   * @param data basic raw data to create a restock
-   * @throws IdAlreadyExistsError if the name of the restock is taken
+   * @param data basic raw data to create a restocking
+   * @throws IdAlreadyExistsError if the name of the restocking is taken
    * @throws EvalError if transaction fails
    */
   public async create(data: basicRestock) {
@@ -80,6 +79,8 @@ export default class RestockController extends BaseController<restock> {
 
     await this.createServer(id, this.fillDataGaps(data));
     await this.uploadIds();
+
+    return id;
   }
 
   /**
@@ -135,8 +136,8 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
-   * @param model new model of the restock
-   * @throws IdDoesNotExistError if the restock does not exist
+   * @param model new model of the restocking
+   * @throws IdDoesNotExistError if the restocking does not exist
    */
   public async update(model: Restock) {
     throw new NoUpdateError();
@@ -144,12 +145,12 @@ export default class RestockController extends BaseController<restock> {
 
   /**
    * @param id to be deleted completely and its effects revoked
-   * @throws NoDeleteError if the restock is not deletable
+   * @throws NoDeleteError if the restocking is not deletable
    */
   public async delete(id: string) {
     const restock = await this.get(id);
 
-    if (!restock.deletable) {
+    if (!restock.order_linked) {
       throw new NoDeleteError();
     }
 
@@ -207,7 +208,7 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
-   * Performs product quantities transaction for the restock.
+   * Performs product quantities transaction for the restocking.
    *
    * @param quantities to be added to the product quantities on server
    * @param to_inventory boolean flag to indicate whether the quantities
@@ -217,7 +218,7 @@ export default class RestockController extends BaseController<restock> {
    * @private
    */
   private async performQuantityTransaction(quantities: QuantityType,
-                                           to_inventory: boolean) {
+                                           to_inventory: boolean | undefined) {
     await this.runTransaction(async (transaction) => {
       let products: Product[] = [];
       let references: Generic<DocumentReference> = {};
@@ -270,16 +271,6 @@ export default class RestockController extends BaseController<restock> {
         throw new ProductNotFoundError();
       }
     }
-
-    let isNegative: boolean | undefined = undefined;
-
-    for (let quantity of Object.values(quantities)) {
-      if (isNegative === undefined) {
-        isNegative = quantity < 0;
-      } else if (isNegative === (0 < quantity)) {
-        throw new InvalidRestockQuantitiesError();
-      }
-    }
   }
 
   /**
@@ -302,7 +293,7 @@ export default class RestockController extends BaseController<restock> {
       note: data.note,
       to_inventory: data.to_inventory,
       quantities: data.quantities,
-      order_id: data.order_id,
+      order_linked: data.order_linked,
       item_count: RestockController.countItems(data.quantities),
       employee_id: BaseModel.currentEmployee,
     });

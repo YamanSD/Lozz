@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicCustomer, customer, CustomerSearchSchema } from "../model/types";
+import { basicCustomer, customer, CustomerSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Customer from "../model/customer";
@@ -69,7 +69,7 @@ export default class CustomerController extends BaseController<customer> {
       birthday: data.birthday,
       is_banned: false,
       orders: [],
-      trail: this.generateInitialTrail()
+      [SpecialFields.trail]: this.generateInitialTrail()
     });
   }
 }

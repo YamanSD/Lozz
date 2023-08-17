@@ -4,7 +4,8 @@ import Courier from "./Courier";
 import Customer from "./Customer";
 import Monetary from "./Monetary";
 import Restock from "./Restock";
-import { order, OrderStatus, TrailNature, TrailType } from "./types";
+import { basicOrder, Generic, MonetaryType, order, OrderStatus, TrailNature, TrailType } from "./types";
+import { InvalidOrderCreationStatusError } from "../controller/Errors";
 
 
 /**
@@ -49,6 +50,10 @@ export default class Order implements BaseModel {
     }
 
     this.parentInstance = parent;
+  }
+
+  public static quantitiesInstance(data: order): Order {
+    return new Order(data, {} as Restock, {} as Customer);
   }
 
   /**
@@ -246,7 +251,8 @@ export default class Order implements BaseModel {
         }
         break;
       case OrderStatus.packaged:
-        if (this.status !== OrderStatus.confirmed) {
+        if (this.status !== OrderStatus.confirmed
+          && this.status !== OrderStatus.pending) {
           throw new TypeError(`Order is ${this.status}, but trying to package`);
         }
         break;
@@ -256,7 +262,7 @@ export default class Order implements BaseModel {
           , but trying to send to courier`);
         }
         break;
-      case OrderStatus.payed:
+      case OrderStatus.paid:
         if (this.status !== OrderStatus.sent_to_courier) {
           throw new TypeError(`Order is ${this.status}, but trying to pay`);
         }
@@ -468,5 +474,71 @@ export default class Order implements BaseModel {
       this.customer,
       this.courier
     );
+  }
+
+  /**
+   * @returns basic quantities suitable for getBasicData
+   * @private
+   */
+  private generateBasicQuantities() {
+    let result: Generic<{
+      quantity: number,
+      price: MonetaryType}> = {};
+    let quantities = this.quantities;
+
+    for (let usi of Object.keys(quantities)) {
+      result[usi] = {
+        quantity: quantities[usi],
+        price: this.prices[usi]
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * @param status status of the basic data
+   * @returns a basic version of the data used to transition
+   *          orders from pending state
+   */
+  public getBasicData(status: OrderStatus): basicOrder {
+    return {
+      note: this.note,
+      status: status,
+      discount: this.discount?.data,
+      province: this.province,
+      address: this.address,
+      delivery: this.delivery?.data,
+      courier_id: this.courier?.name,
+      customer_id: this.customer.phone_number,
+      products: this.generateBasicQuantities(),
+      phone_number: this.phone_number,
+      email: this.email,
+      parent_id: this.parent?.id
+    };
+  }
+
+  /**
+   * - undefined indicates both quantities change
+   * - false indicates only display quantities change
+   * - true indicates only inventory quantities change
+   *
+   * @private
+   */
+  private static creationStatusToInventory: {
+    [status: number]: boolean | undefined
+  } = {
+    [OrderStatus.confirmed]: false,
+    [OrderStatus.packaged]: undefined,
+    [OrderStatus.sent_to_courier]: undefined,
+    [OrderStatus.paid]: undefined,
+  };
+
+  public static isStatusToInventory(status: OrderStatus): boolean | undefined {
+    if (status in Order.creationStatusToInventory) {
+      return Order.creationStatusToInventory[status];
+    }
+
+    throw new InvalidOrderCreationStatusError();
   }
 }

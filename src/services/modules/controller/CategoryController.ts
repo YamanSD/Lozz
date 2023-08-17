@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicCategory, category, CategorySearchSchema } from "../model/types";
+import { basicCategory, category, CategorySearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Category from "../model/category";
@@ -65,7 +65,7 @@ export default class CategoryController extends BaseController<category> {
       options_keys: data.option_keys,
       options_sets: data.options_sets,
       added_price: data.added_price,
-      trail: this.generateInitialTrail()
+      [SpecialFields.trail]: this.generateInitialTrail()
     });
   }
 }

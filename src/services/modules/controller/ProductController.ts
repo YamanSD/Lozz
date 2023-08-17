@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicProduct, Generic, product, productProperties, ProductSearchSchema } from "../model/types";
+import { basicProduct, Generic, product, productProperties, ProductSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Product from "../model/product";
@@ -131,23 +131,6 @@ export default class ProductController extends BaseController<product> {
   }
 
   /**
-   * @param json_0 first object
-   * @param json_1 second object
-   * @returns Set containing the keys of both objects
-   * @private
-   */
-  private static joinKeys(json_0: Generic,
-                          json_1: Generic): Set<string> {
-    let result = new Set<string>(Object.keys(json_0));
-
-    for (let key of Object.keys(json_1)) {
-      result.add(key);
-    }
-
-    return result;
-  }
-
-  /**
    * Activates the listener to the properties.
    * Updates the product.
    * These updates are not for the quantities, but for the product
@@ -162,7 +145,7 @@ export default class ProductController extends BaseController<product> {
       let local = await this.getLocalProperties();
       let server = snapshot.data() ?? {};
 
-      const keys = ProductController.joinKeys(local, server);
+      const keys = BaseController.joinKeys(local, server);
 
       for (let id of keys) {
         if (!(id in server)) {
@@ -235,7 +218,7 @@ export default class ProductController extends BaseController<product> {
       return;
     }
 
-    BaseController.clearAlikeFields(currentData, data);
+    BaseController.clearAlikeFieldsFromNew(currentData, data);
 
     delete data.quantities;
     delete data.inventory_quantities;
@@ -302,7 +285,7 @@ export default class ProductController extends BaseController<product> {
       added_costs: data.added_costs,
       discount: data.discount,
       description: data.description,
-      trail: this.generateInitialTrail()
+      [SpecialFields.trail]: this.generateInitialTrail()
     });
   }
 }

@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicCourier, courier, CourierSearchSchema } from "../model/types";
+import { basicCourier, courier, CourierSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Courier from "../model/courier";
@@ -64,7 +64,7 @@ export default class CourierController extends BaseController<courier> {
       name: data.name,
       shipping_fees: data.shipping_fees,
       orders: [],
-      trail: this.generateInitialTrail()
+      [SpecialFields.trail]: this.generateInitialTrail()
     });
   }
 }

@@ -60,13 +60,15 @@ export default class Product implements BaseModel {
    * @param to_inventory if the quantities are for the inventory
    * @returns an object containing only the suitable quantities
    */
-  public suitableQuantities(to_inventory: boolean) {
-    return to_inventory ? {
+  public suitableQuantities(to_inventory: boolean | undefined) {
+    return to_inventory === undefined ? {
       inventory_quantities: this.inventory_quantities,
       quantities: this.quantities
+    } : (to_inventory ? {
+      inventory_quantities: this.inventory_quantities
     } : {
       quantities: this.quantities
-    };
+    });
   }
 
   /**
@@ -373,12 +375,14 @@ export default class Product implements BaseModel {
    * @throws EvalError if the quantities are invalid
    */
   public checkIsValidAdd(quantities: QuantityType,
-                         to_inventory: boolean): void {
+                         to_inventory: boolean | undefined): void {
+    // If undefined this.quantities is used
     let currentQuantities = to_inventory
       ? this.inventory_quantities
       : this.quantities;
 
     for (let usp of Object.keys(quantities)) {
+      const currentInventory = this.inventory_quantities[usp];
       const current = currentQuantities[usp];
       const added = quantities[usp];
 
@@ -389,7 +393,15 @@ export default class Product implements BaseModel {
           `Invalid removal of quantities for USI: ${this.uspToUsi(usp)}
           , given: ${added} 
           , available: ${current}`
-        );
+        )
+      } else if (to_inventory === undefined
+        && added < 0
+        && currentInventory < -added) {
+        throw new EvalError(
+          `Invalid removal of (inv) quantities for USI: ${this.uspToUsi(usp)}
+          , given: ${added} 
+          , available: ${current}`
+        )
       }
     }
   }
@@ -402,16 +414,21 @@ export default class Product implements BaseModel {
    * @param to_inventory if true the quantities target the inventory quantities.
    * @throws EvalError if the quantities are invalid
    */
-  public add(quantities: QuantityType, to_inventory: boolean): void {
+  public add(quantities: QuantityType,
+             to_inventory: boolean | undefined): void {
     this.checkIsValidAdd(quantities, to_inventory);
 
+    // If undefined this.quantities is used
+    let currentQuantities = to_inventory
+      ? this.inventory_quantities
+      : this.quantities;
+
     for (let usp of Object.keys(quantities)) {
-      const quantity = quantities[usp];
+      currentQuantities[usp] += quantities[usp];
 
-      this.quantities[usp] += quantity;
-
-      if (to_inventory) {
-        this.inventory_quantities[usp] += quantity;
+      if (to_inventory === undefined) {
+        // If undefined add for inventory also
+        this.inventory_quantities[usp] += quantities[usp];
       }
     }
   }
@@ -433,7 +450,7 @@ export default class Product implements BaseModel {
    */
   public addUspQuantity(usi: string,
                         quantity: number,
-                        to_inventory: boolean): void {
+                        to_inventory: boolean | undefined): void {
     this.add({
       [Product.usiToUsp(usi)]: quantity
     }, to_inventory);

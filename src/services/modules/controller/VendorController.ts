@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicVendor, vendor, VendorSearchSchema } from "../model/types";
+import { basicVendor, SpecialFields, vendor, VendorSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "./CollectionNames";
 import Vendor from "../model/Vendor";
@@ -65,7 +65,7 @@ export default class VendorController extends BaseController<vendor> {
       name: data.name,
       phone_numbers: data.phone_numbers,
       emails: data.emails,
-      trail: this.generateInitialTrail()
+      [SpecialFields.trail]: this.generateInitialTrail()
     });
   }
 }

@@ -1,7 +1,7 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicCourier, courier, CourierSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "./CollectionNames";
+import CollectionNames from "../../../CollectionNames";
 import Courier from "../model/courier";
 
 

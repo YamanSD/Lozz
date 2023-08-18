@@ -1,4 +1,6 @@
-export default {
+import { Generic } from "./services/modules/model/types";
+
+const CollectionNames: Generic = {
   ids: "identifiers",
   vendor: {
     name: "vendors",
@@ -42,3 +44,5 @@ export default {
     id: "type",
   }
 };
+
+export default CollectionNames;

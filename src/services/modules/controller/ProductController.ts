@@ -1,7 +1,7 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicProduct, Generic, product, productProperties, ProductSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "./CollectionNames";
+import CollectionNames from "../../../CollectionNames";
 import Product from "../model/product";
 import { IdDoesNotExistError } from "./Errors";
 import BaseModel from "../model/BaseModel";

@@ -1,7 +1,7 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicVendor, SpecialFields, vendor, VendorSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "./CollectionNames";
+import CollectionNames from "../../../CollectionNames";
 import Vendor from "../model/Vendor";
 
 

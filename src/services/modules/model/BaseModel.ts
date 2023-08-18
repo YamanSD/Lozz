@@ -2,6 +2,7 @@ import auth from '@react-native-firebase/auth';
 import { TrailNature, TrailType } from "./types";
 import { cloneDeep } from "lodash";
 import { reduxStorage } from "../../../store";
+import ReduxParameters from "../../../ReduxParameters";
 
 
 /**
@@ -96,7 +97,7 @@ export default abstract class BaseModel {
     let id = BaseModel.currentEmployee;
 
     if (id === undefined) {
-      if (reduxStorage.getItem("Testing")) {
+      if (reduxStorage.getItem(ReduxParameters.testing)) {
         id = "TESTING_ID";
       } else {
         throw new Error("Guest user cannot stamp");

@@ -1,7 +1,7 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicExpense, expense, ExpenseSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "./CollectionNames";
+import CollectionNames from "../../../CollectionNames";
 import Expense from "../model/expense";
 import BaseModel from "../model/BaseModel";
 

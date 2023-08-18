@@ -12,9 +12,9 @@ import {
 } from "./Errors";
 import { Generic, SpecialFields, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
-import CollectionNames from "./CollectionNames";
+import CollectionNames from "../../../CollectionNames";
 import { identity, isEqual, isInteger, pickBy } from "lodash";
-import { reduxStorage } from "../../../store";
+import { reduxStorage, store } from "../../../store";
 
 
 /* Flags to specify the capabilities of a controller */
@@ -488,11 +488,10 @@ export default abstract class BaseController<RawData extends Generic> {
 
   /**
    * Triggers the RN hook for front-end updates.
-   * @protected
    */
-  protected triggerHook(): void {
-    // TODO solve issue using redux
-    // this.hook.setter(!this.hook.variable);
+  public triggerHook(): void {
+    // store.dispatch(SlicesMap[this.collectionName]());
+    // TODO
   }
 
   /**

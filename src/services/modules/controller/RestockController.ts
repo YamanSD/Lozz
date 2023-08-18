@@ -8,7 +8,7 @@ import {
   RestockSearchSchema
 } from "../model/types";
 import firestore, { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
-import CollectionNames from "./CollectionNames";
+import CollectionNames from "../../../CollectionNames";
 import Restock from "../model/restock";
 import {
   EmptyRestockError,

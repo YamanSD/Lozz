@@ -100,7 +100,6 @@ export default class EmployeeController extends BaseController<employee> {
       salary: data.salary,
       gender: data.gender,
       birthday: data.birthday,
-      orders: [],
       join_date: new Date(),
       [SpecialFields.trail]: this.generateInitialTrail()
     });

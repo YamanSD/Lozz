@@ -229,7 +229,7 @@ export type basicVendor = {
 export type category = {
   name: string,
   option_keys?: [string, ...string[]],
-  options_sets?: {
+  option_sets?: {
     [option_key: string]: [any, ...any[]]
   },
   added_price?: {
@@ -244,7 +244,7 @@ export type category = {
 export type basicCategory = {
   name: string,
   option_keys?: [string, ...string[]],
-  options_sets?: {
+  option_sets?: {
     [option_key: string]: [any, ...any[]]
   },
   added_price?: {
@@ -308,10 +308,6 @@ export type basicExpense = {
  * - shipping_fees: object mapping province names to shipping values.
  *   Given be user.
  *
- * - orders: list of strings, each representing an order ID.
- *   These orders are at the courier (physically or virtually).
- *   Auto-modified when an order is modified.
- *
  * - [SpecialFields.trail]: Auto-generated and auto-modified on actions.
  */
 export type courier = {
@@ -319,7 +315,6 @@ export type courier = {
   shipping_fees: {
     [province: string]: MonetaryType
   },
-  orders: [...string[]],
   [SpecialFields.trail]: TrailType
 };
 
@@ -428,11 +423,6 @@ export type basicRestock = {
  * - birthday?: date of birth of the employee.
  *   Given by user.
  *
- * - orders?: list of strings, each representing an ID of an order
- *   that was created by the user.
- *   This list is cleared whenever the employee is paid.
- *   Auto-modified on order creation and upon payment.
- *
  * - [SpecialFields.trail]: Auto-generated and auto-modified on actions.
  */
 export type employee = {
@@ -447,7 +437,6 @@ export type employee = {
   salary: MonetaryType,
   gender?: boolean,
   birthday?: Date,
-  orders?: [...string[]],
   join_date: Date,
   [SpecialFields.trail]: TrailType
 };
@@ -495,9 +484,6 @@ export type basicEmployee = {
  * - email?: string, email of the customer.
  *   Given be user.
  *
- * - orders: list of strings, each representing the ID of an
- *   order for the customer.
- *
  * - [SpecialFields.trail]: Auto-generated and auto-modified on actions.
  */
 export type customer = {
@@ -509,7 +495,6 @@ export type customer = {
   is_banned: boolean,
   phone_number: string,
   email?: string,
-  orders: [...string[]],
   [SpecialFields.trail]: TrailType
 };
 
@@ -898,6 +883,21 @@ export type properties = {
     roundToNearestLbp: number,
     roundToNearestUsd: number,
     [SpecialFields.trail]: TrailType
+  }
+}
+
+/**
+ * Basic properties used for the creation of properties
+ */
+export type basicProperties = {
+  [InformationType.provinces]: {
+    names: [string, ...string[]],
+  },
+  [InformationType.rate]: {
+    buyUsdRate: number,
+    sellUsdRate: number,
+    roundToNearestLbp: number,
+    roundToNearestUsd: number,
   }
 }
 

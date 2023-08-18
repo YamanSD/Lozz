@@ -17,7 +17,7 @@ import CustomerController from "./CustomerController";
 import Monetary from "../model/Monetary";
 import Employee from "../model/Employee";
 import { reduxStorage } from "../../../store";
-import DependencyTree from "./DependencyTree";
+import ReduxParameters from "../../../ReduxParameters";
 
 
 /**
@@ -52,7 +52,9 @@ export default class OrderController extends BaseController<order> {
    *          in the injected dependencies
    */
   public get restockController(): RestockController {
-    return DependencyTree.Restocks;
+    return BaseController.getDependency(
+      CollectionInfo.restock.name
+    );
   }
 
   /**
@@ -60,14 +62,18 @@ export default class OrderController extends BaseController<order> {
    *          in the injected dependencies
    */
   public get courierController(): CourierController {
-    return DependencyTree.Couriers;
+    return BaseController.getDependency(
+      CollectionInfo.courier.name
+    );
   }
 
   /**
    * @returns the stored current employee instance
    */
   public get currentEmployee() {
-    return new Employee(reduxStorage.getItem("currentEmployeeData"));
+    return new Employee(reduxStorage.getItem(
+      ReduxParameters.currentEmployee
+    ));
   }
 
   /**
@@ -75,7 +81,9 @@ export default class OrderController extends BaseController<order> {
    *          in the injected dependencies
    */
   public get customerController(): CustomerController {
-    return DependencyTree.Customers;
+    return BaseController.getDependency(
+      CollectionInfo.customer.name
+    );
   }
 
   /**

@@ -51,7 +51,7 @@ export default class Category implements BaseModel {
    *          Otherwise, undefined.
    */
   public get option_sets() {
-    return this.data.options_sets;
+    return this.data.option_sets;
   }
 
   /**

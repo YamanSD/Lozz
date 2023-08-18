@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { Generic, information, InformationType, properties } from "../model/types";
+import { basicProperties, Generic, information, InformationType } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import { IdDoesNotExistError, IllegalStateError } from "./Errors";
@@ -45,10 +45,14 @@ export default class InformationController
    *
    * @param data to be created
    */
-  public async create(data: properties) {
+  public async create(data: basicProperties) {
     for (let type of Object.keys(data)) {
-      await this.createServer(type,
-        data[type as InformationType] as Generic as information);
+      let uploadData =
+        data[type as InformationType] as Generic;
+
+      uploadData.trail = this.generateInitialTrail();
+
+      await this.createServer(type, uploadData as information);
     }
   }
 

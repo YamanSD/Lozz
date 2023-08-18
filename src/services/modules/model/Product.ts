@@ -49,11 +49,14 @@ export default class Product implements BaseModel {
   /**
    * @param id ID of the product, not present in data
    * @param data raw data of the product
+   * @param category model of the product
    * @returns a wrapper instance used by the restocks manager
    */
-  public static generateWrapper(id: string, data: product): Product {
+  public static generateWrapper(id: string,
+                                data: product,
+                                category: Category): Product {
     data.id = id;
-    return new Product(data, {} as vendor, {} as category);
+    return new Product(data, {} as vendor, category.data);
   }
 
   /**
@@ -356,11 +359,12 @@ export default class Product implements BaseModel {
 
     const selectedOptionValues = Product.invertUsp(usp);
     const optionKeys = this.category.option_keys;
+    const optionSets = this.category.option_sets;
 
     for (let i in optionKeys) {
       const optionValue = selectedOptionValues[i];
 
-      if (!(optionValue in this.category.option_sets[optionKeys[i]])) {
+      if (optionSets[optionKeys[i]].indexOf(optionValue) === -1) {
         return false;
       }
     }
@@ -382,7 +386,7 @@ export default class Product implements BaseModel {
       : this.quantities;
 
     for (let usp of Object.keys(quantities)) {
-      const currentInventory = this.inventory_quantities[usp];
+      const currentInventory = this.getInventoryQuantity(usp);
       const current = currentQuantities[usp];
       const added = quantities[usp];
 

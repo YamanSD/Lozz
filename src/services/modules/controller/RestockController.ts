@@ -20,7 +20,7 @@ import BaseModel from "../model/BaseModel";
 import { sum } from "lodash";
 import ProductController from "./ProductController";
 import Product from "../model/Product";
-import DependencyTree from "./DependencyTree";
+import CategoryController from "./CategoryController";
 
 
 /**
@@ -50,8 +50,22 @@ export default class RestockController extends BaseController<restock> {
     });
   }
 
+  /**
+   * @returns the products controller for the server
+   */
   public get productController(): ProductController {
-    return DependencyTree.Products;
+    return BaseController.getDependency(
+      CollectionInfo.product.name
+    );
+  }
+
+  /**
+   * @returns the categories controller for the server
+   */
+  public get categoryController(): CategoryController {
+    return BaseController.getDependency(
+      CollectionInfo.category.name
+    );
   }
 
   /**
@@ -77,11 +91,17 @@ export default class RestockController extends BaseController<restock> {
   public async create(data: basicRestock) {
     await this.checkQuantities(data.quantities);
 
+    let uploadData = this.fillDataGaps(data);
     const id = BaseModel.getRandomTimestamp(2);
 
-    await this.performQuantityTransaction(data.quantities, data.to_inventory);
+    /* try to change quantities */
+    await this.performQuantityTransaction(
+      uploadData.quantities,
+      uploadData.to_inventory
+    );
 
-    await this.createServer(id, this.fillDataGaps(data));
+    /* create the restocking document on the server */
+    await this.createServer(id, uploadData);
     await this.uploadIds();
 
     return id;
@@ -178,14 +198,15 @@ export default class RestockController extends BaseController<restock> {
    * @param id of the restocking operation whose effects revoked completely
    * @param to_inventory if true return values to inventory only,
    *        if false return values to display only,
-   *        if undefined return to both
+   *        if undefined return to both,
+   *        if null to_inventory is based on previous value
    */
-  public async revoke(id: string, to_inventory: boolean | undefined) {
+  public async revoke(id: string, to_inventory: boolean | undefined | null) {
     const restock = await this.get(id);
 
     await this.performQuantityTransaction(
       restock.negativeQuantities,
-      to_inventory
+      to_inventory === null ? restock.to_inventory : to_inventory
     );
 
     await this.deactivate(id);
@@ -214,7 +235,7 @@ export default class RestockController extends BaseController<restock> {
 
       if (!(id in result)) {
         result[id] = {
-          usp: quantity
+          [usp]: quantity
         };
 
         sums[id] = quantity;
@@ -285,19 +306,30 @@ export default class RestockController extends BaseController<restock> {
       } = RestockController.processUsi(quantities);
 
       const productController = this.productController;
-      let document, product: Product, data: product;
+      const categoryController = this.categoryController;
+
+      let documentRef, product: Product, data;
       // Default value to suppress error
       let productId: string = "";
 
       /* Read all products, check quantities for each */
       for (productId of productIds) {
-        document = productController.collection.doc(productId);
-        data = (await transaction.get(document)) as Generic as product;
-        product = Product.generateWrapper(productId, data);
+        documentRef = productController.collection.doc(productId);
+        const document = await transaction.get(documentRef);
+
+        if (!document.exists) {
+          throw new ProductNotFoundError();
+        }
+
+        data = document.data() as Generic as product;
+        product = Product.generateWrapper(productId,
+          data,
+          await categoryController.get(data.category_id)
+        );
 
         product.add(productQuantities[productId], to_inventory);
         products.push(product);
-        references[productId] = document;
+        references[productId] = documentRef;
       }
 
       /* Update products */

@@ -66,7 +66,6 @@ export default class CourierController extends BaseController<courier> {
     return super.fixDataGaps({
       name: data.name,
       shipping_fees: data.shipping_fees,
-      orders: [],
       [SpecialFields.trail]: this.generateInitialTrail()
     });
   }

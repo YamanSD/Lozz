@@ -13,7 +13,7 @@ import {
 import { Generic, SpecialFields, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
 import CollectionNames from "../../../CollectionInfo";
-import { identity, isEqual, isInteger, pickBy } from "lodash";
+import { isEqual, isInteger, pickBy } from "lodash";
 
 
 /**
@@ -449,10 +449,10 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     if (!this.isPivot) {
-      return !(id in this.idSet) || await this.isErased(id);
+      return !(id in this.idSet || await this.isErased(id));
     }
 
-    return true;
+    return this.pivot < Number(id);
   }
 
   /**
@@ -614,7 +614,7 @@ export default abstract class BaseController<RawData extends Generic> {
    * @param id to be deleted from cache.
    * @protected
    */
-  protected removeCache(id: string): void {
+  public removeCache(id: string): void {
     this.removeFromSearchEngine(id).then(() => {
       this.storage.delete(id);
       this.triggerHook();
@@ -891,7 +891,7 @@ export default abstract class BaseController<RawData extends Generic> {
    * @protected
    */
   protected fixDataGaps(data: Generic): RawData {
-    return pickBy(data, identity) as RawData;
+    return pickBy(data, v => v !== undefined) as RawData;
   }
 
   /**

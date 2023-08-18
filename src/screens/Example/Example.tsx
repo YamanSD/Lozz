@@ -1,24 +1,16 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Alert,
-} from 'react-native';
-import { useDispatch } from 'react-redux';
-import { useTranslation } from 'react-i18next';
-import { Brand } from '../../components';
-import { useTheme } from '../../hooks';
-import { useLazyFetchOneQuery } from '../../services/modules/users';
-import { changeTheme, ThemeState } from '../../store/theme';
-import i18next from 'i18next';
-import firestore from '@react-native-firebase/firestore';
-import VendorController from "../../services/modules/controller/VendorController";
-import { conformsTo } from "lodash";
-import { reduxStorage } from "../../store";
+import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useDispatch } from "react-redux";
+import { useTranslation } from "react-i18next";
+import { Brand } from "../../components";
+import { useTheme } from "../../hooks";
+import { useLazyFetchOneQuery } from "../../services/modules/users";
+import { changeTheme, ThemeState } from "../../store/theme";
+import i18next from "i18next";
+import { reduxStorage, store } from "../../store";
+import ReduxParameters from "../../ReduxParameters";
+import DependencyTree from "../../services/modules/controller/DependencyTree";
+import { EmployeeRole, InformationType } from "../../services/modules/model/types";
 
 
 enum test {
@@ -38,6 +30,8 @@ const Example = () => {
   } = useTheme();
   const dispatch = useDispatch();
 
+  let [i, setI] = useState(0);
+
   const [fetchOne, { data, isSuccess, isLoading, isFetching }] =
     useLazyFetchOneQuery();
 
@@ -48,11 +42,11 @@ const Example = () => {
   }, [isSuccess, data]);
 
   useEffect(() => {
-    reduxStorage.setItem("Testing", true);
+    reduxStorage.setItem(ReduxParameters.testing, true);
   }, []);
 
   const onChangeTheme = ({ theme, darkMode }: Partial<ThemeState>) => {
-    dispatch(changeTheme({ theme, darkMode }));
+    store.dispatch(changeTheme({ theme, darkMode }));
   };
 
   const onChangeLanguage = (lang: 'fr' | 'en') => {
@@ -228,23 +222,103 @@ const Example = () => {
             style={[Common.button.circle, Gutters.regularBMargin]}
             onPress={async () => {
               onChangeTheme({ darkMode: !isDark });
-              const controller = new VendorController();
 
-              // let temp = await controller.get("Hanin");
-              //
-              // // console.log();
-              //
-              // // temp.phone_numbers = ["1231123131311123333"];
-              //
-              // temp.emails = [];
-              //
-              // await controller.erase("Hanin");
+              // let controller = DependencyTree.Restocks;
+              let pController = DependencyTree.Products;
 
-              // await controller.removeServer("Hanin");
+              // pController.removeCache("88");
 
-              // Alert.alert(controller.storage.getAllKeys().toString());
+              // await controller.create({
+              //   to_inventory: false,
+              //   note: "Restock Display only Test",
+              //   quantities: {
+              //     "88_red_s": 100
+              //   }
+              // });
 
-              // Alert.alert(Object.values(temp.data).toString());
+              // await controller.revoke("2023071819154525281", null);
+
+
+              // for (let id of controller.idSet) {
+              //   console.log((await controller.get(id)).data);
+              // }
+
+              // console.log((await pController.get("88")).quantities);
+              // console.log((await pController.get("88")).inventory_quantities)
+
+              // await controller.create({
+              //   [InformationType.provinces]: {
+              //     names: ["Beirut", "Outside-Beirut"]
+              //   },
+              //   [InformationType.rate]: {
+              //     buyUsdRate: 89_000,
+              //     sellUsdRate: 90_000,
+              //     roundToNearestLbp: 5_000,
+              //     roundToNearestUsd: 0.01
+              //   }
+              // });
+
+              // await controller.create({
+              //   name: "Bravo",
+              //   shipping_fees: {
+              //     "Beirut": [1.5, 0],
+              //     "Outside-Beirut": [2, 0]
+              //   }
+              // });
+
+              // await controller.create({
+              //   name: "Bravo",
+              // });
+
+              // await controller.create({
+              //   name: "Cotton",
+              //   description: "100% Cotton Pyjama, made in turkey",
+              //   discount: {
+              //     "red_s": [0.5, 0]
+              //   },
+              //   instructions: {
+              //     "Washing": "Do not boil over 150 degrees C"
+              //   },
+              //   id: "88",
+              //   cost: [2.5, 0],
+              //   price: [5, 0],
+              //   quantities: {
+              //     red_s: 20,
+              //     red_m: 15,
+              //     red_l: 10,
+              //     green_s: 20,
+              //     green_m: 15,
+              //     green_l: 0,
+              //     blue_s: 20,
+              //     blue_m: 15,
+              //     blue_l: 10,
+              //   },
+              //   added_price: {
+              //     green_l: [2, 0]
+              //   },
+              //   vendor_id: "Saleh",
+              //   category_id: "Pyjamas",
+              //   images: {
+              //     red_s: ["http://dreamicus.com/red.html"],
+              //     green_s: ["https://imageonline.co/downloading.php?imagename=B21.png&color=green"],
+              //   }
+              // });
+
+              // console.log(await controller.getLocalProperties());
+              // await controller.pushUpdateProperties();
+              // let controller = DependencyTree.Vendors;
+              //
+              // let Saleh = await controller.get("Saleh");
+              // console.log(Saleh.data);
+              // controller.triggerHook();
+              // const mohamad = await controller.get("Mohamad");
+              // mohamad.emails = ["yamansirajbs@gmail.com"];
+              //
+              // await controller.update(mohamad);
+              //
+              // // setI(i + 1);
+              // // console.log(controller.idSet);
+              console.log((await pController.get("88")).data);
               Alert.alert("DONE");
             }}
           >
@@ -258,8 +332,6 @@ const Example = () => {
             style={[Common.button.circle, Gutters.regularBMargin]}
             onPress={async () => {
                 onChangeLanguage(i18next.language === 'fr' ? 'en' : 'fr');
-                const user = await firestore().collection('Vendors').doc('Demo').get();
-                Alert.alert(user.data()?.name);
               }
             }
           >

@@ -71,7 +71,6 @@ export default class CustomerController extends BaseController<customer> {
       gender: data.gender,
       birthday: data.birthday,
       is_banned: false,
-      orders: [],
       [SpecialFields.trail]: this.generateInitialTrail()
     });
   }

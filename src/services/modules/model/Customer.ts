@@ -116,13 +116,6 @@ export default class Customer implements BaseModel {
   }
 
   /**
-   * @returns the list of orders created by the customer
-   */
-  public get orders() {
-    return this.data.orders;
-  }
-
-  /**
    * @returns the trail
    */
   public get trail(): TrailType {
@@ -179,43 +172,10 @@ export default class Customer implements BaseModel {
   }
 
   /**
-   * @param value new orders of the customer
-   */
-  public set orders(value) {
-    this.data.orders = value;
-  }
-
-  /**
    * @param value user becomes banned or unbanned
    */
   public set is_banned(value) {
     this.data.is_banned = value;
-  }
-
-  /**
-   * @param id appended to the list of orders
-   */
-  public appendOrder(id: string) {
-    if (this.orders === undefined) {
-      this.orders = [];
-    }
-
-    this.orders.push(id);
-  }
-
-  /**
-   * @param id removes from the list of orders
-   */
-  public removeOrder(id: string) {
-    if (this.orders === undefined) {
-      return;
-    }
-
-    const index = this.orders.indexOf(id);
-
-    if (-1 < index) {
-      this.orders.splice(index, 1);
-    }
   }
 
   /**

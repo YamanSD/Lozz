@@ -126,13 +126,6 @@ export default class Employee implements BaseModel {
   }
 
   /**
-   * @returns the list of orders created by the employee
-   */
-  public get orders() {
-    return this.data.orders;
-  }
-
-  /**
    * @returns the date when the employee left the company
    */
   public get end_date() {
@@ -240,39 +233,6 @@ export default class Employee implements BaseModel {
    */
   public set birthday(value) {
     this.data.birthday = value;
-  }
-
-  /**
-   * @param value new orders of the employee
-   */
-  public set orders(value) {
-    this.data.orders = value;
-  }
-
-  /**
-   * @param id appended to the list of orders
-   */
-  public appendOrder(id: string) {
-    if (this.orders === undefined) {
-      this.orders = [];
-    }
-
-    this.orders.push(id);
-  }
-
-  /**
-   * @param id removes from the list of orders
-   */
-  public removeOrder(id: string) {
-    if (this.orders === undefined) {
-      return;
-    }
-
-    const index = this.orders.indexOf(id);
-
-    if (-1 < index) {
-      this.orders.splice(index, 1);
-    }
   }
 
   /**

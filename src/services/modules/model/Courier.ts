@@ -64,13 +64,6 @@ export default class Courier implements BaseModel {
   }
 
   /**
-   * @returns list of order IDs that are at the courier
-   */
-  public get orders() {
-    return this.data.orders;
-  }
-
-  /**
    * @param province province to get shipping fees for
    * @throws Error if the given province is not in the courier shipping fees
    *         object
@@ -135,31 +128,6 @@ export default class Courier implements BaseModel {
    */
   public set shipping_fees(value) {
     this.data.shipping_fees = value;
-  }
-
-  /**
-   * @param value new value of the orders array
-   */
-  public set orders(value) {
-    this.data.orders = value;
-  }
-
-  /**
-   * @param id appended to the orders array
-   */
-  public appendOrder(id: string) {
-    this.orders.push(id);
-  }
-
-  /**
-   * @param id of the order to be removed
-   */
-  public remove_order(id: string) {
-    const index = this.orders.indexOf(id);
-
-    if (-1 < index) {
-      this.orders.splice(index, 1);
-    }
   }
 
   /**

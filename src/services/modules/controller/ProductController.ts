@@ -7,7 +7,6 @@ import { IdDoesNotExistError } from "./Errors";
 import BaseModel from "../model/BaseModel";
 import CategoryController from "./CategoryController";
 import VendorController from "./VendorController";
-import DependencyTree from "./DependencyTree";
 
 
 /**
@@ -35,6 +34,7 @@ export default class ProductController extends BaseController<product> {
     this.loadSearchData().then(() => {
       this.activateListener().then(() => {
         this.injectDependency();
+        this.removeId(this.propertiesId);
       });
     });
   }
@@ -44,7 +44,9 @@ export default class ProductController extends BaseController<product> {
    *          in the injected dependencies
    */
   public get categoryController(): CategoryController {
-    return DependencyTree.Categories;
+    return BaseController.getDependency(
+      CollectionInfo.category.name
+    );
   }
 
   /**
@@ -52,7 +54,9 @@ export default class ProductController extends BaseController<product> {
    *          in the injected dependencies
    */
   public get vendorController(): VendorController {
-    return DependencyTree.Vendors;
+    return BaseController.getDependency(
+      CollectionInfo.vendor.name
+    );
   }
 
   /**
@@ -127,8 +131,13 @@ export default class ProductController extends BaseController<product> {
    * Uploads the local properties to the server
    */
   public async pushUpdateProperties() {
+    let data = await this.getLocalProperties();
+
+    // Remove id from data
+    delete data.id;
+
     await this.updateServer(
-      this.getLocalProperties(),
+      data,
       this.propertiesId,
       true
     );
@@ -198,6 +207,7 @@ export default class ProductController extends BaseController<product> {
     await this.createServer(data.id, this.fillDataGaps(data));
     await this.uploadIds();
     await this.updateIdProperty(data.id);
+    await this.pushUpdateProperties();
   }
 
   /**

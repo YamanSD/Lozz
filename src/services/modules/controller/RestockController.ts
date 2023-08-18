@@ -7,9 +7,9 @@ import {
   restock,
   RestockSearchSchema
 } from "../model/types";
-import firestore, { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionNames";
-import Restock from "../model/restock";
+import firestore from "@react-native-firebase/firestore";
+import CollectionInfo from "../../../CollectionInfo";
+import Restock from "../model/Restock";
 import {
   EmptyRestockError,
   IdDoesNotExistError,
@@ -20,7 +20,7 @@ import BaseModel from "../model/BaseModel";
 import { sum } from "lodash";
 import ProductController from "./ProductController";
 import Product from "../model/Product";
-import DocumentReference = FirebaseFirestoreTypes.DocumentReference;
+import DependencyTree from "./DependencyTree";
 
 
 /**
@@ -37,8 +37,8 @@ export default class RestockController extends BaseController<restock> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.restock.name,
-      CollectionNames.restock.id,
+      CollectionInfo.restock.name,
+      CollectionInfo.restock.id,
       server ?? firestore,
       RestockController.flag,
       RestockSearchSchema
@@ -51,7 +51,7 @@ export default class RestockController extends BaseController<restock> {
   }
 
   public get productController(): ProductController {
-    return this.getDependency(CollectionNames.product.name);
+    return DependencyTree.Products;
   }
 
   /**
@@ -278,14 +278,14 @@ export default class RestockController extends BaseController<restock> {
                                            restock_id?: string) {
     await this.runTransaction(async (transaction) => {
       let products: Product[] = [];
-      let references: Generic<DocumentReference> = {};
+      let references: Generic = {};
 
       let {
         productQuantities, productIds
       } = RestockController.processUsi(quantities);
 
       const productController = this.productController;
-      let document: DocumentReference, product: Product, data: product;
+      let document, product: Product, data: product;
       // Default value to suppress error
       let productId: string = "";
 

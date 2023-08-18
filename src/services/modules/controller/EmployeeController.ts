@@ -1,8 +1,9 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicEmployee, employee, EmployeeSearchSchema, SpecialFields } from "../model/types";
+import { basicEmployee, employee, EmployeeSearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionNames";
-import Employee from "../model/employee";
+import CollectionInfo from "../../../CollectionInfo";
+import Employee from "../model/Employee";
+import database from "@react-native-firebase/database";
 
 
 /**
@@ -14,13 +15,16 @@ export default class EmployeeController extends BaseController<employee> {
     | ControllerFlag.can_deactivate
     | ControllerFlag.has_trail;
 
+  /* object containing user IDs & their status */
+  private static onlineList: Generic<boolean>;
+
   /**
    * @param server firestore instance for the database
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.employee.name,
-      CollectionNames.employee.id,
+      CollectionInfo.employee.name,
+      CollectionInfo.employee.id,
       server ?? firestore,
       EmployeeController.flag,
       EmployeeSearchSchema
@@ -30,6 +34,27 @@ export default class EmployeeController extends BaseController<employee> {
       this.activateListener();
       this.injectDependency();
     });
+  }
+
+  /**
+   * Activates the listener for the employee collection & employee database
+   * online detection.
+   * @protected
+   */
+  protected activateListener() {
+    super.activateListener();
+    database()
+      .ref(`/${CollectionInfo.online_detection}/`)
+      .on('value', snapshot => {
+        EmployeeController.onlineList = snapshot.val();
+    });
+  }
+
+  /**
+   * @returns object containing user IDs & their status
+   */
+  public get onlineList() {
+    return EmployeeController.onlineList;
   }
 
   /**

@@ -1,8 +1,8 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicCategory, category, CategorySearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionNames";
-import Category from "../model/category";
+import CollectionInfo from "../../../CollectionInfo";
+import Category from "../model/Category";
 
 
 /**
@@ -19,8 +19,8 @@ export default class CategoryController extends BaseController<category> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.category.name,
-      CollectionNames.category.id,
+      CollectionInfo.category.name,
+      CollectionInfo.category.id,
       server ?? firestore,
       CategoryController.flag,
       CategorySearchSchema

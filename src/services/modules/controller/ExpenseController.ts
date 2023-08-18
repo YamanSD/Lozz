@@ -1,8 +1,8 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicExpense, expense, ExpenseSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionNames";
-import Expense from "../model/expense";
+import CollectionInfo from "../../../CollectionInfo";
+import Expense from "../model/Expense";
 import BaseModel from "../model/BaseModel";
 
 
@@ -20,8 +20,8 @@ export default class ExpenseController extends BaseController<expense> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.expense.name,
-      CollectionNames.expense.id,
+      CollectionInfo.expense.name,
+      CollectionInfo.expense.id,
       server ?? firestore,
       ExpenseController.flag,
       ExpenseSearchSchema

@@ -1,8 +1,8 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicOrder, Generic, MonetaryType, order, OrderSearchSchema, OrderStatus, QuantityType } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionNames";
-import Order from "../model/order";
+import CollectionInfo from "../../../CollectionInfo";
+import Order from "../model/Order";
 import {
   IdDoesNotExistError,
   InsufficientQuantitiesError,
@@ -17,6 +17,7 @@ import CustomerController from "./CustomerController";
 import Monetary from "../model/Monetary";
 import Employee from "../model/Employee";
 import { reduxStorage } from "../../../store";
+import DependencyTree from "./DependencyTree";
 
 
 /**
@@ -33,8 +34,8 @@ export default class OrderController extends BaseController<order> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.order.name,
-      CollectionNames.order.id,
+      CollectionInfo.order.name,
+      CollectionInfo.order.id,
       server ?? firestore,
       OrderController.flag,
       OrderSearchSchema
@@ -51,7 +52,7 @@ export default class OrderController extends BaseController<order> {
    *          in the injected dependencies
    */
   public get restockController(): RestockController {
-    return this.getDependency(CollectionNames.restock.name);
+    return DependencyTree.Restocks;
   }
 
   /**
@@ -59,7 +60,7 @@ export default class OrderController extends BaseController<order> {
    *          in the injected dependencies
    */
   public get courierController(): CourierController {
-    return this.getDependency(CollectionNames.courier.name);
+    return DependencyTree.Couriers;
   }
 
   /**
@@ -74,7 +75,7 @@ export default class OrderController extends BaseController<order> {
    *          in the injected dependencies
    */
   public get customerController(): CustomerController {
-    return this.getDependency(CollectionNames.customer.name);
+    return DependencyTree.Customers;
   }
 
   /**

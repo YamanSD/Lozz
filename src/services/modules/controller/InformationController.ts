@@ -1,7 +1,7 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { Generic, information, InformationType, properties } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionNames";
+import CollectionInfo from "../../../CollectionInfo";
 import { IdDoesNotExistError, IllegalStateError } from "./Errors";
 import RateInformation from "../model/RateInformation";
 import ProvinceInformation from "../model/ProvinceInformation";
@@ -28,8 +28,8 @@ export default class InformationController
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.information.name,
-      CollectionNames.information.id,
+      CollectionInfo.information.name,
+      CollectionInfo.information.id,
       server ?? firestore,
       InformationController.flag
     );

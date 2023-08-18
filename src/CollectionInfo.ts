@@ -1,7 +1,9 @@
-import { Generic } from "./services/modules/model/types";
+import firestore from "@react-native-firebase/firestore";
 
-const CollectionNames: Generic = {
+export default {
   ids: "identifiers",
+  online_detection: "online",
+  server: firestore,
   vendor: {
     name: "vendors",
     id: "name"
@@ -44,5 +46,3 @@ const CollectionNames: Generic = {
     id: "type",
   }
 };
-
-export default CollectionNames;

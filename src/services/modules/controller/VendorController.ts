@@ -1,7 +1,7 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicVendor, SpecialFields, vendor, VendorSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionNames";
+import CollectionInfo from "../../../CollectionInfo";
 import Vendor from "../model/Vendor";
 
 
@@ -19,8 +19,8 @@ export default class VendorController extends BaseController<vendor> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.vendor.name,
-      CollectionNames.vendor.id,
+      CollectionInfo.vendor.name,
+      CollectionInfo.vendor.id,
       server ?? firestore,
       VendorController.flag,
       VendorSearchSchema

@@ -12,10 +12,40 @@ import {
 } from "./Errors";
 import { Generic, SpecialFields, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
-import CollectionNames from "../../../CollectionNames";
+import CollectionNames from "../../../CollectionInfo";
 import { identity, isEqual, isInteger, pickBy } from "lodash";
-import { reduxStorage, store } from "../../../store";
 
+
+/**
+ * Class responsible for storing & retrieving application dependencies.
+ */
+class InternalDependencyTree {
+  private static instances: Generic = {};
+
+  /**
+   * @param key of the instance
+   * @param instance to be stored
+   */
+  public static inject(key: string, instance: any): void {
+    InternalDependencyTree.instances[key] = instance;
+  }
+
+  /**
+   * @param key of the stored instance
+   * @returns the stored instance
+   */
+  public static get(key: string): any {
+    return InternalDependencyTree.instances[key];
+  }
+
+  /**
+   * @param key to check if it's present
+   * @returns true if the key is in the dependency dictionary
+   */
+  public static isPresent(key: string): boolean {
+    return key in InternalDependencyTree.instances;
+  }
+}
 
 /* Flags to specify the capabilities of a controller */
 export enum ControllerFlag {
@@ -59,10 +89,6 @@ export default abstract class BaseController<RawData extends Generic> {
 
   /* search engine instance for the controller */
   public searchEngine?: Orama<ProvidedTypes>;
-
-  /* cached dependencies */
-  // TODO Fix dependency injections
-  private static dependencies = {};
 
   /* maps document IDs to Orama IDs */
   private idToOramaId: {
@@ -832,16 +858,31 @@ export default abstract class BaseController<RawData extends Generic> {
    * Injects the controller into redux to be used by other components
    */
   public injectDependency(): void {
-    // reduxStorage.setItem(this.uniqueId(this.collectionName),
-    //   JSON.stringify(this));
+    BaseController.injectDependency(this.collectionName, this);
+  }
+
+  /**
+   * @param key of the instance in the dependency tree
+   * @param instance to be stored in the tree
+   */
+  public static injectDependency(key: string, instance: any): void {
+    InternalDependencyTree.inject(key, instance);
   }
 
   /**
    * @param collection_name to be taken from dependency
    * @returns the controller responsible for the collection
    */
-  public getDependency(collection_name: string): any {
-    return reduxStorage.getItem(this.uniqueId(collection_name));
+  public static getDependency(collection_name: string): any {
+    return InternalDependencyTree.get(collection_name);
+  }
+
+  /**
+   * @param collection_name to check if its controller is present in cache
+   * @returns true if the controller is available
+   */
+  public static isDependencyPresent(collection_name: string): boolean {
+    return InternalDependencyTree.isPresent(collection_name);
   }
 
   /**

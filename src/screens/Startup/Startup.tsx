@@ -4,16 +4,21 @@ import { useTheme } from '../../hooks';
 import { Brand } from '../../components';
 import { setDefaultTheme } from '../../store/theme';
 import { ApplicationScreenProps } from '../../../@types/navigation';
+import DependencyTree from "../../services/modules/controller/DependencyTree";
 
 const Startup = ({ navigation }: ApplicationScreenProps) => {
   const { Layout, Gutters } = useTheme();
 
   const init = async () => {
+    await DependencyTree.loadControllers();
+
+    /* Artificial timeout */
     await new Promise(resolve =>
       setTimeout(() => {
         resolve(true);
       }, 2000),
     );
+
     await setDefaultTheme({ theme: 'default', darkMode: null });
     navigation.reset({
       index: 0,

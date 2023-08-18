@@ -1,8 +1,8 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicCustomer, customer, CustomerSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionNames";
-import Customer from "../model/customer";
+import CollectionInfo from "../../../CollectionInfo";
+import Customer from "../model/Customer";
 
 
 /**
@@ -18,8 +18,8 @@ export default class CustomerController extends BaseController<customer> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.customer.name,
-      CollectionNames.customer.id,
+      CollectionInfo.customer.name,
+      CollectionInfo.customer.id,
       server ?? firestore,
       CustomerController.flag,
       CustomerSearchSchema

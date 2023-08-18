@@ -1,12 +1,13 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicProduct, Generic, product, productProperties, ProductSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionNames";
-import Product from "../model/product";
+import CollectionInfo from "../../../CollectionInfo";
+import Product from "../model/Product";
 import { IdDoesNotExistError } from "./Errors";
 import BaseModel from "../model/BaseModel";
 import CategoryController from "./CategoryController";
 import VendorController from "./VendorController";
+import DependencyTree from "./DependencyTree";
 
 
 /**
@@ -24,8 +25,8 @@ export default class ProductController extends BaseController<product> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.product.name,
-      CollectionNames.product.id,
+      CollectionInfo.product.name,
+      CollectionInfo.product.id,
       server ?? firestore,
       ProductController.flag,
       ProductSearchSchema
@@ -43,7 +44,7 @@ export default class ProductController extends BaseController<product> {
    *          in the injected dependencies
    */
   public get categoryController(): CategoryController {
-    return this.getDependency(CollectionNames.category.name);
+    return DependencyTree.Categories;
   }
 
   /**
@@ -51,7 +52,7 @@ export default class ProductController extends BaseController<product> {
    *          in the injected dependencies
    */
   public get vendorController(): VendorController {
-    return this.getDependency(CollectionNames.vendor.name);
+    return DependencyTree.Vendors;
   }
 
   /**

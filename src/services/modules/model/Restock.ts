@@ -78,7 +78,7 @@ export default class Restock implements BaseModel {
     }
 
     this.quantities[usi] += quantity;
-    this.data.item_count += quantity;
+    this.item_count += Math.abs(quantity);
 
     if (this.quantities[usi] === 0) {
       delete this.quantities[usi];
@@ -101,6 +101,13 @@ export default class Restock implements BaseModel {
    */
   public get item_count() {
     return this.data.item_count;
+  }
+
+  /**
+   * @param value new value of the item count
+   */
+  public set item_count(value) {
+    this.data.item_count = value;
   }
 
   /**

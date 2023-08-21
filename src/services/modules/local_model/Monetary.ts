@@ -1,4 +1,4 @@
-import { MonetaryType } from "./types";
+import { MonetaryType } from "../model/types";
 import { isInteger } from "lodash";
 
 
@@ -24,13 +24,13 @@ export default class Monetary {
    *  set by InformationPropertiesManager.
    *  Must be a positive number
    */
-  private static roundToNearestUsdValue: number;
+  private static roundToNearestUsdValue: number = 0.01;
 
   /* Nearest number rounding for LBP,
    *  set by InformationPropertiesManager.
    *  Must be a positive integer that is divisible by 1_000.
    */
-  private static roundToNearestLbpValue: number;
+  private static roundToNearestLbpValue: number = 1_000;
 
   /**
    * @param data MonetaryValue raw data.

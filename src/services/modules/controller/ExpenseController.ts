@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicExpense, expense, ExpenseSearchSchema, SpecialFields } from "../model/types";
+import { basicExpense, expense, ExpenseSearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Expense from "../model/Expense";
@@ -75,5 +75,22 @@ export default class ExpenseController extends BaseController<expense> {
       courier_id: data.courier_id,
       [SpecialFields.trail]: this.generateInitialTrail()
     });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: expense): Generic {
+    return {
+      id: data.id,
+      description: data.description,
+      value: data.value,
+      date: BaseModel.revertDate(data.date),
+      vendor_id: data.vendor_id ?? "",
+      employee_id: data.employee_id ?? "",
+      courier_id: data.courier_id ?? ""
+    };
   }
 }

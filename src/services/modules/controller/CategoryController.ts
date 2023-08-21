@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicCategory, category, CategorySearchSchema, SpecialFields } from "../model/types";
+import { basicCategory, category, CategorySearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Category from "../model/Category";
@@ -65,10 +65,23 @@ export default class CategoryController extends BaseController<category> {
   protected fillDataGaps(data: basicCategory): category {
     return super.fixDataGaps({
       name: data.name,
-      options_keys: data.option_keys,
-      options_sets: data.options_sets,
+      option_keys: data.option_keys,
+      option_sets: data.option_sets,
       added_price: data.added_price,
       [SpecialFields.trail]: this.generateInitialTrail()
     });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: category): Generic {
+    return {
+      id: data.name,
+      name: data.name,
+      option_keys: data.option_keys
+    };
   }
 }

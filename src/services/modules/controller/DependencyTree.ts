@@ -17,17 +17,18 @@ import VendorController from "./VendorController";
  */
 export default class DependencyTree {
   /**
-   * Constructs all controllers
+   * Constructs all controllers.
+   * Note that will not initialize all controllers immediately.
    */
   public static async loadControllers(): Promise<void> {
     new VendorController(CollectionInfo.server);
     new CategoryController(CollectionInfo.server);
+    new ProductController(CollectionInfo.server);
     new CourierController(CollectionInfo.server);
     new CustomerController(CollectionInfo.server);
     new EmployeeController(CollectionInfo.server);
     new ExpenseController(CollectionInfo.server);
     new InformationController(CollectionInfo.server);
-    new ProductController(CollectionInfo.server);
     new RestockController(CollectionInfo.server);
     new OrderController(CollectionInfo.server);
   }
@@ -36,129 +37,109 @@ export default class DependencyTree {
    * @returns the vendors controller instance
    */
   public static get Vendors(): VendorController {
-    const name = CollectionInfo.vendor.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new VendorController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.vendor.name,
+      VendorController,
+      CollectionInfo.server
+    );
   }
 
   /**
    * @returns the categories controller instance
    */
   public static get Categories(): CategoryController {
-    const name = CollectionInfo.category.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new CategoryController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.category.name,
+      CategoryController,
+      CollectionInfo.server
+    );
   }
 
   /**
    * @returns the couriers controller instance
    */
   public static get Couriers(): CourierController {
-    const name = CollectionInfo.courier.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new CourierController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.courier.name,
+      CourierController,
+      CollectionInfo.server
+    );
   }
 
   /**
    * @returns the customers controller instance
    */
   public static get Customers(): CustomerController {
-    const name = CollectionInfo.customer.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new CustomerController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.customer.name,
+      CustomerController,
+      CollectionInfo.server
+    );
   }
 
   /**
    * @returns the employees controller instance
    */
   public static get Employees(): EmployeeController {
-    const name = CollectionInfo.employee.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new EmployeeController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.employee.name,
+      ExpenseController,
+      CollectionInfo.server
+    );
   }
 
   /**
    * @returns the expenses controller instance
    */
   public static get Expenses(): ExpenseController {
-    const name = CollectionInfo.expense.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new ExpenseController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.expense.name,
+      ExpenseController,
+      CollectionInfo.server
+    );
   }
 
   /**
    * @returns the information controller instance
    */
   public static get Information(): InformationController {
-    const name = CollectionInfo.information.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new InformationController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.information.name,
+      InformationController,
+      CollectionInfo.server
+    );
   }
 
   /**
    * @returns the orders controller instance
    */
   public static get Orders(): OrderController {
-    const name = CollectionInfo.order.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new OrderController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.order.name,
+      OrderController,
+      CollectionInfo.server
+    );
   }
 
   /**
    * @returns the products controller instance
    */
   public static get Products(): ProductController {
-    const name = CollectionInfo.product.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new ProductController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.product.name,
+      ProductController,
+      CollectionInfo.server
+    );
   }
 
   /**
    * @returns the restocks controller instance
    */
   public static get Restocks(): RestockController {
-    const name = CollectionInfo.restock.name;
-
-    if (!BaseController.isDependencyPresent(name)) {
-      new RestockController(CollectionInfo.server);
-    }
-
-    return BaseController.getDependency(name);
+    return BaseController.getDependency(
+      CollectionInfo.restock.name,
+      RestockController,
+      CollectionInfo.server
+    );
   }
 }

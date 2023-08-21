@@ -1,7 +1,7 @@
 import BaseModel from "./BaseModel";
 import Courier from "./Courier";
 import Employee from "./Employee";
-import Monetary from "./Monetary";
+import Monetary from "../local_model/Monetary";
 import Vendor from "./Vendor";
 import { expense, TrailNature, TrailType } from "./types";
 

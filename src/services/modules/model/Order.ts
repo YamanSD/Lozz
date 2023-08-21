@@ -2,7 +2,7 @@ import BaseModel from "./BaseModel";
 import CartProduct from "../local_model/CartProduct";
 import Courier from "./Courier";
 import Customer from "./Customer";
-import Monetary from "./Monetary";
+import Monetary from "../local_model/Monetary";
 import Restock from "./Restock";
 import { basicOrder, Generic, MonetaryType, order, OrderStatus, TrailNature, TrailType } from "./types";
 import { InvalidOrderCreationStatusError } from "../controller/Errors";
@@ -412,7 +412,7 @@ export default class Order implements BaseModel {
    * @returns the ID of the employee that created the order
    */
   public get employee_id() {
-    return this.restock.employee_id;
+    return BaseModel.initialEmployee(this.trail);
   }
 
   /**

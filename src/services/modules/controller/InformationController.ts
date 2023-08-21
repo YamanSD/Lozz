@@ -6,6 +6,9 @@ import { IdDoesNotExistError, IllegalStateError } from "./Errors";
 import RateInformation from "../model/RateInformation";
 import ProvinceInformation from "../model/ProvinceInformation";
 import { isEqual } from "lodash";
+import ProductController from "./ProductController";
+import Courier from "../model/Courier";
+import Monetary from "../local_model/Monetary";
 
 
 /**
@@ -41,11 +44,62 @@ export default class InformationController
   }
 
   /**
+   * @returns the products controller
+   */
+  public get productController(): ProductController {
+    return BaseController.getDependency(
+      CollectionInfo.product.name,
+      ProductController,
+      this.metaServer
+    );
+  }
+
+  /**
+   * Activates the listener for the collection.
+   * Handles update processing between documents.
+   *
+   * @private
+   */
+  protected activateListener() {
+    this.collection.onSnapshot(snapshot => {
+      snapshot.docChanges().forEach(async (change) => {
+        const document = change.doc;
+        const id = document.id;
+
+        if (change.type === "added") {
+          if (this.checkCache(id)) {
+            return;
+          }
+
+          const data = document.data();
+          this.setCache(id, data as information);
+        } else if (change.type === "modified") {
+          const data = document.data();
+          this.updateCache(id, data);
+
+          if (id === InformationType.provinces) {
+            Courier.provinces = data.names;
+          } else if (id === InformationType.rate) {
+            Monetary.roundUsdNumber = data.roundToNearestUsd;
+            Monetary.roundLbpNumber = data.roundToNearestLbp;
+            Monetary.buyUsdRate = data.buyUsdRate;
+            Monetary.sellUsdRate = data.sellUsdRate;
+          }
+        } else if (change.type === "removed") {
+          this.removeCache(id);
+        }
+      });
+    });
+  }
+
+  /**
    * Note that this function is called only once by layer-2
    *
    * @param data to be created
    */
   public async create(data: basicProperties) {
+    await this.productController.checkOnProperties();
+
     for (let type of Object.keys(data)) {
       let uploadData =
         data[type as InformationType] as Generic;
@@ -113,6 +167,15 @@ export default class InformationController
    * @protected
    */
   protected fillDataGaps(data: Generic): information {
+    throw new IllegalStateError();
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: information): Generic {
     throw new IllegalStateError();
   }
 }

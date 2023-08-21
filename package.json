@@ -13,7 +13,7 @@
     "pod-install": "cd ios && RCT_NEW_ARCH_ENABLED=1 bundle exec pod install && cd .."
   },
   "dependencies": {
-    "@orama/orama": "^1.1.1",
+    "@orama/orama": "^1.2.1",
     "@react-native-firebase/analytics": "^18.3.0",
     "@react-native-firebase/app": "^18.3.0",
     "@react-native-firebase/auth": "^18.3.0",

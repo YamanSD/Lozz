@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicCourier, courier, CourierSearchSchema, SpecialFields } from "../model/types";
+import { basicCourier, courier, CourierSearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "../../../CollectionInfo";
 import Courier from "../model/Courier";
@@ -68,5 +68,18 @@ export default class CourierController extends BaseController<courier> {
       shipping_fees: data.shipping_fees,
       [SpecialFields.trail]: this.generateInitialTrail()
     });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: courier): Generic {
+    return {
+      id: data.name,
+      name: data.name,
+      provinces: Object.keys(data.shipping_fees),
+    };
   }
 }

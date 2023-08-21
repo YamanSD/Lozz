@@ -4,6 +4,7 @@ export default {
   ids: "identifiers",
   online_detection: "online",
   server: firestore,
+  testing_id: "TESTING_ID",
   vendor: {
     name: "vendors",
     id: "name"

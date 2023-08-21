@@ -1,9 +1,20 @@
-import auth from '@react-native-firebase/auth';
+import auth from "@react-native-firebase/auth";
 import { TrailNature, TrailType } from "./types";
 import { cloneDeep } from "lodash";
 import { reduxStorage } from "../../../store";
 import ReduxParameters from "../../../ReduxParameters";
+import CollectionInfo from "../../../CollectionInfo";
+import { firebase } from "@react-native-firebase/firestore";
+import { IllegalStateError } from "../controller/Errors";
 
+
+/**
+ * Firestore raw timestamp
+ */
+type RawTimestamp = {
+  seconds: number,
+  nanoseconds: number
+};
 
 /**
  * Very simple abstract class used to achieve polymorphism between the
@@ -49,17 +60,22 @@ export default abstract class BaseModel {
    * @returns the current datetime in the following format (yyyymmddhhMMssnnn)
    */
   public static get currentTimestamp(): string {
-    const temp = new Date();
+    return BaseModel.revertDate(new Date());
+  }
 
-    return [
-      temp.getFullYear(),
-      temp.getMonth().toString().padStart(2, '0'),
-      temp.getDate().toString().padStart(2, '0'),
-      temp.getHours().toString().padStart(2, '0'),
-      temp.getMinutes().toString().padStart(2, '0'),
-      temp.getSeconds().toString().padStart(2, '0'),
-      temp.getMilliseconds().toString().padStart(3, '0')
-    ].join('');
+  /**
+   * @param trail to be processed
+   * @returns the ID of the employee that created the trail.
+   *          If the creation tag does not exist, return null.
+   */
+  public static initialEmployee(trail: TrailType): string {
+    for (let timestamp of Object.keys(trail)) {
+      if (trail[timestamp].nature === TrailNature.C) {
+        return trail[timestamp].employee_id;
+      }
+    }
+
+    throw new IllegalStateError();
   }
 
   /**
@@ -67,7 +83,7 @@ export default abstract class BaseModel {
    * @returns a string containing n random digits
    */
   public static getRandomNumber(n: number): string {
-    return Math.round(Math.random() * (10 ** n)).toString();
+    return Math.floor(Math.random() * (10 ** n)).toString();
   }
 
   /**
@@ -98,7 +114,7 @@ export default abstract class BaseModel {
 
     if (id === undefined) {
       if (reduxStorage.getItem(ReduxParameters.testing)) {
-        id = "TESTING_ID";
+        id = CollectionInfo.testing_id;
       } else {
         throw new Error("Guest user cannot stamp");
       }
@@ -124,6 +140,42 @@ export default abstract class BaseModel {
       millis = Number.parseInt(id.substring(14, 17));
 
     return new Date(year, month, day, hour, minute, second, millis);
+  }
+
+  /**
+   * @param trail to get the initial timestamp from
+   * @returns the creation timestamp in yyyymmddhhMMssnnn format
+   */
+  public static initialTimestamp(trail: TrailType): string {
+    for (let timestamp of Object.keys(trail)) {
+      if (trail[timestamp].nature === TrailNature.C) {
+        return timestamp;
+      }
+    }
+
+    throw new IllegalStateError();
+  }
+
+  /**
+   * @param date to be reverted
+   * @returns a string in the form of yyyymmddhhMMssnnn
+   */
+  public static revertDate(date: Date | RawTimestamp): string {
+    if (!(date instanceof Date)) {
+      date = (
+        new firebase.firestore.Timestamp(date.seconds, date.nanoseconds)
+      ).toDate();
+    }
+
+    return [
+      date.getFullYear(),
+      date.getMonth().toString().padStart(2, '0'),
+      date.getDate().toString().padStart(2, '0'),
+      date.getHours().toString().padStart(2, '0'),
+      date.getMinutes().toString().padStart(2, '0'),
+      date.getSeconds().toString().padStart(2, '0'),
+      date.getMilliseconds().toString().padStart(3, '0')
+    ].join('');
   }
 
   /**

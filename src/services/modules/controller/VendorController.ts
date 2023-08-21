@@ -1,5 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicVendor, SpecialFields, vendor, VendorSearchSchema } from "../model/types";
+import { basicVendor, Generic, SpecialFields, vendor, VendorSearchSchema } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Vendor from "../model/Vendor";
@@ -69,5 +69,19 @@ export default class VendorController extends BaseController<vendor> {
       emails: data.emails,
       [SpecialFields.trail]: this.generateInitialTrail()
     });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: vendor): Generic {
+    return {
+      id: data.name,
+      name: data.name,
+      phone_numbers: data.phone_numbers ?? [],
+      emails: data.emails ?? []
+    };
   }
 }

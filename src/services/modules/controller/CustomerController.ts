@@ -1,8 +1,9 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicCustomer, customer, CustomerSearchSchema, SpecialFields } from "../model/types";
+import { basicCustomer, customer, CustomerSearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Customer from "../model/Customer";
+import BaseModel from "../model/BaseModel";
 
 
 /**
@@ -72,6 +73,27 @@ export default class CustomerController extends BaseController<customer> {
       birthday: data.birthday,
       is_banned: false,
       [SpecialFields.trail]: this.generateInitialTrail()
+    });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: customer): Generic {
+    return super.fixDataGaps({
+      id: data.phone_number,
+      first_name: data.first_name,
+      middle_name: data.middle_name ?? "",
+      last_name: data.last_name,
+      phone_number: data.phone_number,
+      email: data.email ?? "",
+      gender: data.gender,
+      birthday: data.birthday !== undefined
+        ? BaseModel.revertDate(data.birthday)
+        : undefined,
+      is_banned: data.is_banned
     });
   }
 }

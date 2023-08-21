@@ -1,9 +1,16 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicProduct, Generic, product, productProperties, ProductSearchSchema, SpecialFields } from "../model/types";
+import {
+  basicProduct,
+  Generic,
+  product,
+  productProperties,
+  ProductSearchSchema,
+  SpecialFields
+} from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Product from "../model/Product";
-import { IdDoesNotExistError } from "./Errors";
+import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
 import BaseModel from "../model/BaseModel";
 import CategoryController from "./CategoryController";
 import VendorController from "./VendorController";
@@ -29,13 +36,13 @@ export default class ProductController extends BaseController<product> {
       server ?? firestore,
       ProductController.flag,
       ProductSearchSchema
-    );
+    )
+
+    this.removeId(this.propertiesId);
 
     this.loadSearchData().then(() => {
-      this.activateListener().then(() => {
-        this.injectDependency();
-        this.removeId(this.propertiesId);
-      });
+      this.activateListener();
+      this.injectDependency();
     });
   }
 
@@ -45,7 +52,9 @@ export default class ProductController extends BaseController<product> {
    */
   public get categoryController(): CategoryController {
     return BaseController.getDependency(
-      CollectionInfo.category.name
+      CollectionInfo.category.name,
+      CategoryController,
+      this.metaServer
     );
   }
 
@@ -55,7 +64,9 @@ export default class ProductController extends BaseController<product> {
    */
   public get vendorController(): VendorController {
     return BaseController.getDependency(
-      CollectionInfo.vendor.name
+      CollectionInfo.vendor.name,
+      VendorController,
+      this.metaServer
     );
   }
 
@@ -102,20 +113,25 @@ export default class ProductController extends BaseController<product> {
    *          If not present, fetched from server and added to cache.
    */
   public async getLocalProperties(): Promise<productProperties> {
+    let data;
+
     if (this.checkCache(this.propertiesId)) {
-      return this.getCache(this.propertiesId) as Generic as productProperties;
+      data = this.getCache(this.propertiesId) as Generic as productProperties;
     } else {
-      const data = await this.getServerProperties();
+      data = await this.getServerProperties();
       this.setCache(this.propertiesId, data as product);
-      return data as productProperties;
     }
+
+    delete data.id;
+
+    return data;
   }
 
   /**
    * @param properties new properties
    */
   public updateLocalProperties(properties: productProperties): void {
-    this.setCache(this.propertiesId, properties as Generic as product);
+    this.updateCache(this.propertiesId, properties as Generic as product);
   }
 
   /**
@@ -123,21 +139,10 @@ export default class ProductController extends BaseController<product> {
    */
   public async updateIdProperty(id: string) {
     let local = await this.getLocalProperties();
-    local[id] = BaseModel.getRandomTimestamp();
-    this.updateLocalProperties(local);
-  }
-
-  /**
-   * Uploads the local properties to the server
-   */
-  public async pushUpdateProperties() {
-    let data = await this.getLocalProperties();
-
-    // Remove id from data
-    delete data.id;
+    local[id] = BaseModel.currentTimestamp;
 
     await this.updateServer(
-      data,
+      local,
       this.propertiesId,
       true
     );
@@ -150,35 +155,26 @@ export default class ProductController extends BaseController<product> {
    * properties (price, cost, etc...)
    * Quantities are updated by restocks manager.
    */
-  public async activateListener() {
-    // Temporary fix. Should be moved to local properties
-    await this.checkOnProperties();
-
+  public activateListener() {
     this.propertiesDocument.onSnapshot(async (snapshot) => {
       let local = await this.getLocalProperties();
       let server = snapshot.data() ?? {};
-
       const keys = BaseController.joinKeys(local, server);
 
       for (let id of keys) {
         if (!(id in server)) {
           this.removeCache(id);
         } else if (!(id in local) || local[id] !== server[id]) {
-          this.addCache(await this.get(id));
+          const data = (await this.getServer(id)).data() as Generic;
+
+          data.id = id;
+
+          this.updateCache(id, data as product);
         }
       }
 
       this.updateLocalProperties(server);
     });
-  }
-
-  /**
-   * Alias for this.setCache
-   * @param product to be added to the cache
-   * @private
-   */
-  private addCache(product: Product) {
-    this.setCache(product.id, product.data);
   }
 
   /**
@@ -204,10 +200,13 @@ export default class ProductController extends BaseController<product> {
    * @throws IdAlreadyExistsError if the name of the product is taken
    */
   public async create(data: basicProduct) {
+    if (!(await this.isIdAvailable(data.id))) {
+      throw new IdAlreadyExistsError();
+    }
+
     await this.createServer(data.id, this.fillDataGaps(data));
     await this.uploadIds();
     await this.updateIdProperty(data.id);
-    await this.pushUpdateProperties();
   }
 
   /**
@@ -219,25 +218,24 @@ export default class ProductController extends BaseController<product> {
    * @throws IdDoesNotExistError if the product does not exist
    */
   public async update(model: Product) {
-    if (await this.isIdAvailable(model.name)) {
+    if (await this.isIdAvailable(model.id)) {
       throw new IdDoesNotExistError();
     }
 
-    const currentData: Generic | undefined = this.getCache(model.name);
+    const currentData: Generic | undefined = this.getCache(model.id);
     const data: Generic | undefined = model.dataCopy;
 
     if (currentData === undefined) {
-      await this.updateServer(data, model.name);
-      await this.updateIdProperty(model.id);
-      return;
+      await this.updateServer(data, model.id);
+    } else {
+      BaseController.clearAlikeFieldsFromNew(currentData, data);
+
+      delete data.quantities;
+      delete data.inventory_quantities;
+
+      await this.updateServer(data, model.id);
     }
 
-    BaseController.clearAlikeFieldsFromNew(currentData, data);
-
-    delete data.quantities;
-    delete data.inventory_quantities;
-
-    await this.updateServer(data, model.name);
     await this.updateIdProperty(model.id);
   }
 
@@ -301,5 +299,35 @@ export default class ProductController extends BaseController<product> {
       description: data.description,
       [SpecialFields.trail]: this.generateInitialTrail()
     });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: product): Generic {
+    let quantities = data.quantities;
+    let available_values: Set<string> = new Set<string>();
+
+    for (let usi of Object.keys(quantities)) {
+      if (quantities[usi] !== 0) {
+        Product.invertUsi(usi).option_values.forEach(value => {
+          available_values.add(value);
+        });
+      }
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      vendor_id: data.vendor_id,
+      category_id: data.category_id,
+      price: data.price,
+      cost: data.cost,
+      discounted: data.discount === undefined,
+      description: data.description,
+      available_values: Array.from<string>(available_values.values())
+    };
   }
 }

@@ -1,7 +1,7 @@
 import BaseModel from "./BaseModel";
 import CartProduct from "../local_model/CartProduct";
 import Category from "./Category";
-import Monetary from "./Monetary";
+import Monetary from "../local_model/Monetary";
 import Vendor from "./Vendor";
 import {
   cartProduct, category, product, QuantityType,

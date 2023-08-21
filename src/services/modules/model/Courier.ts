@@ -1,6 +1,6 @@
 import BaseModel from "./BaseModel";
 import { courier, TrailNature, TrailType } from "./types";
-import Monetary from "./Monetary";
+import Monetary from "../local_model/Monetary";
 import { NoProvincesError } from "../controller/Errors";
 
 

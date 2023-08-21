@@ -1551,10 +1551,10 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@orama/orama@^1.1.1":
-  version "1.1.1"
-  resolved "https://registry.npmjs.org/@orama/orama/-/orama-1.1.1.tgz"
-  integrity sha512-s52+s1ThY7Q/lAqwmws21Yq6LmSqwB9IJW9+Vwh21eonlwFGBaUkiiiQnuozl7ILWQSr+yfmZ8CVujr7cZQJ6Q==
+"@orama/orama@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.npmjs.org/@orama/orama/-/orama-1.2.1.tgz"
+  integrity sha512-vq3ar9REofq7Q87riamQB5y1aJc068Qwbnd7uAboeSfRTDj2+KdNiwjTEk01SVjr8eAvCx8iRZl4rkEYo0ETYw==
 
 "@react-native-community/cli-clean@11.3.3":
   version "11.3.3"

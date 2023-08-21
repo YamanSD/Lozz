@@ -1,9 +1,10 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicEmployee, employee, EmployeeSearchSchema, Generic, SpecialFields } from "../model/types";
+import { basicEmployee, employee, EmployeeRole, EmployeeSearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Employee from "../model/Employee";
 import database from "@react-native-firebase/database";
+import BaseModel from "../model/BaseModel";
 
 
 /**
@@ -102,6 +103,31 @@ export default class EmployeeController extends BaseController<employee> {
       birthday: data.birthday,
       join_date: new Date(),
       [SpecialFields.trail]: this.generateInitialTrail()
+    });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: employee): Generic {
+    return super.fixDataGaps({
+      id: data.phone_number,
+      first_name: data.first_name,
+      middle_name: data.middle_name ?? "",
+      last_name: data.last_name,
+      phone_number: data.phone_number,
+      email: data.email,
+      role: data.role,
+      commission_percent: data.commission_percent ?? 0,
+      salary: data.salary,
+      gender: data.gender,
+      birthday: data.birthday !== undefined
+        ? BaseModel.revertDate(data.birthday)
+        : undefined,
+      left: data.role === EmployeeRole.past,
+      join_date: BaseModel.revertDate(data.join_date)
     });
   }
 }

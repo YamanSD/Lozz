@@ -1,5 +1,13 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicOrder, Generic, MonetaryType, order, OrderSearchSchema, OrderStatus, QuantityType } from "../model/types";
+import {
+  basicOrder,
+  Generic,
+  MonetaryType,
+  order,
+  OrderSearchSchema,
+  OrderStatus,
+  QuantityType, SpecialFields
+} from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Order from "../model/Order";
@@ -14,10 +22,11 @@ import {
 import RestockController from "./RestockController";
 import CourierController from "./CourierController";
 import CustomerController from "./CustomerController";
-import Monetary from "../model/Monetary";
+import Monetary from "../local_model/Monetary";
 import Employee from "../model/Employee";
 import { reduxStorage } from "../../../store";
 import ReduxParameters from "../../../ReduxParameters";
+import BaseModel from "../model/BaseModel";
 
 
 /**
@@ -53,7 +62,9 @@ export default class OrderController extends BaseController<order> {
    */
   public get restockController(): RestockController {
     return BaseController.getDependency(
-      CollectionInfo.restock.name
+      CollectionInfo.restock.name,
+      RestockController,
+      this.metaServer
     );
   }
 
@@ -63,7 +74,9 @@ export default class OrderController extends BaseController<order> {
    */
   public get courierController(): CourierController {
     return BaseController.getDependency(
-      CollectionInfo.courier.name
+      CollectionInfo.courier.name,
+      CourierController,
+      this.metaServer
     );
   }
 
@@ -82,7 +95,9 @@ export default class OrderController extends BaseController<order> {
    */
   public get customerController(): CustomerController {
     return BaseController.getDependency(
-      CollectionInfo.customer.name
+      CollectionInfo.customer.name,
+      CustomerController,
+      this.metaServer
     );
   }
 
@@ -271,6 +286,14 @@ export default class OrderController extends BaseController<order> {
    * @returns the ID of an order, based on the current pivot
    */
   public async generateId(): Promise<string> {
+    const idDoc = await this.idSetDocument.get();
+
+    if (!idDoc.exists) {
+      await this.idSetDocument.set({
+        data: this.pivot
+      });
+    }
+
     return await this.runTransaction(async (transaction) => {
       let newPivot =
         (await transaction.get(this.idSetDocument)).data()?.data + 1;
@@ -345,6 +368,9 @@ export default class OrderController extends BaseController<order> {
       temp.multiply(products[usi].quantity);
       result.add(temp);
     }
+
+    // Invert value
+    result.multiply(-1);
 
     return result.data;
   }
@@ -421,5 +447,29 @@ export default class OrderController extends BaseController<order> {
       parent_id: data.parent_id,
       trail: this.generateInitialTrail()
     });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: order): Generic {
+    return {
+      id: data.id,
+      date: BaseModel.initialTimestamp(data[SpecialFields.trail]),
+      note: data.note,
+      discounted: data.discount === undefined,
+      status: data.status,
+      total: data.total,
+      province: data.province,
+      address: data.address ?? "",
+      courier_id: data.courier_id ?? "",
+      customer_id: data.customer_id,
+      commission_percent: data.commission_percent ?? 0,
+      phone_number: data.phone_number ?? "",
+      email: data.email ?? "",
+      parent_id: data.parent_id ?? ""
+    };
   }
 }

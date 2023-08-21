@@ -2,10 +2,12 @@ import BaseController, { ControllerFlag } from "./BaseController";
 import {
   basicRestock,
   Generic,
-  JointQuantityType, product,
+  JointQuantityType,
+  product,
   QuantityType,
   restock,
-  RestockSearchSchema
+  RestockSearchMapping,
+  RestockSearchSchema, SpecialFields
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
@@ -13,8 +15,8 @@ import Restock from "../model/Restock";
 import {
   EmptyRestockError,
   IdDoesNotExistError,
-  IllegalStateError,
-  NoUpdateError, ProductNotFoundError
+  NoUpdateError,
+  ProductNotFoundError
 } from "./Errors";
 import BaseModel from "../model/BaseModel";
 import { sum } from "lodash";
@@ -55,7 +57,9 @@ export default class RestockController extends BaseController<restock> {
    */
   public get productController(): ProductController {
     return BaseController.getDependency(
-      CollectionInfo.product.name
+      CollectionInfo.product.name,
+      ProductController,
+      this.metaServer
     );
   }
 
@@ -64,7 +68,9 @@ export default class RestockController extends BaseController<restock> {
    */
   public get categoryController(): CategoryController {
     return BaseController.getDependency(
-      CollectionInfo.category.name
+      CollectionInfo.category.name,
+      CategoryController,
+      this.metaServer
     );
   }
 
@@ -115,13 +121,18 @@ export default class RestockController extends BaseController<restock> {
     this.collection.onSnapshot(snapshot => {
       snapshot.docChanges().forEach(async (change) => {
         const document = change.doc;
-        // undefined if removed
-        const data: restock | undefined = document.data() as restock;
         const id = document.id;
+        const data: restock | undefined = document.data() as restock;
         const productController = this.productController;
+        const cacheCheck = this.checkCache(id);
         let restock = new Restock(data);
 
-        if (change.type === "added") {
+        if (change.type === "added"
+          || (change.type === "modified" && !cacheCheck)) {
+          if (cacheCheck) {
+            return;
+          }
+
           for (let usi of restock.products) {
             const usi_data = Product.invertUsi(usi);
             let product = await productController.get(usi_data.id);
@@ -135,31 +146,45 @@ export default class RestockController extends BaseController<restock> {
 
           this.setCache(id, restock.data);
         } else if (change.type === "modified") {
-          // If in cache, remove quantities, otherwise ignore.
-          if (this.checkCache(id)) {
-            let oldRestock = new Restock(this.getCache(id) as restock);
-            const diff = oldRestock.to_inventory !== restock.to_inventory;
+          /*
+           * If in cache compare old with new,
+           * otherwise enter to previous branch
+           */
+          let oldRestock = new Restock(this.getCache(id) as restock);
+          const diff = oldRestock.to_inventory !== restock.to_inventory;
 
-            for (let usi of restock.products) {
-              const usi_data = Product.invertUsi(usi);
-              let product = await productController.get(usi_data.id);
+          for (let usi of restock.products) {
+            const usi_data = Product.invertUsi(usi);
+            let product = await productController.get(usi_data.id);
 
-              product.addUspQuantity(
-                usi,
-                restock.getQuantity(usi)
-                - (diff ? 0 : oldRestock.getQuantity(usi)),
-                restock.to_inventory
-              );
+            product.addUspQuantity(
+              usi,
+              restock.getQuantity(usi)
+              - (diff ? 0 : oldRestock.getQuantity(usi)),
+              restock.to_inventory
+            );
 
-              productController.updateLocal(product);
-            }
-
-            this.updateCache(id, restock.data);
-          } else {
-
+            productController.updateLocal(product);
           }
-        } else {
-          throw new IllegalStateError();
+
+          this.updateCache(id, restock.data);
+        } else if (change.type === "removed") {
+          if (!cacheCheck) {
+            return;
+          }
+
+          for (let usi of restock.products) {
+            const usi_data = Product.invertUsi(usi);
+            let product = await productController.get(usi_data.id);
+
+            product.addUspQuantity(
+              usi, -restock.getQuantity(usi), restock.to_inventory
+            );
+
+            productController.updateLocal(product);
+          }
+
+          this.removeCache(id);
         }
       });
     });
@@ -322,7 +347,8 @@ export default class RestockController extends BaseController<restock> {
         }
 
         data = document.data() as Generic as product;
-        product = Product.generateWrapper(productId,
+        product = Product.generateWrapper(
+          productId,
           data,
           await categoryController.get(data.category_id)
         );
@@ -407,5 +433,29 @@ export default class RestockController extends BaseController<restock> {
       item_count: RestockController.countItems(data.quantities),
       trail: this.generateInitialTrail()
     });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: restock): Generic {
+    const toInventory = data.to_inventory === undefined
+      ? RestockSearchMapping.both
+      : (data.to_inventory
+        ? RestockSearchMapping.inventory
+        : RestockSearchMapping.display);
+
+    return {
+      id: data.id,
+      date: data.id,
+      note: data.note,
+      to_inventory: toInventory,
+      item_count: data.item_count,
+      order_linked: data.order_linked,
+      employee_id: BaseModel.initialEmployee(data[SpecialFields.trail]),
+      quantities: Object.keys(data.quantities)
+    };
   }
 }

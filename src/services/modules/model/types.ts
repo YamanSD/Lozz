@@ -2,6 +2,7 @@
  * File contains the core type definitions of the application
  */
 
+// @ts-ignore
 import { Schema } from "@orama/orama";
 
 /**
@@ -928,6 +929,7 @@ export type information = {
  * Defines the search schema for the Vendor collection
  */
 export const VendorSearchSchema: Schema = {
+  id: 'string', // Required for search engine
   name: 'string',
   phone_numbers: 'string[]',
   emails: 'string[]'
@@ -937,14 +939,16 @@ export const VendorSearchSchema: Schema = {
  * Defines the search schema for the Category collection
  */
 export const CategorySearchSchema: Schema = {
+  id: 'string', // Required for search engine
   name: 'string',
-  options_keys: 'string[]'
+  option_keys: 'string[]'
 };
 
 /**
  * Defines the search schema for the Expense collection
  */
 export const ExpenseSearchSchema: Schema = {
+  id: 'string', // Required for search engine
   description: 'string',
   value: 'number[]',
   date: 'string',  // (yyyymmdd) format
@@ -957,19 +961,31 @@ export const ExpenseSearchSchema: Schema = {
  * Defines the search schema for the Courier collection
  */
 export const CourierSearchSchema: Schema = {
+  id: 'string', // Required for search engine
   name: 'string',
-  orders: 'string[]'
+  provinces: 'string[]'
 };
+
+/**
+ * Enum class for the to_inventory value.
+ * Used in search filters.
+ */
+export enum RestockSearchMapping {
+  display = 0,
+  inventory,
+  both
+}
 
 /**
  * Defines the search schema for the Restocks collection
  */
 export const RestockSearchSchema: Schema = {
+  id: 'string', // Required for search engine
   date: 'string', // restock ID
   note: 'string', // Can be empty
-  to_inventory: 'boolean',
+  to_inventory: 'number',
   item_count: 'number',
-  order_id: 'string', // Can be empty
+  order_linked: 'boolean',
   employee_id: 'string',
   quantities: 'string[]' // Only USIs
 };
@@ -978,6 +994,7 @@ export const RestockSearchSchema: Schema = {
  * Defines the search schema for the Employee collection
  */
 export const EmployeeSearchSchema: Schema = {
+  id: 'string', // Required for search engine
   first_name: 'string',
   middle_name: 'string', // Can be empty
   last_name: 'string',
@@ -988,8 +1005,7 @@ export const EmployeeSearchSchema: Schema = {
   salary: 'number[]',
   gender: 'boolean', // Can be empty
   birthday: 'string', // Can be empty, (yyyymmdd)
-  orders: 'string[]', // Can be empty
-  end_date: 'string', // Can be empty
+  left: 'boolean',
   join_date: 'string' // (yyyymmdd), same as ID
 };
 
@@ -997,6 +1013,7 @@ export const EmployeeSearchSchema: Schema = {
  * Defines the search schema for the Customer collection
  */
 export const CustomerSearchSchema: Schema = {
+  id: 'string', // Required for search engine
   first_name: 'string',
   middle_name: 'string', // Can be empty
   last_name: 'string',
@@ -1004,7 +1021,6 @@ export const CustomerSearchSchema: Schema = {
   email: 'string', // Can be empty
   gender: 'boolean', // Can be empty
   birthday: 'string', // Can be empty, (yyyymmdd)
-  orders: 'string[]', // Can be empty
   is_banned: 'boolean'
 };
 
@@ -1012,21 +1028,23 @@ export const CustomerSearchSchema: Schema = {
  * Defines the search schema for the Product collection
  */
 export const ProductSearchSchema: Schema = {
-  id: 'string',
+  id: 'string', // Required for search engine
   name: 'string',
   vendor_id: 'string',
   category_id: 'string',
   price: 'number[]',
   cost: 'number[]',
   discounted: 'boolean',
-  description: 'string'
+  description: 'string',
+  available_values: 'string[]'
 };
 
 /**
  * Defines the search schema for the Order collection
  */
 export const OrderSearchSchema: Schema = {
-  id: 'string',
+  id: 'string', // Required for search engine
+  date: 'string',
   note: 'string', // Can be empty
   discounted: 'boolean',
   status: 'number',
@@ -1035,7 +1053,6 @@ export const OrderSearchSchema: Schema = {
   address: 'string', // Can be empty
   courier_id: 'string', // Can be empty
   customer_id: 'string',
-  paid: 'boolean', // Can be empty
   commission_percent: 'number', // Can be empty
   phone_number: 'string',
   email: 'string',

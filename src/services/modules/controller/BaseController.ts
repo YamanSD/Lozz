@@ -1,6 +1,11 @@
 import firestore, { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { MMKV } from "react-native-mmkv";
-import { create, insert, Orama, ProvidedTypes, remove, Schema } from "@orama/orama";
+import {
+  update, create, insert, Orama,
+  ProvidedTypes,
+  remove, Schema
+  // @ts-ignore
+} from "@orama/orama";
 import {
   IdAlreadyExistsError,
   IdDoesNotExistError,
@@ -13,7 +18,7 @@ import {
 import { Generic, SpecialFields, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
 import CollectionNames from "../../../CollectionInfo";
-import { isEqual, isInteger, pickBy } from "lodash";
+import { isEqual, pickBy } from "lodash";
 
 
 /**
@@ -27,7 +32,9 @@ class InternalDependencyTree {
    * @param instance to be stored
    */
   public static inject(key: string, instance: any): void {
-    InternalDependencyTree.instances[key] = instance;
+    if (!(key in InternalDependencyTree.instances)) {
+      InternalDependencyTree.instances[key] = instance;
+    }
   }
 
   /**
@@ -56,6 +63,9 @@ export enum ControllerFlag {
   can_delete =      0b010000,
   can_update =      0b100000,
 }
+
+/* Name alias for the search engine type */
+type SearchEngine = Orama<ProvidedTypes>;
 
 /**
  * Class responsible for handling raw data storage & retrieval
@@ -88,12 +98,10 @@ export default abstract class BaseController<RawData extends Generic> {
   private readonly flags: number;
 
   /* search engine instance for the controller */
-  public searchEngine?: Orama<ProvidedTypes>;
+  public searchEngine?: SearchEngine;
 
-  /* maps document IDs to Orama IDs */
-  private idToOramaId: {
-    [id: string]: any
-  } = {};
+  /* search schema for the collection */
+  private readonly searchSchema?: Schema;
 
   /**
    * @param collection_name name of the controlled collection
@@ -109,15 +117,7 @@ export default abstract class BaseController<RawData extends Generic> {
               server: typeof firestore,
               flags: number = 0,
               search_schema?: Schema) {
-    if (search_schema !== undefined) {
-      create({
-        schema: search_schema,
-        id: collection_name
-      }).then((value) => {
-        this.searchEngine = value;
-      });
-    }
-
+    this.searchSchema = search_schema;
     this.collection_id = collection_id;
     this.collection_name = collection_name;
     this.serverInstance = server;
@@ -449,7 +449,7 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     if (!this.isPivot) {
-      return !(id in this.idSet || await this.isErased(id));
+      return !(this.idSet.has(id) || await this.isErased(id));
     }
 
     return this.pivot < Number(id);
@@ -500,6 +500,10 @@ export default abstract class BaseController<RawData extends Generic> {
         const id = document.id;
 
         if (change.type === "added") {
+          if (this.checkCache(id)) {
+            return;
+          }
+
           const data: RawData = document.data() as RawData;
           this.setCache(id, data);
         } else if (change.type === "modified") {
@@ -525,7 +529,7 @@ export default abstract class BaseController<RawData extends Generic> {
    * @returns true if the ID is in cache
    * @protected
    */
-  protected checkCache(id: string): boolean {
+  public checkCache(id: string): boolean {
     return this.storage.contains(id);
   }
 
@@ -600,12 +604,11 @@ export default abstract class BaseController<RawData extends Generic> {
    * @protected
    */
   protected async removeFromSearchEngine(id: string) {
-    if (this.searchEngine === undefined) {
+    if (await this.checkSearchEngine()) {
       return;
     }
 
-    await remove(this.searchEngine, this.idToOramaId[id]);
-    delete this.idToOramaId[id];
+    await remove(this.searchEngine as SearchEngine, id);
   }
 
   /**
@@ -637,6 +640,14 @@ export default abstract class BaseController<RawData extends Generic> {
   }
 
   /**
+   * @param str to be checked
+   * @returns true if the given str is a valid integer
+   */
+  public isNumeric(str: string): boolean {
+    return !isNaN(Number(str));
+  }
+
+  /**
    * @param id to be added to the ID list on server
    */
   public addId(id: string) {
@@ -645,7 +656,7 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     if (this.isPivot) {
-      if (!isInteger(id)) {
+      if (!this.isNumeric(id)) {
         throw new PivotError();
       }
 
@@ -789,17 +800,57 @@ export default abstract class BaseController<RawData extends Generic> {
   }
 
   /**
+   * Checks if there is a search schema if there is, and the searchEngine
+   * is not initialized, initializes the search engine.
+   * Otherwise, returns false without any actions.
+   *
+   * @returns true if there is not a search schema
+   * @private
+   */
+  private async checkSearchEngine(): Promise<boolean> {
+    if (this.searchSchema === undefined) {
+      return true;
+    } else if (this.searchEngine !== undefined) {
+      return false;
+    }
+
+    this.searchEngine = await create({
+      schema: this.searchSchema,
+      id: this.collectionName
+    });
+
+    return false;
+  }
+
+  /**
    * If there is no search engine, do nothing.
    * Default implementation of the load search for controllers.
    * Child classes might override and call in constructor.
    * @protected
    */
   protected async loadSearchData() {
-    if (this.searchEngine === undefined) {
+    if (await this.checkSearchEngine()) {
       return;
     }
 
-    for (let id of this.storage.getAllKeys()) {
+    if (this.isPivot) {
+      let id = 1;
+
+      while (id <= this.pivot) {
+        const data = this.getCache(id.toString());
+
+        if (data === undefined) {
+          continue;
+        }
+
+        await this.updateSearchEngine(id.toString(), data);
+        id++;
+      }
+
+      return;
+    }
+
+    for (let id of this.idSet) {
       const data = this.getCache(id);
 
       if (data === undefined) {
@@ -818,12 +869,33 @@ export default abstract class BaseController<RawData extends Generic> {
    * @protected
    */
   protected async updateSearchEngine(id: string, data: RawData) {
-    if (this.searchEngine === undefined) {
+    if (
+      await this.checkSearchEngine() || !(this.isPivot || this.idSet.has(id))
+    ) {
       return;
     }
 
-    this.idToOramaId[id] = await insert(this.searchEngine, data);
+    try {
+      return await insert(
+        this.searchEngine as SearchEngine, {
+          id: id,
+          ...this.fixSearchEngineData(data)
+      });
+    } catch (e) { // Only way to fail is due to the ID already existing
+      return await update(
+        this.searchEngine as SearchEngine,
+        id,
+        this.fixSearchEngineData(data)
+      );
+    }
   }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected abstract fixSearchEngineData(data: RawData): Generic;
 
   /**
    * @returns the initial trail type for any document
@@ -871,9 +943,18 @@ export default abstract class BaseController<RawData extends Generic> {
 
   /**
    * @param collection_name to be taken from dependency
+   * @param ctor the constructor of the Controller
+   * @param server server of the collection
    * @returns the controller responsible for the collection
    */
-  public static getDependency(collection_name: string): any {
+  public static getDependency<T extends BaseController<any>>
+  (collection_name: string,
+   ctor: new (...arg: any) => T,
+   server: typeof firestore) {
+    if (!BaseController.isDependencyPresent(collection_name)) {
+      return new ctor(server);
+    }
+
     return InternalDependencyTree.get(collection_name);
   }
 

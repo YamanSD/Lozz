@@ -1,6 +1,6 @@
 import Category from "../model/Category";
 import Vendor from "../model/Vendor";
-import Monetary from "../model/Monetary";
+import Monetary from "./Monetary";
 import { cartProduct } from "../model/types";
 
 

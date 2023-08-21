@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import Monetary from "./Monetary";
+import Monetary from "../local_model/Monetary";
 import { category, TrailNature, TrailType } from "./types";
 
 

@@ -69,6 +69,32 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
+   * @returns the pending pivot storage ID name
+   * @private
+   */
+  private get pendingPivotName() {
+    return this.uniqueId(this.collectionName) + "-pending-pivot";
+  }
+
+  /**
+   * @param increment if true, increments the pending pivot by 1
+   * @returns the local pending pivot
+   */
+  public pendingPivot(increment?: boolean) {
+    if (!this.checkCache(this.pendingPivotName)) {
+      this.storage.set(this.pendingPivotName, 0);
+    }
+
+    let pivot = this.storage.getNumber(this.pendingPivotName) as number;
+
+    if (increment) {
+      pivot++;
+    }
+
+    return pivot;
+  }
+
+  /**
    * @returns the couriers controller for the server,
    *          in the injected dependencies
    */
@@ -107,7 +133,7 @@ export default class OrderController extends BaseController<order> {
    * @throws IdDoesNotExistError if the id does not belong to an order
    */
   public async get(id: string): Promise<Order> {
-    if (await this.isIdAvailable(id)) {
+    if (id === this.pendingPivotName || await this.isIdAvailable(id)) {
       throw new IdDoesNotExistError();
     }
 
@@ -139,7 +165,7 @@ export default class OrderController extends BaseController<order> {
    */
   public async create(data: basicOrder) {
     if (data.status === OrderStatus.pending) {
-      const id = `pending_${this.pivot}`;
+      const id = `pending_${this.pendingPivot(true)}`;
 
       // Pending local
       await this.setCache(id, this.fillDataGaps(data));

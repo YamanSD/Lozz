@@ -110,10 +110,12 @@ export default class OrderController extends BaseController<order> {
   /**
    * @returns the stored current employee instance
    */
-  public get currentEmployee() {
-    return new Employee(reduxStorage.getItem(
+  public get currentEmployee(): Employee | undefined {
+    const data = reduxStorage.getItem(
       ReduxParameters.currentEmployee
-    ));
+    );
+
+    return data === undefined ? undefined : new Employee(data);
   }
 
   /**
@@ -487,7 +489,7 @@ export default class OrderController extends BaseController<order> {
       restock_id: data.restock_id, // Added to data by create function
       prices: this.getPrices(data),
       payment: undefined,
-      commission_percent: this.currentEmployee.commission_percent,
+      commission_percent: this.currentEmployee?.commission_percent,
       phone_number: data.phone_number,
       email: data.email,
       link_id: data.link_id,

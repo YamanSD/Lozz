@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/lib/integration/react';
 import { store, persistor, reduxStorage } from "./store";
@@ -10,29 +10,65 @@ import auth from "@react-native-firebase/auth";
 import ReduxParameters from "./ReduxParameters";
 import { NotAuthorizedError } from "./services/modules/controller/Errors";
 import CollectionNames from "./CollectionInfo";
+import DependencyTree from "./services/modules/controller/DependencyTree";
+
 
 const App = () => {
+  // Set an initializing state whilst Firebase connects
+  const [initializing, setInitializing] = useState(true);
+  const [logged, setLogged] = useState(false);
+
   useEffect(() => {
-    // Assuming user is logged in
-    const userId = auth().currentUser?.uid;
+    reduxStorage.setItem(
+      ReduxParameters.testing,
+      ReduxParameters.testingValue
+    );
 
-    if (userId !== undefined) {
-      const reference = database().ref(
-        `/${CollectionNames.online_detection}/${userId}`
-      );
+    return auth().onAuthStateChanged(async (user) => {
+      if (initializing) {
+        setInitializing(false);
+      }
 
-      // Set the /users/:userId value to true
-      reference.set(true).then();
+      if (user !== null) {
+        const userId = user.phoneNumber;
 
-      // Remove the node whenever the client disconnects
-      reference.onDisconnect()
-        .remove()
-        .then();
-    } else if (!reduxStorage.getItem(ReduxParameters.testing)) {
-      throw new NotAuthorizedError();
-    }
+        if (userId === null) {
+          throw new NotAuthorizedError();
+        }
+
+        const employee = await DependencyTree.Employees.get(userId);
+
+        reduxStorage.setItem(
+          ReduxParameters.currentEmployee,
+          employee.data
+        );
+
+        const reference = database().ref(
+          `/${CollectionNames.online_detection}/${userId}`
+        );
+
+        // Set the /users/:userId value to true
+        reference.set(true).then(
+          () => {
+            setLogged(true);
+          }
+        );
+
+        // Remove the node whenever the client disconnects
+        reference.onDisconnect()
+          .remove()
+          .then();
+      } else if (reduxStorage.getItem(ReduxParameters.testing)) {
+        setLogged(true);
+      }
+    });
   }, []);
 
+  if (initializing) {
+    return null;
+  }
+
+  // TODO when working on frontend, add the login page
   return (
     <Provider store={store}>
       {/**

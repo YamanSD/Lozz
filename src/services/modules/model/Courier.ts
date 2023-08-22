@@ -1,7 +1,9 @@
 import BaseModel from "./BaseModel";
-import { courier, TrailNature, TrailType } from "./types";
+import { courier, TrailNature, TrailType, MonetaryType } from "./types";
 import Monetary from "../local_model/Monetary";
-import { NoProvincesError } from "../controller/Errors";
+import { NoZonesError } from "../controller/Errors";
+import ZoneInformation from "./ZoneInformation";
+import ProvinceInformation from "./ProvinceInformation";
 
 
 /**
@@ -11,8 +13,11 @@ export default class Courier implements BaseModel {
   /* raw data of the courier */
   private dataValue: courier;
 
-  /* set of available province names */
-  private static provinceSet: Set<string> = new Set<string>();
+  /* zone information object */
+  private static zonesObject: ZoneInformation;
+
+  /* province information object */
+  private static provincesObject: ProvinceInformation;
 
   /**
    * @param data raw data of the courier
@@ -36,17 +41,31 @@ export default class Courier implements BaseModel {
   }
 
   /**
-   * @returns the province set
+   * @returns the zone set
    */
-  public static get provinces() {
-    return Courier.provinceSet;
+  public static get zones() {
+    return Courier.zonesObject;
   }
 
   /**
-   * @param value of the new province set
+   * @param value of the new zone set
+   */
+  public static set zones(value) {
+    Courier.zonesObject = value;
+  }
+
+  /**
+   * @returns the provinces object
+   */
+  public static get provinces() {
+    return Courier.provincesObject;
+  }
+
+  /**
+   * @param value new province object value
    */
   public static set provinces(value) {
-    Courier.provinceSet = value;
+    Courier.provincesObject = value;
   }
 
   /**
@@ -64,42 +83,52 @@ export default class Courier implements BaseModel {
   }
 
   /**
-   * @param province province to get shipping fees for
-   * @throws Error if the given province is not in the courier shipping fees
+   * @param value value of the order to calculate the shipping fees for
+   * @param zone zone to get shipping fees for
+   * @throws Error if the given zone is not in the courier shipping fees
    *         object
    * @returns the Monetary value of the shipping fees
    */
-  public getShippingFees(province: string): Monetary {
-    if (!(province in this.shipping_fees)) {
-      throw new Error(`Invalid province ${province} with courier ${this.name}`);
+  public getShippingFees(value: Monetary, zone: string): Monetary {
+    if (!Courier.isValidZone(zone)) {
+      throw new Error(`Invalid zone ${zone} with courier ${this.name}`);
     }
 
-    return new Monetary(this.shipping_fees[province]);
+    let result = new Monetary(this.shipping_fees[zone]);
+    const discount = Courier.zones.getShippingDiscount(value, zone);
+
+    if (Array.isArray(discount)) { // MonetaryType
+      result.add(new Monetary(discount as MonetaryType));
+    } else {
+      result.applyDiscount(discount);
+    }
+
+    return result;
   }
 
   /**
-   * @param province to be checked
-   * @returns true if the province is valid
-   * @throws NoProvincesError if there are no provinces
+   * @param zone to be checked
+   * @returns true if the zone is valid
+   * @throws NoZonesError if there are no zones
    */
-  public static isValidProvince(province: string) {
-    if (Courier.provinces.size === 0) {
-      throw new NoProvincesError();
+  public static isValidZone(zone: string) {
+    if (Courier.zones === undefined) {
+      throw new NoZonesError();
     }
 
-    return province in Courier.provinces;
+    return zone in Courier.zones;
   }
 
   /**
-   * @param province to be added to the shipping fees
-   * @param value new shipping fee of the province
+   * @param zone to be added to the shipping fees
+   * @param value new shipping fee of the zone
    */
-  public setShippingFees(province: string, value: Monetary): void {
-    if (!Courier.isValidProvince(province)) {
-      throw new Error(`Invalid province does not exist`);
+  public setShippingFees(zone: string, value: Monetary): void {
+    if (!Courier.isValidZone(zone)) {
+      throw new Error(`Invalid zone does not exist`);
     }
 
-    this.shipping_fees[province] = value.data;
+    this.shipping_fees[zone] = value.data;
   }
 
   /**

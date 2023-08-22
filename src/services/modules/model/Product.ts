@@ -772,7 +772,7 @@ export default class Product implements BaseModel {
       name: this.name,
       quantity: quantity,
       total_price: this.getTotalPrice(usp).multiplyCopy(quantity).data,
-      discount: this.getDiscount(usp),
+      discount: this.price.discountPercent(this.getDiscount(usp)),
       description: this.description,
       increment: this.increment,
       max_quantity: this.getQuantity(usp),

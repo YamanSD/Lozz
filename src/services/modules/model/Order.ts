@@ -6,6 +6,7 @@ import Monetary from "../local_model/Monetary";
 import Restock from "./Restock";
 import { basicOrder, Generic, MonetaryType, order, OrderStatus, TrailNature, TrailType } from "./types";
 import { InvalidOrderCreationStatusError } from "../controller/Errors";
+import CollectionInfo from "../../../CollectionInfo";
 
 
 /**
@@ -114,6 +115,17 @@ export default class Order implements BaseModel {
     return this.data.total !== undefined
       ? new Monetary(this.data.total)
       : undefined;
+  }
+
+  /**
+   * @param value new total of the order
+   */
+  public set total(value) {
+    if (value === undefined) {
+      return;
+    }
+
+    this.data.total = value.data;
   }
 
   /**
@@ -506,6 +518,20 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @returns the zone of the order
+   */
+  public get zone() {
+    return this.data.zone;
+  }
+
+  /**
+   * @param value new value of the zone
+   */
+  public set zone(value) {
+    this.data.zone = value;
+  }
+
+  /**
    * @param status status of the basic data
    * @returns a basic version of the data used to transition
    *          orders from pending state
@@ -516,6 +542,7 @@ export default class Order implements BaseModel {
       status: status,
       discount: this.discount?.data,
       province: this.province,
+      zone: this.zone,
       address: this.address,
       delivery: this.delivery?.data,
       courier_id: this.courier?.name,
@@ -525,6 +552,15 @@ export default class Order implements BaseModel {
       email: this.email,
       link_id: this.linkOrder?.id
     };
+  }
+
+  /**
+   * @returns the name of the province of the order
+   */
+  public get provinceName() {
+    return CollectionInfo.provinces[
+      this.province ?? (CollectionInfo.provinces.length - 1)
+      ];
   }
 
   /**
@@ -543,6 +579,10 @@ export default class Order implements BaseModel {
     [OrderStatus.paid]: undefined,
   };
 
+  /**
+   * @param status to be checked if it affects the inventory
+   * @returns the type of inventory change needed for the given status
+   */
   public static isStatusToInventory(status: OrderStatus): boolean | undefined {
     if (status in Order.creationStatusToInventory) {
       return Order.creationStatusToInventory[status];

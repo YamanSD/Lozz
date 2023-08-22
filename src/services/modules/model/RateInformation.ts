@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import { information, rateInformation, TrailType } from "./types";
+import { Generic, information, rateInformation, TrailType } from "./types";
 import { InvalidInputError } from "../controller/Errors";
 
 
@@ -20,7 +20,7 @@ export default class RateInformation implements BaseModel {
    */
   public constructor(data: information) {
     this.dataValue = data;
-    this.informationValue = data.data as rateInformation;
+    this.informationValue = data as Generic as rateInformation;
   }
 
   /**

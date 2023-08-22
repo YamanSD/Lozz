@@ -1,5 +1,6 @@
-import { MonetaryType } from "../model/types";
+import { MonetaryDiscountType, MonetaryType } from "../model/types";
 import { isInteger } from "lodash";
+import RateInformation from "../model/RateInformation";
 
 
 /**
@@ -14,23 +15,8 @@ export default class Monetary {
   /* Represents the USD portion of the money */
   private usdValue: number;
 
-  /* USD sell to LBP rate, set by InformationPropertiesManager */
-  private static sellUsdRateValue: number;
-
-  /* USD buy to LBP rate, set by InformationPropertiesManager */
-  private static buyUsdRateValue: number;
-
-  /* Nearest number rounding for USD,
-   *  set by InformationPropertiesManager.
-   *  Must be a positive number
-   */
-  private static roundToNearestUsdValue: number = 0.01;
-
-  /* Nearest number rounding for LBP,
-   *  set by InformationPropertiesManager.
-   *  Must be a positive integer that is divisible by 1_000.
-   */
-  private static roundToNearestLbpValue: number = 1_000;
+  /* object containing all the information about currency conversion */
+  private static ratesObject: RateInformation;
 
   /**
    * @param data MonetaryValue raw data.
@@ -53,75 +39,63 @@ export default class Monetary {
   }
 
   /**
+   * Factory method for zero value discount instances.
+   *
+   * @returns a Monetary discount of zero.
+   */
+  public static noDiscount(): MonetaryDiscountType {
+    return {usd: 0, lbp: 0};
+  }
+
+  /**
+   * @param value discount object to be applied
+   */
+  public applyDiscount(value: MonetaryDiscountType) {
+    this.usd *= 1 - value.usd;
+    this.lbp *= 1 - value.lbp;
+    this.applyRounding();
+  }
+
+  /**
+   * @returns the rates object
+   */
+  public static get rates() {
+    return Monetary.ratesObject;
+  }
+
+  /**
+   * @param value new rates object
+   */
+  public static set rates(value) {
+    Monetary.ratesObject = value;
+  }
+
+  /**
    * @returns the nearest round value for LBP.
    */
   public static get roundLbpNumber(): number {
-    return Monetary.roundToNearestLbpValue;
+    return Monetary.rates.roundingLbp;
   }
 
   /**
    * @returns the nearest rounding number for USD.
    */
   public static get roundUsdNumber(): number {
-    return Monetary.roundToNearestUsdValue;
-  }
-
-  /**
-   * @param value new number value for rounding LBP values.
-   * @throws RangeError if the given value is not divisible
-   *         by 1000 or less than or equal to 0.
-   */
-  public static set roundLbpNumber(value: number) {
-    if (value % 1_000 != 0 || value <= 0) {
-      throw new RangeError(
-        "Rounding value must be divisible by 1000, and positive"
-      );
-    }
-
-    Monetary.roundToNearestLbpValue = value;
-  }
-
-  /**
-   * @param value new number value for rounding USD values.
-   * @throws RangeError if the given value is less than 0 or
-   *         greater than 100.
-   */
-  public static set roundUsdNumber(value) {
-    if (value < 0 || 100 < value) {
-      throw new RangeError(
-        "Rounding number must an integer between 0 and 100"
-      );
-    }
-
-    Monetary.roundToNearestUsdValue = value;
+    return Monetary.rates.roundingUsd;
   }
 
   /**
    * @returns the selling rate for USD.
    */
   public static get sellUsdRate(): number {
-    return Monetary.sellUsdRateValue;
+    return Monetary.rates.sellRate;
   }
 
   /**
    * @returns the buying rate for USD.
    */
   public static get buyUsdRate(): number {
-    return Monetary.buyUsdRateValue;
-  }
-
-  /**
-   * @param value new value of the selling USD rate.
-   */
-  public static set sellUsdRate(value: number) {
-    Monetary.sellUsdRateValue = value;
-  }
-
-  /**
-   * @param value new value of the buying USD rate.
-   */
-  public static set buyUsdRate(value: number) {
-    Monetary.buyUsdRateValue = value;
+    return Monetary.rates.buyRate;
   }
 
   /**
@@ -289,16 +263,10 @@ export default class Monetary {
 
   /**
    * @param discount amount deducted from this instance.
-   * @returns array containing 2 numbers, first is USD percentage of deduction,
-   *          second is LBP percentage of deduction
+   * @returns MonetaryDiscountType instance
    */
-  public discountPercent(discount: Monetary) {
-    const temp = this.subtractCopy(discount).percent(this);
-
-    return {
-      usd: 1 - temp.usd,
-      lbp: 1 - temp.lbp
-    }
+  public discountPercent(discount: Monetary): MonetaryDiscountType {
+    return this.subtractCopy(discount).percent(this);
   }
 
   /**
@@ -307,8 +275,8 @@ export default class Monetary {
    */
   public percent(other: Monetary) {
     return {
-      usd: this.usd / other.usd,
-      lbp: this.lbp / other.lbp
+      usd: other.usd / this.usd,
+      lbp: other.lbp / this.lbp
     };
   }
 

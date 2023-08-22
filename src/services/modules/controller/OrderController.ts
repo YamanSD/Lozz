@@ -28,6 +28,7 @@ import Employee from "../model/Employee";
 import { reduxStorage } from "../../../store";
 import ReduxParameters from "../../../ReduxParameters";
 import BaseModel from "../model/BaseModel";
+import Courier from "../model/Courier";
 
 
 /**
@@ -392,6 +393,12 @@ export default class OrderController extends BaseController<order> {
       await this.restockController.updateQuantities(
         order.restock.id, newQuantities, to_inventory
       );
+
+      order.total = new Monetary(
+        this.generateTotal(order.getBasicData(order.status), order.zone)
+      );
+
+      await this.update(order);
     } catch (e) {
       if (e instanceof EvalError) {
         throw new InsufficientQuantitiesError();
@@ -403,10 +410,11 @@ export default class OrderController extends BaseController<order> {
 
   /**
    * @param data to generate the total for
+   * @param zone of the order
    * @returns the total monetary value for the order, not accounting
    *          for discounts or delivery.
    */
-  public generateTotal(data: basicOrder): MonetaryType {
+  public generateTotal(data: basicOrder, zone: string): MonetaryType {
     let result = Monetary.noValue();
     let temp: Monetary;
     const products = data.products;
@@ -419,6 +427,14 @@ export default class OrderController extends BaseController<order> {
 
     // Invert value
     result.multiply(-1);
+
+    const discount = Courier.zones.getShippingDiscount(result, zone);
+
+    if (Array.isArray(discount)) { // MonetaryType
+      result.add(new Monetary(discount as MonetaryType));
+    } else {
+      result.applyDiscount(discount);
+    }
 
     return result.data;
   }
@@ -480,7 +496,8 @@ export default class OrderController extends BaseController<order> {
       note: data.note,
       discount: data.discount,
       status: data.status,
-      total: this.generateTotal(data),
+      total: this.generateTotal(data, data.zone),
+      zone: data.zone,
       province: data.province,
       address: data.address,
       delivery: data.delivery,
@@ -507,6 +524,7 @@ export default class OrderController extends BaseController<order> {
       id: data.id,
       date: BaseModel.initialTimestamp(data[SpecialFields.trail]),
       note: data.note,
+      zone: data.zone,
       discounted: data.discount === undefined,
       status: data.status,
       total: data.total,

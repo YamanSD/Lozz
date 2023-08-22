@@ -57,9 +57,9 @@ export class NoTrailError extends Error {
   }
 }
 
-export class NoProvincesError extends Error {
+export class NoZonesError extends Error {
   public constructor() {
-    super("NoProvincesError");
+    super("NoZonesError");
   }
 }
 

@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import { information, provinceInformation, TrailType } from "./types";
+import { information, provinceInformation } from "./types";
 
 
 /**
@@ -23,15 +23,15 @@ export default class ProvinceInformation implements BaseModel {
   /**
    * @returns a list of province names
    */
-  public get provinces() {
-    return this.information.names;
+  public get provinces(): string[] {
+    return this.information;
   }
 
   /**
    * @param value new list of provinces
    */
   public set provinces(value) {
-    this.information.names = value;
+    this.information = value;
   }
 
   /**
@@ -54,20 +54,6 @@ export default class ProvinceInformation implements BaseModel {
    */
   public isValid(province: string): boolean {
     return this.provinces.indexOf(province) !== -1;
-  }
-
-  /**
-   * @returns the trail
-   */
-  public get trail(): TrailType {
-    return this.information.trail;
-  }
-
-  /**
-   * @param value new value of the trail
-   */
-  public set trail(value: TrailType) {
-    this.information.trail = value;
   }
 
   /**

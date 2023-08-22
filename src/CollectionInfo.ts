@@ -1,6 +1,11 @@
 import firestore from "@react-native-firebase/firestore";
 
 export default {
+  provinces: [
+    "Akkar", "Baalbek-Hermel", "Beirut",
+    "Beqaa", "Keserwan-Jbeil", "Mount Lebanon",
+    "Nabatieh", "North", "South", "Unknown"
+  ],
   ids: "identifiers",
   online_detection: "online",
   server: firestore,

@@ -5,6 +5,7 @@ import CollectionInfo from "../../../CollectionInfo";
 import { IdDoesNotExistError, IllegalStateError } from "./Errors";
 import RateInformation from "../model/RateInformation";
 import ProvinceInformation from "../model/ProvinceInformation";
+import ZoneInformation from "../model/ZoneInformation";
 import { isEqual } from "lodash";
 import ProductController from "./ProductController";
 import Courier from "../model/Courier";
@@ -14,7 +15,8 @@ import Monetary from "../local_model/Monetary";
 /**
  * Alias for all information models
  */
-export type InformationModels = RateInformation | ProvinceInformation;
+export type InformationModels =
+  RateInformation | ProvinceInformation | ZoneInformation;
 
 /**
  * Class responsible for handling operations on the information collection.
@@ -38,8 +40,10 @@ export default class InformationController
     );
 
     this.loadSearchData().then(() => {
-      this.activateListener();
-      this.injectDependency();
+      this.updateModels().then(() => {
+        this.activateListener();
+        this.injectDependency();
+      });
     });
   }
 
@@ -52,6 +56,33 @@ export default class InformationController
       ProductController,
       this.metaServer
     );
+  }
+
+  /**
+   * Updates all model information from cache
+   * @private
+   */
+  private async updateModels() {
+    for (let [_, type] of Object.entries(InformationType)) {
+      this.updateModel(type, (await this.get(type)).data);
+    }
+  }
+
+  /**
+   * Updates the model information.
+   *
+   * @param type of the information
+   * @param data of the information
+   * @private
+   */
+  private updateModel(type: string, data: information) {
+    if (type === InformationType.zones) {
+      Courier.zones = new ZoneInformation(data);
+    } else if (type === InformationType.rate) {
+      Monetary.rates = new RateInformation(data);
+    } else if (type === InformationType.provinces) {
+      Courier.provinces = new ProvinceInformation(data);
+    }
   }
 
   /**
@@ -71,20 +102,15 @@ export default class InformationController
             return;
           }
 
-          const data = document.data();
-          await this.setCache(id, data as information);
-        } else if (change.type === "modified") {
-          const data = document.data();
-          await this.updateCache(id, data);
+          const data = document.data() as information;
 
-          if (id === InformationType.provinces) {
-            Courier.provinces = data.names;
-          } else if (id === InformationType.rate) {
-            Monetary.roundUsdNumber = data.roundToNearestUsd;
-            Monetary.roundLbpNumber = data.roundToNearestLbp;
-            Monetary.buyUsdRate = data.buyUsdRate;
-            Monetary.sellUsdRate = data.sellUsdRate;
-          }
+          await this.setCache(id, data as information);
+          this.updateModel(id, data);
+        } else if (change.type === "modified") {
+          const data = document.data() as information;
+
+          await this.updateCache(id, data);
+          this.updateModel(id, data);
         } else if (change.type === "removed") {
           this.removeCache(id);
         }
@@ -100,7 +126,17 @@ export default class InformationController
   public async create(data: basicProperties) {
     await this.productController.checkOnProperties();
 
-    for (let type of Object.keys(data)) {
+    /* Create basic provinces */
+    await this.createServer(InformationType.provinces, {
+      type: InformationType.provinces,
+      data: CollectionInfo.provinces
+    });
+
+    for (let [_, type] of Object.entries(InformationType)) {
+      if (type === InformationType.provinces) {
+        continue;
+      }
+
       let uploadData =
         data[type as InformationType] as Generic;
 
@@ -135,16 +171,21 @@ export default class InformationController
    * @param type of the information
    * @returns an information model
    */
-  public async get(type: InformationType) {
+  public async get(type: InformationType): Promise<InformationModels> {
     const data = await this.getData(type);
 
     if (data === undefined) {
       throw new IdDoesNotExistError();
     }
 
-    return type === InformationType.rate
-      ? new RateInformation(data)
-      : new ProvinceInformation(data);
+    switch (type) {
+      case InformationType.provinces:
+        return new ProvinceInformation(data);
+      case InformationType.rate:
+        return new RateInformation(data);
+      case InformationType.zones:
+        return new ZoneInformation(data);
+    }
   }
 
   /**
@@ -159,6 +200,13 @@ export default class InformationController
    */
   public async getRate(): Promise<RateInformation> {
     return await this.get(InformationType.rate) as RateInformation;
+  }
+
+  /**
+   * @returns the zone information object
+   */
+  public async getZones(): Promise<ZoneInformation> {
+    return await this.get(InformationType.zones) as ZoneInformation;
   }
 
   /**

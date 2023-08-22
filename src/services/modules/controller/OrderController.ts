@@ -6,7 +6,8 @@ import {
   order,
   OrderSearchSchema,
   OrderStatus,
-  QuantityType, SpecialFields
+  QuantityType,
+  SpecialFields
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
@@ -152,8 +153,8 @@ export default class OrderController extends BaseController<order> {
 
     let parent = undefined;
 
-    if (orderData.parent_id !== undefined && orderData.parent_id !== id) {
-      parent = await this.get(orderData.parent_id);
+    if (orderData.link_id !== undefined && orderData.link_id !== id) {
+      parent = await this.get(orderData.link_id);
     }
 
     return new Order(orderData, restock, customer, courier, parent);
@@ -163,7 +164,7 @@ export default class OrderController extends BaseController<order> {
    * @param data basic raw data to create an order
    * @throws InsufficientQuantitiesError if the name of the order is taken
    */
-  public async create(data: basicOrder) {
+  public async create(data: basicOrder): Promise<string> {
     if (data.status === OrderStatus.pending) {
       const id = `pending_${this.pendingPivot(true)}`;
 
@@ -184,6 +185,8 @@ export default class OrderController extends BaseController<order> {
       data.id = await this.generateId();
 
       await this.createServer(data.id, this.fillDataGaps(data));
+
+      return data.id;
     } catch (e) {
       if (e instanceof EvalError) {
         throw new InsufficientQuantitiesError();
@@ -225,6 +228,22 @@ export default class OrderController extends BaseController<order> {
     } else {
       throw new OrderNotConfirmedNorPendingError()
     }
+  }
+
+  /**
+   * @param id of the old order
+   * @param exchangeOrder new order to be placed, and linked to the old order
+   */
+  public async exchange(id: string, exchangeOrder: basicOrder) {
+    if (await this.isIdAvailable(id)) {
+      throw new IdDoesNotExistError();
+    }
+
+    exchangeOrder.link_id = id;
+    let order = await this.get(id);
+    order.link_id = await this.create(exchangeOrder);
+
+    await this.update(order);
   }
 
   /**
@@ -273,6 +292,7 @@ export default class OrderController extends BaseController<order> {
         order.status = OrderStatus.canceled;
         order.restock.to_inventory = undefined;
         break;
+      case OrderStatus.paid:
       case OrderStatus.sent_to_courier:
         order.status = OrderStatus.canceled_at_courier;
         order.restock.to_inventory = false;
@@ -444,7 +464,7 @@ export default class OrderController extends BaseController<order> {
       Order linked;
       customer: ${data.customer_id};
       ${data.courier_id ? `courier: ${data.courier_id};` : ''}
-      ${data.parent_id ? `parent_order: ${data.parent_id};` : ''}`;
+      ${data.link_id ? `parent_order: ${data.link_id};` : ''}`;
   }
 
   /**
@@ -470,7 +490,7 @@ export default class OrderController extends BaseController<order> {
       commission_percent: this.currentEmployee.commission_percent,
       phone_number: data.phone_number,
       email: data.email,
-      parent_id: data.parent_id,
+      link_id: data.link_id,
       trail: this.generateInitialTrail()
     });
   }
@@ -495,7 +515,7 @@ export default class OrderController extends BaseController<order> {
       commission_percent: data.commission_percent ?? 0,
       phone_number: data.phone_number ?? "",
       email: data.email ?? "",
-      parent_id: data.parent_id ?? ""
+      link_id: data.link_id ?? ""
     };
   }
 }

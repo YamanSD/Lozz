@@ -24,32 +24,32 @@ export default class Order implements BaseModel {
   /* customer instance representing the customer of the order */
   private readonly customerInstance: Customer;
 
-  /* parent order of this exchange order */
-  private readonly parentInstance?: Order;
+  /* link order of this exchange order */
+  private readonly linkInstance?: Order;
 
   /**
    * @param data raw order data
    * @param restock representing the order
    * @param customer of the order
    * @param courier of the order
-   * @param parent associated Parent order
+   * @param link associated link order
    */
   public constructor(data: order,
                      restock: Restock,
                      customer: Customer,
                      courier?: Courier,
-                     parent?: Order) {
+                     link?: Order) {
     this.dataValue = data;
     this.restockInstance = restock;
     this.customerInstance = customer;
     this.courierInstance = courier;
 
-    if (data.parent_id !== parent?.id) {
-      throw new EvalError(`Parent ID mismatch, expected ${data.parent_id}
-      , got ${parent?.id}`);
+    if (data.link_id !== link?.id) {
+      throw new EvalError(`link ID mismatch, expected ${data.link_id}
+      , got ${link?.id}`);
     }
 
-    this.parentInstance = parent;
+    this.linkInstance = link;
   }
 
   public static quantitiesInstance(data: order): Order {
@@ -198,17 +198,17 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @returns the associated parent order of this instance
+   * @returns the associated link order of this instance
    */
-  public get parent() {
-    return this.parentInstance;
+  public get linkOrder() {
+    return this.linkInstance;
   }
 
   /**
-   * @returns the ID of the parent exchange order
+   * @returns the ID of the link exchange order
    */
-  public get exchange_id() {
-    return this.data.parent_id;
+  public get link_id() {
+    return this.data.link_id;
   }
 
   /**
@@ -225,6 +225,15 @@ export default class Order implements BaseModel {
    */
   public set discount_percent(value: number) {
     this.discount = this.total?.applyDiscountPercentCopy(value);
+  }
+
+  /**
+   * Note that this does not change the linked instance.
+   *
+   * @param value new link ID for the order
+   */
+  public set link_id(value) {
+    this.data.link_id = value;
   }
 
   /**
@@ -514,7 +523,7 @@ export default class Order implements BaseModel {
       products: this.generateBasicQuantities(),
       phone_number: this.phone_number,
       email: this.email,
-      parent_id: this.parent?.id
+      link_id: this.linkOrder?.id
     };
   }
 

@@ -312,7 +312,7 @@ export default abstract class BaseController<RawData extends Generic> {
 
     await this.runTransaction(
       async (transaction) => {
-      transaction.update(this.collection.doc(id), data);
+      transaction.update(this.collection.doc(id), this.fixDataGaps(data));
     });
   }
 

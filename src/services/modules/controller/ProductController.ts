@@ -119,7 +119,7 @@ export default class ProductController extends BaseController<product> {
       data = this.getCache(this.propertiesId) as Generic as productProperties;
     } else {
       data = await this.getServerProperties();
-      this.setCache(this.propertiesId, data as product);
+      await this.setCache(this.propertiesId, data as product);
     }
 
     delete data.id;
@@ -130,8 +130,8 @@ export default class ProductController extends BaseController<product> {
   /**
    * @param properties new properties
    */
-  public updateLocalProperties(properties: productProperties): void {
-    this.updateCache(this.propertiesId, properties as Generic as product);
+  public async updateLocalProperties(properties: productProperties) {
+    await this.updateCache(this.propertiesId, properties as Generic as product);
   }
 
   /**
@@ -169,11 +169,11 @@ export default class ProductController extends BaseController<product> {
 
           data.id = id;
 
-          this.updateCache(id, data as product);
+          await this.updateCache(id, data as product);
         }
       }
 
-      this.updateLocalProperties(server);
+      await this.updateLocalProperties(server);
     });
   }
 
@@ -242,8 +242,8 @@ export default class ProductController extends BaseController<product> {
   /**
    * @param model to be updated in cache
    */
-  public updateLocal(model: Product) {
-    this.updateCache(model.id, model.data);
+  public async updateLocal(model: Product) {
+    await this.updateCache(model.id, model.data);
   }
 
   /**
@@ -310,9 +310,9 @@ export default class ProductController extends BaseController<product> {
     let quantities = data.quantities;
     let available_values: Set<string> = new Set<string>();
 
-    for (let usi of Object.keys(quantities)) {
-      if (quantities[usi] !== 0) {
-        Product.invertUsi(usi).option_values.forEach(value => {
+    for (let usp of Object.keys(quantities)) {
+      if (quantities[usp] !== 0) {
+        Product.invertUsp(usp).forEach(value => {
           available_values.add(value);
         });
       }

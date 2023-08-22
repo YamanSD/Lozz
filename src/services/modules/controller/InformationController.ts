@@ -72,10 +72,10 @@ export default class InformationController
           }
 
           const data = document.data();
-          this.setCache(id, data as information);
+          await this.setCache(id, data as information);
         } else if (change.type === "modified") {
           const data = document.data();
-          this.updateCache(id, data);
+          await this.updateCache(id, data);
 
           if (id === InformationType.provinces) {
             Courier.provinces = data.names;

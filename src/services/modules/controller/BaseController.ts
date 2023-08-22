@@ -265,7 +265,7 @@ export default abstract class BaseController<RawData extends Generic> {
     const document = await this.collection.doc(id).get();
 
     if (document.exists) {
-      this.setCache(id, document.data() as RawData);
+      await this.setCache(id, document.data() as RawData);
     }
 
     return document;
@@ -449,7 +449,7 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     if (!this.isPivot) {
-      return !(this.idSet.has(id) || await this.isErased(id));
+      return !this.idSet.has(id) || await this.isErased(id);
     }
 
     return this.pivot < Number(id);
@@ -505,10 +505,10 @@ export default abstract class BaseController<RawData extends Generic> {
           }
 
           const data: RawData = document.data() as RawData;
-          this.setCache(id, data);
+          await this.setCache(id, data);
         } else if (change.type === "modified") {
           const data: RawData = document.data() as RawData;
-          this.updateCache(id, data);
+          await this.updateCache(id, data);
         } else if (change.type === "removed") {
           this.removeCache(id);
         }
@@ -558,11 +558,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * @param data raw data of the document
    * @protected
    */
-  protected setCache(id: string, data: RawData): void {
-    this.updateSearchEngine(id, data).then(() => {
-      this.storage.set(id, JSON.stringify(data));
-      this.triggerHook();
-    });
+  protected async setCache(id: string, data: RawData) {
+    await this.updateSearchEngine(id, data);
+    this.storage.set(id, JSON.stringify(data));
+    this.triggerHook();
   }
 
   /**
@@ -572,14 +571,14 @@ export default abstract class BaseController<RawData extends Generic> {
    * @param data raw data of the document
    * @protected
    */
-  protected updateCache(id: string, data: Generic): void {
+  protected async updateCache(id: string, data: Generic) {
     let oldData: Generic = this.getCache(id) ?? {};
 
     for (let key of Object.keys(data)) {
       oldData[key] = data[key];
     }
 
-    this.setCache(id, oldData as RawData);
+    await this.setCache(id, oldData as RawData);
   }
 
   /**
@@ -882,7 +881,7 @@ export default abstract class BaseController<RawData extends Generic> {
           ...this.fixSearchEngineData(data)
       });
     } catch (e) { // Only way to fail is due to the ID already existing
-      return await update(
+      await update(
         this.searchEngine as SearchEngine,
         id,
         this.fixSearchEngineData(data)

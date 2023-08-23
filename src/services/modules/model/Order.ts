@@ -53,15 +53,18 @@ export default class Order implements BaseModel {
     this.linkInstance = link;
   }
 
-  public static quantitiesInstance(data: order): Order {
-    return new Order(data, {} as Restock, {} as Customer);
-  }
-
   /**
    * @returns the stored raw data
    */
   public get data(): order {
     return this.dataValue;
+  }
+
+  /**
+   * @returns the negative quantities of the order
+   */
+  public get negativeQuantities() {
+    return this.restock.negativeQuantities;
   }
 
   /**
@@ -456,7 +459,7 @@ export default class Order implements BaseModel {
    */
   public add(usi: string, quantity: number,
              value: Monetary, cost: Monetary): void {
-    this.restock.add(usi, quantity);
+    this.restock.add(usi, quantity, false);
     this.addToTotal(value, quantity);
     this.addToPrices(usi, value);
     this.addToCosts(usi, cost);

@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import { restock, TrailType } from "./types";
+import { QuantityType, restock, TrailType } from "./types";
 
 
 /**
@@ -151,6 +151,20 @@ export default class Restock implements BaseModel {
     }
 
     return this.quantities[rusi];
+  }
+
+  /**
+   * @param to_inventory if true all products become to inventory.
+   *        Otherwise, all products become to display.
+   */
+  public convertDestination(to_inventory: boolean): QuantityType {
+    let result: QuantityType = {};
+
+    for (let rusi of Object.keys(this.quantities)) {
+      result[Restock.convert(rusi, to_inventory)] = this.quantities[rusi];
+    }
+
+    return result;
   }
 
   /**

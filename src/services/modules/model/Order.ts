@@ -129,7 +129,7 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @returns the province associated with the order
+   * @returns the province index associated with the order
    */
   public get province() {
     return this.data.province;
@@ -140,6 +140,47 @@ export default class Order implements BaseModel {
    */
   public get address() {
     return this.data.address;
+  }
+
+  /**
+   * @returns the total to pay by the customer for the order
+   */
+  public get total_to_pay(): Monetary {
+    return (this.total ?? Monetary.noValue())
+      .subtractCopy(this.discount ?? Monetary.noValue())
+      .addCopy(this.delivery ?? Monetary.noValue());
+  }
+
+  /**
+   * @returns the profit of the order considering the
+   *          costs, prices, discount, & delivery.
+   */
+  public get profit(): Monetary {
+    let result: Monetary = Monetary.noValue();
+    let delivery: Monetary = this.delivery ?? Monetary.noValue();
+    let discount: Monetary = this.discount ?? Monetary.noValue();
+
+    if (delivery.isNegative) {
+      result.subtract(delivery);
+    }
+
+    result.subtract(discount);
+    const products = this.prices;
+
+    for (let usi of Object.keys(products)) {
+      const cost = new Monetary(products[usi].cost);
+      const price = new Monetary(products[usi].price);
+      const quantity = this.getQuantity(usi);
+
+      // Negative, since quantities are negative when removing
+      price.multiply(-quantity);
+      cost.multiply(-quantity);
+
+      result.add(price);
+      result.subtract(cost);
+    }
+
+    return result;
   }
 
   /**
@@ -386,7 +427,19 @@ export default class Order implements BaseModel {
    * @param value price value of the product
    */
   public addToPrices(usi: string, value: Monetary): void {
-    this.prices[usi] = value.data;
+    this.prices[usi].price = value.data;
+
+    if (this.getQuantity(usi) === 0) {
+      delete this.prices[usi];
+    }
+  }
+
+  /**
+   * @param usi USI of the product
+   * @param value price value of the product
+   */
+  public addToCosts(usi: string, value: Monetary): void {
+    this.prices[usi].cost = value.data;
 
     if (this.getQuantity(usi) === 0) {
       delete this.prices[usi];
@@ -399,11 +452,14 @@ export default class Order implements BaseModel {
    * @param usi to add quantity for
    * @param quantity value to be added
    * @param value price of the product
+   * @param cost value of the product
    */
-  public add(usi: string, quantity: number, value: Monetary): void {
+  public add(usi: string, quantity: number,
+             value: Monetary, cost: Monetary): void {
     this.restock.add(usi, quantity);
     this.addToTotal(value, quantity);
     this.addToPrices(usi, value);
+    this.addToCosts(usi, cost);
   }
 
   /**
@@ -419,7 +475,7 @@ export default class Order implements BaseModel {
    * Adds the given cart product to the order
    */
   public addCartProduct(product: CartProduct): void {
-    this.add(product.usi, product.quantity, product.total_price);
+    this.add(product.usi, product.quantity, product.price, product.cost);
   }
 
   /**
@@ -504,13 +560,16 @@ export default class Order implements BaseModel {
   private generateBasicQuantities() {
     let result: Generic<{
       quantity: number,
-      price: MonetaryType}> = {};
+      price: MonetaryType,
+      cost: MonetaryType}> = {};
+
     let quantities = this.quantities;
 
     for (let usi of Object.keys(quantities)) {
       result[usi] = {
         quantity: quantities[usi],
-        price: this.prices[usi]
+        price: this.prices[usi].price,
+        cost: this.prices[usi].cost
       };
     }
 
@@ -567,6 +626,8 @@ export default class Order implements BaseModel {
    * - undefined indicates both quantities change
    * - false indicates only display quantities change
    * - true indicates only inventory quantities change
+   *
+   * This function is used on creation only.
    *
    * @private
    */

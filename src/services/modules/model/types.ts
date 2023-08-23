@@ -699,7 +699,10 @@ export type MonetaryDiscountType = {
  *   Given by user.
  *
  * - total_price: MonetaryValue representing the final price of a unit,
- *   after applying discounts and added price.
+ *   after applying discounts and added price, & multiplying by quantity.
+ *
+ * - total_discount: MonetaryValue representing the final cost of a unit,
+ *   after applying added costs & multiplying by quantity.
  *
  * - discount?: discount percentages given on the product.
  *   Automatically calculated on creation.
@@ -725,6 +728,7 @@ export type cartProduct = {
   image?: string,
   quantity: number,
   total_price: MonetaryType,
+  total_cost: MonetaryType,
   discount?: MonetaryDiscountType,
   description?: string,
   increment: number,
@@ -819,7 +823,10 @@ export type order = {
   customer_id: string,
   restock_id: string,
   prices: {
-    [usi: string]: MonetaryType
+    [usi: string]: {
+      price: MonetaryType,
+      cost: MonetaryType
+    }
   },
   payment?: MonetaryType,
   commission_percent?: number,
@@ -854,7 +861,8 @@ export type basicOrder = {
   products: {
     [usi: string]: {
       quantity: number,
-      price: MonetaryType
+      price: MonetaryType,
+      cost: MonetaryType
     }
   },
   phone_number?: string,
@@ -1084,7 +1092,8 @@ export const OrderSearchSchema: Schema = {
   discounted: 'boolean',
   status: 'number',
   total: 'number[]',
-  province: 'string', // Can be empty
+  zone: 'string',
+  province: 'number', // Can be empty
   address: 'string', // Can be empty
   courier_id: 'string', // Can be empty
   customer_id: 'string',

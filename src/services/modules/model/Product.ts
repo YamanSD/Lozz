@@ -776,7 +776,8 @@ export default class Product implements BaseModel {
       description: this.description,
       increment: this.increment,
       max_quantity: this.getQuantity(usp),
-      min_quantity: this.getMinimumQuantity(usp)
+      min_quantity: this.getMinimumQuantity(usp),
+      total_cost: this.getTotalCost(usp).multiplyCopy(quantity).data
     };
 
     if (this.images !== undefined

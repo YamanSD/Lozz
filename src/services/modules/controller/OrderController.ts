@@ -7,7 +7,8 @@ import {
   OrderSearchSchema,
   OrderStatus,
   QuantityType,
-  SpecialFields
+  SpecialFields,
+  TrailNature
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
@@ -28,7 +29,7 @@ import Employee from "../model/Employee";
 import { reduxStorage } from "../../../store";
 import ReduxParameters from "../../../ReduxParameters";
 import BaseModel from "../model/BaseModel";
-import Courier from "../model/Courier";
+import Restock from "../model/Restock";
 
 
 /**
@@ -142,10 +143,13 @@ export default class OrderController extends BaseController<order> {
     }
 
     const orderData = await this.getData(id) as order;
-    const restock = await this.restockController.get(orderData.restock_id);
+
+    let restock = undefined;
+    if (orderData.restock_id !== undefined) {
+      restock = await this.restockController.get(orderData.restock_id);
+    }
 
     let courier = undefined;
-
     if (orderData.courier_id !== undefined) {
       courier = await this.courierController.get(orderData.courier_id);
     }
@@ -154,13 +158,12 @@ export default class OrderController extends BaseController<order> {
       orderData.customer_id
     );
 
-    let parent = undefined;
-
+    let link = undefined;
     if (orderData.link_id !== undefined && orderData.link_id !== id) {
-      parent = await this.get(orderData.link_id);
+      link = await this.get(orderData.link_id);
     }
 
-    return new Order(orderData, restock, customer, courier, parent);
+    return new Order(orderData, restock as Restock, customer, courier, link);
   }
 
   /**
@@ -187,7 +190,11 @@ export default class OrderController extends BaseController<order> {
 
       data.id = await this.generateId();
 
-      await this.createServer(data.id, this.fillDataGaps(data));
+      try {
+        await this.createServer(data.id, this.fillDataGaps(data));
+      } catch (e) {
+
+      }
 
       return data.id;
     } catch (e) {
@@ -308,6 +315,9 @@ export default class OrderController extends BaseController<order> {
       order.restock.id,
       order.restock.to_inventory
     );
+
+    // Deactivate a canceled order
+    this.stamp(order.trail, TrailNature.D);
     await this.update(order);
   }
 
@@ -395,7 +405,7 @@ export default class OrderController extends BaseController<order> {
       );
 
       order.total = new Monetary(
-        this.generateTotal(order.getBasicData(order.status), order.zone)
+        this.generateTotal(order.getBasicData(order.status))
       );
 
       await this.update(order);
@@ -410,11 +420,10 @@ export default class OrderController extends BaseController<order> {
 
   /**
    * @param data to generate the total for
-   * @param zone of the order
    * @returns the total monetary value for the order, not accounting
    *          for discounts or delivery.
    */
-  public generateTotal(data: basicOrder, zone: string): MonetaryType {
+  public generateTotal(data: basicOrder): MonetaryType {
     let result = Monetary.noValue();
     let temp: Monetary;
     const products = data.products;
@@ -428,14 +437,6 @@ export default class OrderController extends BaseController<order> {
     // Invert value
     result.multiply(-1);
 
-    const discount = Courier.zones.getShippingDiscount(result, zone);
-
-    if (Array.isArray(discount)) { // MonetaryType
-      result.add(new Monetary(discount as MonetaryType));
-    } else {
-      result.applyDiscount(discount);
-    }
-
     return result.data;
   }
 
@@ -445,12 +446,17 @@ export default class OrderController extends BaseController<order> {
    * @param data whose products object to be separated
    * @returns the prices object
    */
-  public getPrices(data: basicOrder): Generic<MonetaryType> {
-    let prices: Generic<MonetaryType> = {};
+  public getPrices(data: basicOrder) {
+    let prices: Generic<{
+        price: MonetaryType, cost: MonetaryType
+    }> = {};
     const products = data.products;
 
     for (let usi of Object.keys(products)) {
-      prices[usi] = products[usi].price;
+      prices[usi] = {
+        price: products[usi].price,
+        cost: products[usi].cost
+      };
     }
 
     return prices;
@@ -478,9 +484,7 @@ export default class OrderController extends BaseController<order> {
    * @returns a note for the restocking based on the data
    */
   public generateNote(data: basicOrder): string {
-    return `
-      Order linked;
-      customer: ${data.customer_id};
+    return `customer: ${data.customer_id};
       ${data.courier_id ? `courier: ${data.courier_id};` : ''}
       ${data.link_id ? `parent_order: ${data.link_id};` : ''}`;
   }
@@ -496,7 +500,7 @@ export default class OrderController extends BaseController<order> {
       note: data.note,
       discount: data.discount,
       status: data.status,
-      total: this.generateTotal(data, data.zone),
+      total: this.generateTotal(data),
       zone: data.zone,
       province: data.province,
       address: data.address,

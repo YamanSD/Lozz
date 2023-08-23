@@ -833,9 +833,9 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     if (this.isPivot) {
-      let id = 1;
+      let id = 0;
 
-      while (id <= this.pivot) {
+      while (++id <= this.pivot) {
         const data = this.getCache(id.toString());
 
         if (data === undefined) {
@@ -843,7 +843,6 @@ export default abstract class BaseController<RawData extends Generic> {
         }
 
         await this.updateSearchEngine(id.toString(), data);
-        id++;
       }
 
       return;

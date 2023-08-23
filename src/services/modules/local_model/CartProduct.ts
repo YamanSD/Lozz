@@ -110,6 +110,28 @@ export default class CartProduct {
   }
 
   /**
+   * @returns the total cost of the cart product
+   */
+  public get total_cost(): Monetary {
+    return new Monetary(this.data.total_cost);
+  }
+
+  /**
+   * @returns the total cost of a single unit for a cart product
+   */
+  public get price(): Monetary {
+    return new Monetary(this.data.total_price).divideCopy(this.quantity);
+  }
+
+  /**
+   * @returns the total cost of a single unit for a cart product
+   */
+  public get cost(): Monetary {
+    return new Monetary(this.data.total_cost).divideCopy(this.quantity);
+  }
+
+
+  /**
    * @param value new quantity of the product
    *
    * If the new value exceeds the maximum, maximum is set.

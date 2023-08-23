@@ -7,7 +7,8 @@ import {
   QuantityType,
   restock,
   RestockSearchMapping,
-  RestockSearchSchema, SpecialFields
+  RestockSearchSchema,
+  SpecialFields
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
@@ -16,7 +17,7 @@ import {
   EmptyRestockError,
   IdDoesNotExistError,
   NoUpdateError,
-  ProductNotFoundError
+  ProductNotFoundError, RestockAlreadyRevockedError, RestockDeletionError
 } from "./Errors";
 import BaseModel from "../model/BaseModel";
 import { sum } from "lodash";
@@ -155,6 +156,7 @@ export default class RestockController extends BaseController<restock> {
            */
           let oldRestock = new Restock(this.getCache(id) as restock);
           const diff = oldRestock.to_inventory !== restock.to_inventory;
+          const deactivated = restock.isDeactivated;
 
           for (let usi of restock.products) {
             const usi_data = Product.invertUsi(usi);
@@ -164,7 +166,9 @@ export default class RestockController extends BaseController<restock> {
             product.addUspQuantity(
               usi,
               restock.getQuantity(usi)
-              - (diff ? 0 : oldRestock.getQuantity(usi)),
+              // When deactivated the above & below term result in zero
+              - (diff ? 0 : oldRestock.getQuantity(usi))
+              - (deactivated ? restock.getQuantity(usi) : 0),
               restock.to_inventory
             );
 
@@ -235,6 +239,10 @@ export default class RestockController extends BaseController<restock> {
    */
   public async revoke(id: string, to_inventory: boolean | undefined | null) {
     const restock = await this.get(id);
+
+    if (restock.isDeactivated) {
+      throw new RestockAlreadyRevockedError();
+    }
 
     await this.performQuantityTransaction(
       restock.negativeQuantities,
@@ -321,7 +329,7 @@ export default class RestockController extends BaseController<restock> {
    * @param to_inventory boolean flag to indicate whether the quantities
    *        are for the inventory or not
    * @param restock_id if present, update the to_inventory field of the
-   *        restock document.
+   *        restocking document.
    * @returns null if the transaction worked, otherwise product ID that failed
    * @throws EvalError if the transaction fails due to quantities
    * @private
@@ -380,6 +388,25 @@ export default class RestockController extends BaseController<restock> {
           }
         );
       }
+    });
+  }
+
+  /**
+   * @param quantities to be completely deleted without any trace
+   * @param reason of deletion of the quantities
+   */
+  public async deleteQuantities(quantities: QuantityType, reason: string) {
+    for (let quantity of Object.values(quantities)) {
+      if (0 < quantity) {
+        throw new RestockDeletionError();
+      }
+    }
+
+    await this.create({
+      note: reason,
+      quantities: quantities,
+      to_inventory: undefined,
+      order_linked: false
     });
   }
 

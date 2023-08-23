@@ -122,3 +122,15 @@ export class OrderNotAtCourierError extends Error {
     super("OrderNotAtCourierError");
   }
 }
+
+export class RestockDeletionError extends Error {
+  public constructor() {
+    super("RestockDeletionError");
+  }
+}
+
+export class RestockAlreadyRevockedError extends Error {
+  public constructor() {
+    super("RestockAlreadyRevockedError");
+  }
+}

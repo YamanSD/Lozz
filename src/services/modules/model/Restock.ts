@@ -66,6 +66,13 @@ export default class Restock implements BaseModel {
   }
 
   /**
+   * @param value new quantities
+   */
+  public set quantities(value) {
+    this.data.quantities = value;
+  }
+
+  /**
    * Adds the given quantity to the quantity of the USI in the restocking.
    * If the resulting quantity is zero, delete the USI from the quantities.
    *
@@ -177,5 +184,19 @@ export default class Restock implements BaseModel {
    */
   public get copy() {
     return new Restock(this.dataCopy);
+  }
+
+  /**
+   * @returns whether the object is deactivated
+   */
+  public get isDeactivated(): boolean {
+    return BaseModel.isDeactivated(this.trail);
+  }
+
+  /**
+   * @returns whether the object is deleted
+   */
+  public get isDeleted(): boolean {
+    return BaseModel.isDeleted(this.trail);
   }
 }

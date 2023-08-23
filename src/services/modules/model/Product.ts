@@ -60,18 +60,13 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param to_inventory if the quantities are for the inventory
-   * @returns an object containing only the suitable quantities
+   * @returns an object containing both quantities
    */
-  public suitableQuantities(to_inventory: boolean | undefined) {
-    return to_inventory === undefined ? {
+  public suitableQuantities() {
+    return {
       inventory_quantities: this.inventory_quantities,
       quantities: this.quantities
-    } : (to_inventory ? {
-      inventory_quantities: this.inventory_quantities
-    } : {
-      quantities: this.quantities
-    });
+    };
   }
 
   /**
@@ -379,7 +374,7 @@ export default class Product implements BaseModel {
    * @throws EvalError if the quantities are invalid
    */
   public checkIsValidAdd(quantities: QuantityType,
-                         to_inventory: boolean | undefined): void {
+                         to_inventory: boolean): void {
     // If undefined this.quantities is used
     let currentQuantities = to_inventory
       ? this.inventory_quantities
@@ -419,7 +414,7 @@ export default class Product implements BaseModel {
    * @throws EvalError if the quantities are invalid
    */
   public add(quantities: QuantityType,
-             to_inventory: boolean | undefined): void {
+             to_inventory: boolean): void {
     this.checkIsValidAdd(quantities, to_inventory);
 
     // If undefined this.quantities is used
@@ -454,9 +449,22 @@ export default class Product implements BaseModel {
    */
   public addUspQuantity(usi: string,
                         quantity: number,
-                        to_inventory: boolean | undefined): void {
+                        to_inventory: boolean): void {
     this.add({
       [Product.usiToUsp(usi)]: quantity
+    }, to_inventory);
+  }
+
+  /**
+   * @param quantity to be added
+   * @param rusp of the quantity
+   * @param to_inventory true for inventory otherwise for display
+   */
+  public addSingle(quantity: number,
+                   rusp: string,
+                   to_inventory: boolean): void {
+    return this.add({
+      [rusp]: quantity
     }, to_inventory);
   }
 

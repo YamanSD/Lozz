@@ -9,6 +9,12 @@ export default class Restock implements BaseModel {
   /* raw restocking data */
   private dataValue: restock;
 
+  /*
+   * if present at the end of a RUSI, indicates that quantity
+   * if for inventory
+   */
+  private static INVENTORY_FLAG: string = "_INV";
+
   /**
    * @param data raw restocking data
    */
@@ -28,6 +34,16 @@ export default class Restock implements BaseModel {
    */
   public get products() {
     return Object.keys(this.quantities);
+  }
+
+  /**
+   * @param rusi to be converted
+   * @returns the USI of the RUSI
+   */
+  public static removeTag(rusi: string): string {
+    return this.isToInventory(rusi)
+      ? rusi.replace(Restock.INVENTORY_FLAG, "")
+      : rusi;
   }
 
   /**
@@ -52,17 +68,18 @@ export default class Restock implements BaseModel {
   }
 
   /**
-   * @returns true if the restocking is for the inventory
-   */
-  public get to_inventory() {
-    return this.data.to_inventory;
-  }
-
-  /**
    * @returns the quantities object for the restocking
    */
   public get quantities() {
     return this.data.quantities;
+  }
+
+  /**
+   * @param rusi to check
+   * @returns true if the RUSI is for the inventory
+   */
+  public static isToInventory(rusi: string): boolean {
+    return rusi.endsWith(Restock.INVENTORY_FLAG);
   }
 
   /**
@@ -73,34 +90,76 @@ export default class Restock implements BaseModel {
   }
 
   /**
+   * @returns the inventory flag
+   */
+  public get inventory_flag() {
+    return Restock.INVENTORY_FLAG;
+  }
+
+  /**
+   * @param usi to generate the RUSI for
+   * @param to_inventory true indicates that the USI is for inventory
+   * @returns the RUSI
+   */
+  public static getRusi(usi: string, to_inventory: boolean) {
+    return usi + (to_inventory ? Restock.INVENTORY_FLAG : "")
+  }
+
+  /**
+   * @param rusi to be converted
+   * @param to_inventory destination
+   * @returns USI or RUSI depending on the input
+   */
+  public static convert(rusi: string, to_inventory: boolean) {
+    if (Restock.isToInventory(rusi)) {
+      return to_inventory ? rusi : Restock.removeTag(rusi);
+    } else {
+      return to_inventory ? Restock.getRusi(rusi, true) : rusi;
+    }
+  }
+
+  /**
    * Adds the given quantity to the quantity of the USI in the restocking.
    * If the resulting quantity is zero, delete the USI from the quantities.
    *
    * @param usi to add quantity for
    * @param quantity value to be added, can be negative or non-integer
+   * @param to_inventory if true, the quantity is targeted to the inventory
    */
-  public add(usi: string, quantity: number): void {
-    if (!(usi in this.quantities)) {
-      this.quantities[usi] = 0;
+  public add(usi: string, quantity: number, to_inventory: boolean): void {
+    const rusi = Restock.getRusi(usi, to_inventory);
+
+    if (!(rusi in this.quantities)) {
+      this.quantities[rusi] = 0;
     }
 
-    this.quantities[usi] += quantity;
+    this.quantities[rusi] += quantity;
     this.item_count += Math.abs(quantity);
 
-    if (this.quantities[usi] === 0) {
-      delete this.quantities[usi];
+    if (this.quantities[rusi] === 0) {
+      delete this.quantities[rusi];
     }
   }
 
   /**
-   * @param usi to check quantity for
+   * @param rusi to check quantity for
+   * @returns the quantity of the RUSI
    */
-  public getQuantity(usi: string): number {
-    if (!(usi in this.quantities)) {
+  public getQuantity(rusi: string): number {
+    if (!(rusi in this.quantities)) {
       return 0;
     }
 
-    return this.quantities[usi];
+    return this.quantities[rusi];
+  }
+
+  /**
+   * @param usi to get quantity for
+   * @param to_inventory source of quantity
+   * @returns the quantity of the USI in the given source
+   */
+  public getUsiQuantity(usi: string, to_inventory: boolean) {
+    return this.getQuantity(Restock.getRusi(usi, to_inventory))
   }
 
   /**
@@ -163,13 +222,6 @@ export default class Restock implements BaseModel {
    */
   public get trail(): TrailType {
     return this.data.trail;
-  }
-
-  /**
-   * @param value new to inventory value
-   */
-  public set to_inventory(value: boolean | undefined) {
-    this.data.to_inventory = value;
   }
 
   /**

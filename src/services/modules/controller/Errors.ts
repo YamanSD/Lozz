@@ -129,8 +129,8 @@ export class RestockDeletionError extends Error {
   }
 }
 
-export class RestockAlreadyRevockedError extends Error {
+export class RestockAlreadyRevokedError extends Error {
   public constructor() {
-    super("RestockAlreadyRevockedError");
+    super("RestockAlreadyRevokedError");
   }
 }

@@ -6,9 +6,10 @@ import {
   product,
   QuantityType,
   restock,
-  RestockSearchMapping,
   RestockSearchSchema,
-  SpecialFields
+  SpecialFields,
+  TrailNature,
+  TrailType
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
@@ -17,7 +18,9 @@ import {
   EmptyRestockError,
   IdDoesNotExistError,
   NoUpdateError,
-  ProductNotFoundError, RestockAlreadyRevockedError, RestockDeletionError
+  ProductNotFoundError,
+  RestockAlreadyRevokedError,
+  RestockDeletionError
 } from "./Errors";
 import BaseModel from "../model/BaseModel";
 import { sum } from "lodash";
@@ -102,10 +105,7 @@ export default class RestockController extends BaseController<restock> {
     const id = BaseModel.getRandomTimestamp(2);
 
     /* try to change quantities */
-    await this.performQuantityTransaction(
-      uploadData.quantities,
-      uploadData.to_inventory
-    );
+    await this.performQuantityTransaction(uploadData.quantities);
 
     /* create the restocking document on the server */
     await this.createServer(id, uploadData);
@@ -135,13 +135,14 @@ export default class RestockController extends BaseController<restock> {
             return;
           }
 
-          for (let usi of restock.products) {
-            const usi_data = Product.invertUsi(usi);
+          for (let rusi of restock.products) {
+            const usi_data = Product.invertUsi(rusi);
+            const usi = Restock.removeTag(rusi);
             let product = products[usi_data.id]
               ?? await productController.get(usi_data.id);
 
             product.addUspQuantity(
-              usi, restock.getQuantity(usi), restock.to_inventory
+              usi, restock.getQuantity(rusi), Restock.isToInventory(rusi)
             );
 
             await productController.updateLocal(product);
@@ -155,21 +156,23 @@ export default class RestockController extends BaseController<restock> {
            * otherwise enter to previous branch
            */
           let oldRestock = new Restock(this.getCache(id) as restock);
-          const diff = oldRestock.to_inventory !== restock.to_inventory;
           const deactivated = restock.isDeactivated;
 
-          for (let usi of restock.products) {
-            const usi_data = Product.invertUsi(usi);
+          for (let rusi of BaseController.joinKeys(
+            restock.products, oldRestock.products)
+            ) {
+            const usi_data = Product.invertUsi(rusi);
+            const usi = Restock.removeTag(rusi);
             let product = products[usi_data.id]
               ?? await productController.get(usi_data.id);
 
             product.addUspQuantity(
               usi,
-              restock.getQuantity(usi)
+              restock.getQuantity(rusi)
               // When deactivated the above & below term result in zero
-              - (diff ? 0 : oldRestock.getQuantity(usi))
-              - (deactivated ? restock.getQuantity(usi) : 0),
-              restock.to_inventory
+              - oldRestock.getQuantity(rusi)
+              - (deactivated ? restock.getQuantity(rusi) : 0),
+              Restock.isToInventory(rusi)
             );
 
             await productController.updateLocal(product);
@@ -182,13 +185,14 @@ export default class RestockController extends BaseController<restock> {
             return;
           }
 
-          for (let usi of restock.products) {
-            const usi_data = Product.invertUsi(usi);
+          for (let rusi of restock.products) {
+            const usi_data = Product.invertUsi(rusi);
+            const usi = Restock.removeTag(rusi);
             let product = products[usi_data.id]
               ?? await productController.get(usi_data.id);
 
             product.addUspQuantity(
-              usi, -restock.getQuantity(usi), restock.to_inventory
+              usi, -restock.getQuantity(rusi), Restock.isToInventory(rusi)
             );
 
             await productController.updateLocal(product);
@@ -211,15 +215,13 @@ export default class RestockController extends BaseController<restock> {
   /**
    * @param id ID of the restocking to be updated
    * @param new_quantities new quantities of the restocking
-   * @param to_inventory if false update only display quantities,
-   *        if true update only inventory,
-   *        if undefined update both.
+   * @param deactivate if true, stamp restock with deactivate rather than
+   *        updated.
    */
   public async updateQuantities(
     id: string,
     new_quantities: QuantityType,
-    to_inventory: boolean | undefined
-  ) {
+    deactivate?: boolean) {
     const oldRestock = await this.get(id);
 
     let quantities = RestockController.combineQuantities(
@@ -227,29 +229,30 @@ export default class RestockController extends BaseController<restock> {
         oldRestock.quantities
     );
 
-    await this.performQuantityTransaction(quantities, to_inventory, id);
+    // Also updates restock
+    await this.performQuantityTransaction(quantities, {
+      id: id,
+      quantities: new_quantities,
+      stamp: deactivate ? TrailNature.D : TrailNature.U,
+      trail: oldRestock.trail
+    });
   }
 
   /**
    * @param id of the restocking operation whose effects revoked completely
-   * @param to_inventory if true return values to inventory only,
-   *        if false return values to display only,
-   *        if undefined return to both,
-   *        if null to_inventory is based on previous value
    */
-  public async revoke(id: string, to_inventory: boolean | undefined | null) {
+  public async revoke(id: string) {
     const restock = await this.get(id);
 
     if (restock.isDeactivated) {
-      throw new RestockAlreadyRevockedError();
+      throw new RestockAlreadyRevokedError();
     }
 
-    await this.performQuantityTransaction(
+    await this.updateQuantities(
+      id,
       restock.negativeQuantities,
-      to_inventory === null ? restock.to_inventory : to_inventory
+      true
     );
-
-    await this.deactivate(id);
   }
 
   /**
@@ -259,7 +262,7 @@ export default class RestockController extends BaseController<restock> {
    *          to their USP quantities
    * @private
    */
-  private static processUsi(quantities: QuantityType): {
+  public static processRusi(quantities: QuantityType): {
     productQuantities: JointQuantityType,
     productIds: string[]
   } {
@@ -268,27 +271,28 @@ export default class RestockController extends BaseController<restock> {
     // Can use a Max Heap to speed up (untested idea)
     let sums: Generic<number> = {};
 
-    for (let usi of Object.keys(quantities)) {
+    for (let rusi of Object.keys(quantities)) {
+      const usi = Restock.removeTag(rusi);
       const id = Product.invertUsi(usi).id;
-      const usp = Product.usiToUsp(usi);
-      const quantity = quantities[usi];
+      const rusp = Product.usiToUsp(rusi);
+      const quantity = quantities[rusi];
 
       if (!(id in result)) {
         result[id] = {
-          [usp]: quantity
+          [rusp]: quantity
         };
 
         sums[id] = quantity;
       } else {
-        result[id][usp] = quantity;
+        result[id][rusp] = quantity;
         sums[id] += quantity;
       }
     }
 
     let productIds = Object.keys(result);
 
-    productIds.sort((usi_0, usi_1) => {
-      return sums[usi_1] - sums[usi_0];
+    productIds.sort((rusi_0, rusi_1) => {
+      return sums[rusi_1] - sums[rusi_0];
     });
 
     return {
@@ -309,41 +313,43 @@ export default class RestockController extends BaseController<restock> {
       return new_quantities;
     }
 
-    const usiList = BaseController.joinKeys(new_quantities, old_quantities);
+    let result = BaseModel.deepCopy(new_quantities);
+    const rusiList = BaseController.joinKeys(result, old_quantities);
 
-    for (let usi of usiList) {
-      if (!(usi in new_quantities)) {
-        new_quantities[usi] = 0;
+    for (let rusi of rusiList) {
+      if (!(rusi in result)) {
+        result[rusi] = 0;
       }
 
-      new_quantities[usi] -= old_quantities[usi] ?? 0;
+      result[rusi] -= old_quantities[rusi] ?? 0;
     }
 
-    return new_quantities;
+    return result;
   }
 
   /**
    * Performs product quantities transaction for the restocking.
    *
    * @param quantities to be added to the product quantities on server
-   * @param to_inventory boolean flag to indicate whether the quantities
-   *        are for the inventory or not
-   * @param restock_id if present, update the to_inventory field of the
-   *        restocking document.
+   * @param restockInfo if present, update the restocking document.
    * @returns null if the transaction worked, otherwise product ID that failed
    * @throws EvalError if the transaction fails due to quantities
    * @private
    */
   private async performQuantityTransaction(quantities: QuantityType,
-                                           to_inventory: boolean | undefined,
-                                           restock_id?: string) {
+                                           restockInfo?: {
+                                               id: string,
+                                               quantities: QuantityType,
+                                               trail: TrailType,
+                                               stamp: TrailNature
+                                           }) {
     await this.runTransaction(async (transaction) => {
       let products: Product[] = [];
       let references: Generic = {};
 
       let {
         productQuantities, productIds
-      } = RestockController.processUsi(quantities);
+      } = RestockController.processRusi(quantities);
 
       const productController = this.productController;
       const categoryController = this.categoryController;
@@ -368,7 +374,17 @@ export default class RestockController extends BaseController<restock> {
           await categoryController.get(data.category_id)
         );
 
-        product.add(productQuantities[productId], to_inventory);
+        let quantityValues = productQuantities[productId];
+
+        // Iterate over RUSPs and add to product
+        for (let rusp of Object.keys(quantityValues)) {
+          product.addSingle(
+            quantityValues[rusp],
+            Restock.removeTag(rusp),
+            Restock.isToInventory(rusp)
+          );
+        }
+
         products.push(product);
         references[productId] = documentRef;
       }
@@ -377,14 +393,20 @@ export default class RestockController extends BaseController<restock> {
       for (product of products) {
         await transaction.update(
           references[product.id],
-          product.suitableQuantities(to_inventory)
+          product.suitableQuantities()
         );
       }
 
-      if (restock_id !== undefined) {
+      if (restockInfo !== undefined) {
+        let trail = restockInfo.trail;
+
+        this.stamp(trail, restockInfo.stamp);
+
         await transaction.update(
-          this.collection.doc(restock_id), {
-            to_inventory: to_inventory ?? firestore.FieldValue.delete()
+          this.collection.doc(restockInfo.id), {
+            quantities: restockInfo.quantities,
+            item_count: RestockController.countItems(restockInfo.quantities),
+            [SpecialFields.trail]: trail
           }
         );
       }
@@ -405,7 +427,6 @@ export default class RestockController extends BaseController<restock> {
     await this.create({
       note: reason,
       quantities: quantities,
-      to_inventory: undefined,
       order_linked: false
     });
   }
@@ -461,7 +482,6 @@ export default class RestockController extends BaseController<restock> {
     return super.fixDataGaps({
       id: data.id,
       note: data.note,
-      to_inventory: data.to_inventory,
       quantities: data.quantities,
       order_linked: data.order_linked,
       item_count: RestockController.countItems(data.quantities),
@@ -475,17 +495,10 @@ export default class RestockController extends BaseController<restock> {
    * @protected
    */
   protected fixSearchEngineData(data: restock): Generic {
-    const toInventory = data.to_inventory === undefined
-      ? RestockSearchMapping.both
-      : (data.to_inventory
-        ? RestockSearchMapping.inventory
-        : RestockSearchMapping.display);
-
     return {
       id: data.id,
       date: data.id,
       note: data.note,
-      to_inventory: toInventory,
       item_count: data.item_count,
       order_linked: data.order_linked,
       employee_id: BaseModel.initialEmployee(data[SpecialFields.trail]),

@@ -339,11 +339,6 @@ export type basicCourier = {
  *   operation.
  *   Given by user.
  *
- * - to_inventory?: boolean representing whether the restocking operation
- *   is to the inventory or the on-display quantities.
- *   If undefined, both quantities are modified with the same effect.
- *   Given by user.
- *
  * - quantities: object mapping USIs to quantities of these products in
  *   the restocking operation.
  *   Can be negative to indicate removing and can use floats for
@@ -356,6 +351,12 @@ export type basicCourier = {
  *   When present, allows the restocking instance to be deleted.
  *   Auto-added when an order is created.
  *
+ * - rusi: stands for restock underscore-separated identifier consists of
+ *   a USI & an optional flag to determine whether the USI quantity
+ *   is for the inventory or not.
+ *   Given by user, the flag specification is generated according to user
+ *   choices.
+ *
  * - item_count: number representing the sum of the quantities of
  *   all items.
  *   Auto-generated on creation.
@@ -365,9 +366,8 @@ export type basicCourier = {
 export type restock = {
   id: string,
   note?: string,
-  to_inventory: boolean | undefined,
   quantities: {
-    [usi: string]: number
+    [rusi: string]: number
   },
   item_count: number,
   order_linked?: boolean,
@@ -380,9 +380,8 @@ export type restock = {
 export type basicRestock = {
   id?: string,
   note?: string,
-  to_inventory: boolean | undefined,
   quantities: {
-    [usi: string]: number
+    [rusi: string]: number
   },
   order_linked?: boolean
 };
@@ -515,20 +514,22 @@ export type basicCustomer = {
 /**
  * Shortcut for typing.
  *
- * - usp: USP of the product mapped to its number.
+ * - rusp: USP of the product mapped to its number.
+ *   A RUSP is a USP with the inventory flag attached to it,
+ *   if necessary.
  */
 export type QuantityType = {
-  [usp: string]: number
+  [rusp: string]: number
 };
 
 /**
  * Shortcut for typing.
  *
- * - Maps an ID to an object mapping USPs to quantities
+ * - Maps an ID to an object mapping RUSPs to quantities
  */
 export type JointQuantityType = {
   [id: string]: {
-    [usp: string]: number
+    [rusp: string]: number
   }
 }
 
@@ -1010,23 +1011,12 @@ export const CourierSearchSchema: Schema = {
 };
 
 /**
- * Enum class for the to_inventory value.
- * Used in search filters.
- */
-export enum RestockSearchMapping {
-  display = 0,
-  inventory,
-  both
-}
-
-/**
  * Defines the search schema for the Restocks collection
  */
 export const RestockSearchSchema: Schema = {
   id: 'string', // Required for search engine
   date: 'string', // restock ID
   note: 'string', // Can be empty
-  to_inventory: 'number',
   item_count: 'number',
   order_linked: 'boolean',
   employee_id: 'string',

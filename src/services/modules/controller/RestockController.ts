@@ -95,12 +95,13 @@ export default class RestockController extends BaseController<restock> {
   /**
    * @param quantities to be transformed
    * @param to_inventory if true quantities are for the inventory only
-   *                     undefined for both,
-   *                     false for display only.
+   *                     false for display only,
+   *                     undefined do nothing,
+   *                     null for both.
    * @returns quantities for the inventory
    */
   public static transformQuantities(quantities: QuantityType,
-                             to_inventory: boolean | undefined): QuantityType {
+                             to_inventory: boolean | undefined | null): QuantityType {
     if (to_inventory === undefined) {
       return quantities;
     }
@@ -108,6 +109,10 @@ export default class RestockController extends BaseController<restock> {
     const restock = new Restock({
       quantities: quantities
     } as restock);
+
+    if (to_inventory === null) {
+      return restock.duplicateQuantities;
+    }
 
     return restock.convertDestination(to_inventory);
   }

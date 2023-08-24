@@ -393,7 +393,8 @@ export type restock = {
  *
  * - to_inventory?: boolean if true, all quantities are set to inventory.
  *   Otherwise, if false send to display only.
- *   Otherwise, undefined do nothing.
+ *   Otherwise, null for both.
+ *   Otherwise, undefined modify nothing.
  */
 export type basicRestock = {
   id?: string,
@@ -401,7 +402,7 @@ export type basicRestock = {
   costs?: {
     [usi: string]: MonetaryType
   },
-  to_inventory?: boolean,
+  to_inventory?: boolean | null,
   quantities: {
     [rusi: string]: number
   },

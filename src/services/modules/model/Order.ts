@@ -328,13 +328,17 @@ export default class Order implements BaseModel {
         }
         break;
       case OrderStatus.paid:
-        if (this.status !== OrderStatus.sent_to_courier) {
+        if (this.status !== OrderStatus.sent_to_courier
+          && this.status !== OrderStatus.packaged
+          && this.status !== OrderStatus.confirmed
+          && this.status === OrderStatus.paid) {
           throw new TypeError(`Order is ${this.status}, but trying to pay`);
         }
         break;
       case OrderStatus.canceled:
-        if (this.status !== OrderStatus.confirmed
-          && this.status !== OrderStatus.pending) {
+        if (this.status === OrderStatus.canceled ||
+            this.status === OrderStatus.canceled_at_courier ||
+            this.status === OrderStatus.received_from_courier) {
           throw new TypeError(`Order is ${this.status}, but trying cancel`);
         }
         break;
@@ -635,19 +639,20 @@ export default class Order implements BaseModel {
    * @private
    */
   private static creationStatusToInventory: {
-    [status: number]: boolean | undefined
+    [status: number]: boolean | undefined | null
   } = {
     [OrderStatus.confirmed]: false,
-    [OrderStatus.packaged]: undefined,
-    [OrderStatus.sent_to_courier]: undefined,
-    [OrderStatus.paid]: undefined,
+    [OrderStatus.packaged]: null,
+    [OrderStatus.sent_to_courier]: null,
+    [OrderStatus.paid]: null,
   };
 
   /**
    * @param status to be checked if it affects the inventory
    * @returns the type of inventory change needed for the given status
    */
-  public static isStatusToInventory(status: OrderStatus): boolean | undefined {
+  public static isStatusToInventory(status: OrderStatus):
+    boolean | undefined | null {
     if (status in Order.creationStatusToInventory) {
       return Order.creationStatusToInventory[status];
     }

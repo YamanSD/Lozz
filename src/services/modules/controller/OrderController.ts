@@ -184,16 +184,12 @@ export default class OrderController extends BaseController<order> {
       data.restock_id = await this.restockController.create({
         note: this.generateNote(data),
         quantities: this.getQuantities(data),
-        order_linked: true
+        to_inventory: Order.isStatusToInventory(data.status)
       });
 
       data.id = await this.generateId();
 
-      try {
-        await this.createServer(data.id, this.fillDataGaps(data));
-      } catch (e) {
-
-      }
+      await this.createServer(data.id, this.fillDataGaps(data));
 
       return data.id;
     } catch (e) {
@@ -236,6 +232,8 @@ export default class OrderController extends BaseController<order> {
       order.status = OrderStatus.packaged;
 
       await this.restockController.transferToBoth(order.restock.id);
+
+      await this.update(order);
     } else {
       throw new OrderNotConfirmedNorPendingError()
     }
@@ -315,12 +313,14 @@ export default class OrderController extends BaseController<order> {
     if (revoke) {
       await this.restockController.revoke(order.restock.id);
     } else {
-      await this.restockController.transferFromInventory(order.restock.id);
+      // Negative quantities thus moving them to inventory,
+      // deducts from the inventory but not the display
+      await this.restockController.transferToInventory(order.restock.id);
     }
 
     // Deactivate a canceled order
     this.stamp(order.trail, TrailNature.D);
-    await this.update(order);
+    await this.updateServer(order.data, order.id, true);
   }
 
   /**
@@ -333,7 +333,7 @@ export default class OrderController extends BaseController<order> {
       throw new OrderNotAtCourierError();
     }
 
-    await this.restockController.transferToBoth(order.restock.id);
+    await this.restockController.revoke(order.restock.id);
 
     order.status = OrderStatus.received_from_courier;
     await this.update(order);

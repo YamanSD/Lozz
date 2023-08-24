@@ -447,7 +447,7 @@ export default class Product implements BaseModel {
    * @param quantity of the given USP
    * @param to_inventory if true the quantities target the inventory quantities
    */
-  public addUspQuantity(usi: string,
+  public addUsiQuantity(usi: string,
                         quantity: number,
                         to_inventory: boolean): void {
     this.add({

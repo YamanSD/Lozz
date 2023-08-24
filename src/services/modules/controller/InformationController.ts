@@ -7,7 +7,6 @@ import RateInformation from "../model/RateInformation";
 import ProvinceInformation from "../model/ProvinceInformation";
 import ZoneInformation from "../model/ZoneInformation";
 import { isEqual } from "lodash";
-import ProductController from "./ProductController";
 import Courier from "../model/Courier";
 import Monetary from "../local_model/Monetary";
 
@@ -45,17 +44,6 @@ export default class InformationController
         this.injectDependency();
       });
     });
-  }
-
-  /**
-   * @returns the products controller
-   */
-  public get productController(): ProductController {
-    return BaseController.getDependency(
-      CollectionInfo.product.name,
-      ProductController,
-      this.metaServer
-    );
   }
 
   /**
@@ -124,8 +112,6 @@ export default class InformationController
    * @param data to be created
    */
   public async create(data: basicProperties) {
-    await this.productController.checkOnProperties();
-
     /* Create basic provinces */
     await this.createServer(InformationType.provinces, {
       type: InformationType.provinces,

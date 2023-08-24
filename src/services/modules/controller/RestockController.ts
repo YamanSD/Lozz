@@ -6,10 +6,9 @@ import {
   product,
   QuantityType,
   restock,
-  RestockSearchSchema,
+  RestockSearchSchema, restockUpdate,
   SpecialFields,
   TrailNature,
-  TrailType
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
@@ -115,97 +114,6 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
-   * Activates the restocks listener,
-   * that modifies product quantities automatically
-   */
-  public activateListener() {
-    this.collection.onSnapshot(snapshot => {
-      snapshot.docChanges().forEach(async (change) => {
-        const document = change.doc;
-        const id = document.id;
-        const data: restock | undefined = document.data() as restock;
-        const productController = this.productController;
-        const cacheCheck = this.checkCache(id);
-        let products: Generic<Product> = {};
-        let restock = new Restock(data);
-
-        if (change.type === "added"
-          || (change.type === "modified" && !cacheCheck)) {
-          if (cacheCheck) {
-            return;
-          }
-
-          for (let rusi of restock.products) {
-            const usi_data = Product.invertUsi(rusi);
-            const usi = Restock.removeTag(rusi);
-            let product = products[usi_data.id]
-              ?? await productController.get(usi_data.id);
-
-            product.addUspQuantity(
-              usi, restock.getQuantity(rusi), Restock.isToInventory(rusi)
-            );
-
-            await productController.updateLocal(product);
-            products[usi_data.id] = product;
-          }
-
-          await this.setCache(id, restock.data);
-        } else if (change.type === "modified") {
-          /*
-           * If in cache compare old with new,
-           * otherwise enter to previous branch
-           */
-          let oldRestock = new Restock(this.getCache(id) as restock);
-          const deactivated = restock.isDeactivated;
-
-          for (let rusi of BaseController.joinKeys(
-            restock.products, oldRestock.products)
-            ) {
-            const usi_data = Product.invertUsi(rusi);
-            const usi = Restock.removeTag(rusi);
-            let product = products[usi_data.id]
-              ?? await productController.get(usi_data.id);
-
-            product.addUspQuantity(
-              usi,
-              restock.getQuantity(rusi)
-              // When deactivated the above & below term result in zero
-              - oldRestock.getQuantity(rusi)
-              - (deactivated ? restock.getQuantity(rusi) : 0),
-              Restock.isToInventory(rusi)
-            );
-
-            await productController.updateLocal(product);
-            products[usi_data.id] = product;
-          }
-
-          await this.updateCache(id, restock.data);
-        } else if (change.type === "removed") {
-          if (!cacheCheck) {
-            return;
-          }
-
-          for (let rusi of restock.products) {
-            const usi_data = Product.invertUsi(rusi);
-            const usi = Restock.removeTag(rusi);
-            let product = products[usi_data.id]
-              ?? await productController.get(usi_data.id);
-
-            product.addUspQuantity(
-              usi, -restock.getQuantity(rusi), Restock.isToInventory(rusi)
-            );
-
-            await productController.updateLocal(product);
-            products[usi_data.id] = product;
-          }
-
-          this.removeCache(id);
-        }
-      });
-    });
-  }
-
-  /**
    * @throws NoUpdateError, restocks do not allow non-quantity updates
    */
   public async update(model: Restock) {
@@ -232,9 +140,9 @@ export default class RestockController extends BaseController<restock> {
     // Also updates restock
     await this.performQuantityTransaction(quantities, {
       id: id,
-      quantities: new_quantities,
+      quantities: deactivate ? oldRestock.quantities : new_quantities,
       stamp: deactivate ? TrailNature.D : TrailNature.U,
-      trail: oldRestock.trail
+      [SpecialFields.trail]: oldRestock.trail
     });
   }
 
@@ -250,7 +158,7 @@ export default class RestockController extends BaseController<restock> {
 
     await this.updateQuantities(
       id,
-      restock.negativeQuantities,
+      restock.zeroQuantities,
       true
     );
   }
@@ -337,12 +245,7 @@ export default class RestockController extends BaseController<restock> {
    * @private
    */
   private async performQuantityTransaction(quantities: QuantityType,
-                                           restockInfo?: {
-                                               id: string,
-                                               quantities: QuantityType,
-                                               trail: TrailType,
-                                               stamp: TrailNature
-                                           }) {
+                                           restockInfo?: restockUpdate) {
     await this.runTransaction(async (transaction) => {
       let products: Product[] = [];
       let references: Generic = {};
@@ -462,6 +365,42 @@ export default class RestockController extends BaseController<restock> {
     if (Object.keys(quantities).length === 0) {
       throw new EmptyRestockError();
     }
+  }
+
+  /**
+   * @param id of the restocking whose quantities moved
+   *        to the inventory only.
+   */
+  public async transferToInventory(id: string) {
+    const restock = await this.get(id);
+    const quantities = restock.convertDestination(true);
+
+    await this.updateQuantities(id, quantities);
+  }
+
+  /**
+   * @param id of the restocking whose quantities moved
+   *        to the display only.
+   */
+  public async transferFromInventory(id: string) {
+    const restock = await this.get(id);
+    const quantities = restock.convertDestination(false);
+
+    await this.updateQuantities(id, quantities);
+  }
+
+  /**
+   * Quantities not in the inventory are added to the inventory.
+   * Quantities not on display are added to the on display.
+   *
+   * @param id of the restocking whose quantities moved
+   *        to both inventory & display.
+   */
+  public async transferToBoth(id: string) {
+    const restock = await this.get(id);
+    const quantities = restock.duplicateQuantities;
+
+    await this.updateQuantities(id, quantities);
   }
 
   /**

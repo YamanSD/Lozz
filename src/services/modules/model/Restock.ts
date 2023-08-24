@@ -32,7 +32,7 @@ export default class Restock implements BaseModel {
   /**
    * @returns a list of all product USIs in the restocking
    */
-  public get products() {
+  public get rusiSet() {
     return Object.keys(this.quantities);
   }
 
@@ -44,6 +44,14 @@ export default class Restock implements BaseModel {
     return this.isToInventory(rusi)
       ? rusi.replace(Restock.INVENTORY_FLAG, "")
       : rusi;
+  }
+
+  /**
+   * @param rusi to be converted
+   * @return the RUSI of the USI
+   */
+  public static addTag(rusi: string): string {
+    return this.isToInventory(rusi) ? rusi : rusi + Restock.INVENTORY_FLAG;
   }
 
   /**
@@ -102,19 +110,18 @@ export default class Restock implements BaseModel {
    * @returns the RUSI
    */
   public static getRusi(usi: string, to_inventory: boolean) {
-    return usi + (to_inventory ? Restock.INVENTORY_FLAG : "")
+    return to_inventory ? Restock.addTag(usi) : Restock.removeTag(usi);
   }
 
   /**
    * @param rusi to be converted
-   * @param to_inventory destination
    * @returns USI or RUSI depending on the input
    */
-  public static convert(rusi: string, to_inventory: boolean) {
+  public static convert(rusi: string) {
     if (Restock.isToInventory(rusi)) {
-      return to_inventory ? rusi : Restock.removeTag(rusi);
+      return Restock.removeTag(rusi);
     } else {
-      return to_inventory ? Restock.getRusi(rusi, true) : rusi;
+      return Restock.addTag(rusi);
     }
   }
 
@@ -160,11 +167,32 @@ export default class Restock implements BaseModel {
   public convertDestination(to_inventory: boolean): QuantityType {
     let result: QuantityType = {};
 
-    for (let rusi of Object.keys(this.quantities)) {
-      result[Restock.convert(rusi, to_inventory)] = this.quantities[rusi];
+    for (let rusi of this.rusiSet) {
+      const newRusi = to_inventory
+        ? Restock.addTag(rusi)
+        : Restock.removeTag(rusi);
+
+      result[newRusi] = this.quantities[rusi];
     }
 
     return result;
+  }
+
+  /**
+   * Quantities not in the inventory are added to the inventory.
+   * Quantities not on display are added to the on display.
+   *
+   * @returns the duplicated quantities according to the above criteria
+   */
+  public get duplicateQuantities(): QuantityType {
+    let invQuantities = this.convertDestination(true);
+    const disQuantities = this.convertDestination(false);
+
+    for (let rusi of Object.keys(disQuantities)) {
+      invQuantities[rusi] = disQuantities[rusi];
+    }
+
+    return invQuantities;
   }
 
   /**
@@ -219,13 +247,26 @@ export default class Restock implements BaseModel {
   }
 
   /**
+   * @returns a copy of the quantities, but values are zeros
+   */
+  public get zeroQuantities() {
+    let result: QuantityType = {};
+
+    for (let rusi of Object.keys(this.quantities)) {
+      result[rusi] = 0;
+    }
+
+    return result;
+  }
+
+  /**
    * @returns a copy of the quantities, but value signs are inverse
    */
   public get negativeQuantities() {
     let result = BaseModel.deepCopy(this.quantities);
 
-    for (let usi of Object.keys(result)) {
-      result[usi] *= -1;
+    for (let rusi of Object.keys(result)) {
+      result[rusi] *= -1;
     }
 
     return result;

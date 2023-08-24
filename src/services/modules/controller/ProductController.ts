@@ -3,15 +3,13 @@ import {
   basicProduct,
   Generic,
   product,
-  productProperties,
   ProductSearchSchema,
   SpecialFields
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Product from "../model/Product";
-import { IdAlreadyExistsError, IdDoesNotExistError } from "./Errors";
-import BaseModel from "../model/BaseModel";
+import { IdDoesNotExistError } from "./Errors";
 import CategoryController from "./CategoryController";
 import VendorController from "./VendorController";
 
@@ -37,8 +35,6 @@ export default class ProductController extends BaseController<product> {
       ProductController.flag,
       ProductSearchSchema
     )
-
-    this.removeId(this.propertiesId);
 
     this.loadSearchData().then(() => {
       this.activateListener();
@@ -71,113 +67,6 @@ export default class ProductController extends BaseController<product> {
   }
 
   /**
-   * @returns the properties ID used to store properties locally
-   */
-  public get propertiesId() {
-    return Product.exclusiveName;
-  }
-
-  /**
-   * @returns the properties document
-   */
-  public get propertiesDocument() {
-    return this.collection.doc(this.propertiesId);
-  }
-
-  /**
-   * Creates the properties document on server in the products' collection,
-   * if it does not exist.
-   * Initially empty.
-   * This method should be called from layer-2 of the application
-   */
-  public async checkOnProperties() {
-    let document = await this.propertiesDocument.get();
-
-    if (!document.exists) {
-      const id = this.propertiesId;
-      await this.createServer(id, {} as product);
-      this.removeId(id); // Remove the added ID in the create server method
-    }
-  }
-
-  /**
-   * @returns the properties object from the server.
-   *          Guaranteed to be undefined.
-   */
-  public async getServerProperties() {
-    return (await this.propertiesDocument.get()).data() as Generic;
-  }
-
-  /**
-   * @returns the properties object from the cache.
-   *          If not present, fetched from server and added to cache.
-   */
-  public async getLocalProperties(): Promise<productProperties> {
-    let data;
-
-    if (this.checkCache(this.propertiesId)) {
-      data = this.getCache(this.propertiesId) as Generic as productProperties;
-    } else {
-      data = await this.getServerProperties();
-      await this.setCache(this.propertiesId, data as product);
-    }
-
-    delete data.id;
-
-    return data;
-  }
-
-  /**
-   * @param properties new properties
-   */
-  public async updateLocalProperties(properties: productProperties) {
-    await this.updateCache(this.propertiesId, properties as Generic as product);
-  }
-
-  /**
-   * @param id to be refreshed in the local properties
-   */
-  public async updateIdProperty(id: string) {
-    let local = await this.getLocalProperties();
-    local[id] = BaseModel.currentTimestamp;
-
-    await this.updateServer(
-      local,
-      this.propertiesId,
-      true
-    );
-  }
-
-  /**
-   * Activates the listener to the properties.
-   * Updates the product.
-   * These updates are not for the quantities, but for the product
-   * properties (price, cost, etc...)
-   * Quantities are updated by restocks manager.
-   */
-  public activateListener() {
-    this.propertiesDocument.onSnapshot(async (snapshot) => {
-      let local = await this.getLocalProperties();
-      let server = snapshot.data() ?? {};
-      const keys = BaseController.joinKeys(local, server);
-
-      for (let id of keys) {
-        if (!(id in server)) {
-          this.removeCache(id);
-        } else if (!(id in local) || local[id] !== server[id]) {
-          const data = (await this.getServer(id)).data() as Generic;
-
-          data.id = id;
-
-          await this.updateCache(id, data as product);
-        }
-      }
-
-      await this.updateLocalProperties(server);
-    });
-  }
-
-  /**
    * @param id of the product to be fetched
    * @returns product data
    * @throws IdDoesNotExistError if the id does not belong to a product
@@ -200,13 +89,7 @@ export default class ProductController extends BaseController<product> {
    * @throws IdAlreadyExistsError if the name of the product is taken
    */
   public async create(data: basicProduct) {
-    if (!(await this.isIdAvailable(data.id))) {
-      throw new IdAlreadyExistsError();
-    }
-
-    await this.createServer(data.id, this.fillDataGaps(data));
-    await this.uploadIds();
-    await this.updateIdProperty(data.id);
+    return await this.genericCreate(data, data.id);
   }
 
   /**
@@ -236,42 +119,7 @@ export default class ProductController extends BaseController<product> {
       await this.updateServer(data, model.id);
     }
 
-    await this.updateIdProperty(model.id);
-  }
-
-  /**
-   * @param model to be updated in cache
-   */
-  public async updateLocal(model: Product) {
-    await this.updateCache(model.id, model.data);
-  }
-
-  /**
-   * Updates the model on server.
-   * Does not trigger a property update.
-   * Only updates quantities.
-   *
-   * @param model new model of the product
-   * @param to_inventory if true uploads inventory quantities,
-   *        if false, uploads display quantities,
-   *        else if undefined uploads both.
-   * @throws IdDoesNotExistError if the product does not exist
-   */
-  public async quantitiesUpdate(model: Product, to_inventory?: boolean) {
-    if (await this.isIdAvailable(model.name)) {
-      throw new IdDoesNotExistError();
-    }
-
-    let data = to_inventory === undefined ? {
-      quantities: model.quantities,
-      inventory_quantities: model.inventory_quantities
-    } : (to_inventory ? {
-      inventory_quantities: model.inventory_quantities
-    } : {
-      quantities: model.quantities
-    });
-
-    await this.updateServer(data, model.id, true);
+    await this.updateServer(data, model.id);
   }
 
   /**

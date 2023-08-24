@@ -387,6 +387,16 @@ export type basicRestock = {
 };
 
 /**
+ * Data type for updating the restocking in the transaction
+ */
+export type restockUpdate = {
+  id: string,
+  quantities: QuantityType,
+  [SpecialFields.trail]: TrailType,
+  stamp: TrailNature
+};
+
+/**
  * - id (Doc ID): string representing the ID of the employee.
  *   Auto-generated using the initial employee phone number.
  *
@@ -633,14 +643,6 @@ export type product = {
   },
   description?: string,
   [SpecialFields.trail]: TrailType
-};
-
-/**
- * Used to listen to product property changes.
- * This reduces the number of reads required for updating product quantities.
- */
-export type productProperties = {
-  [id: string]: string
 };
 
 /**

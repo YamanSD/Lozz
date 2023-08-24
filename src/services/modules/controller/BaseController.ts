@@ -530,6 +530,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * @protected
    */
   public checkCache(id: string): boolean {
+    if (id === undefined) {
+      return true;
+    }
+
     return this.storage.contains(id);
   }
 
@@ -593,6 +597,22 @@ export default abstract class BaseController<RawData extends Generic> {
 
     for (let key of Object.keys(json_1)) {
       result.add(key);
+    }
+
+    return result;
+  }
+
+  /**
+   * @param json_0 first object
+   * @param json_1 second object
+   * @returns Set containing the values of both objects
+   * @private
+   */
+  public static joinValues(json_0: Generic, json_1: Generic): Set<string> {
+    let result = new Set<string>(Object.values(json_0));
+
+    for (let value of Object.values(json_1)) {
+      result.add(value);
     }
 
     return result;
@@ -794,7 +814,11 @@ export default abstract class BaseController<RawData extends Generic> {
   /**
    * Clears the cache completely
    */
-  public clearCache(): void {
+  public async clearCache() {
+    for (let id of this.storage.getAllKeys()) {
+      await this.removeFromSearchEngine(id);
+    }
+
     this.storage.clearAll();
   }
 
@@ -880,12 +904,23 @@ export default abstract class BaseController<RawData extends Generic> {
           ...this.fixSearchEngineData(data)
       });
     } catch (e) { // Only way to fail is due to the ID already existing
-      await update(
-        this.searchEngine as SearchEngine,
-        id,
-        this.fixSearchEngineData(data)
-      );
+      try {
+        await update(
+          this.searchEngine as SearchEngine,
+          id,
+          this.fixSearchEngineData(data)
+        );
+      } catch (ignore) {}
     }
+  }
+
+  /**
+   * Creates an artificial delay
+   *
+   * @param ms to delay
+   */
+  public async delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**

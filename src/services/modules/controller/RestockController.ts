@@ -121,8 +121,8 @@ export default class RestockController extends BaseController<restock> {
     await this.checkQuantities(data.quantities);
 
     let uploadData = this.fillDataGaps(data);
-    data.quantities = RestockController.transformQuantities(
-      data.quantities,
+    uploadData.quantities = RestockController.transformQuantities(
+      uploadData.quantities,
       data.to_inventory
     );
     const id = BaseModel.getRandomTimestamp(2);
@@ -446,6 +446,7 @@ export default class RestockController extends BaseController<restock> {
       id: data.id,
       note: data.note,
       quantities: data.quantities,
+      costs: data.costs,
       order_linked: data.order_linked,
       item_count: RestockController.countItems(data.quantities),
       trail: this.generateInitialTrail()
@@ -462,6 +463,7 @@ export default class RestockController extends BaseController<restock> {
       id: data.id,
       date: data.id,
       note: data.note,
+      invoice_linked: data.costs !== undefined,
       item_count: data.item_count,
       order_linked: data.order_linked,
       employee_id: BaseModel.initialEmployee(data[SpecialFields.trail]),

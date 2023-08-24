@@ -134,3 +134,9 @@ export class RestockAlreadyRevokedError extends Error {
     super("RestockAlreadyRevokedError");
   }
 }
+
+export class InvalidInvoiceQuantitiesError extends Error {
+  public constructor() {
+    super("InvalidInvoiceQuantitiesError");
+  }
+}

@@ -4,10 +4,11 @@ import Employee from "./Employee";
 import Monetary from "../local_model/Monetary";
 import Vendor from "./Vendor";
 import { expense, TrailNature, TrailType } from "./types";
+import Restock from "./Restock";
 
 
 /* Type of the instance given to the expense */
-type Associate = Employee | Vendor | Courier;
+export type Associate = Employee | Vendor | Courier | Restock;
 
 /**
  * Class encapsulating the expense data.
@@ -118,24 +119,28 @@ export default class Expense implements BaseModel {
    * @returns the employee related with the expense if linked,
    *          otherwise undefined
    */
-  public get employee() {
-    return this.is_employee ? this.associate : undefined;
+  public get employee(): Employee | undefined {
+    return this.is_employee ? this.associate as Employee : undefined;
   }
 
   /**
    * @returns the courier related with the expense if linked,
    *          otherwise undefined
    */
-  public get courier() {
-    return this.is_courier ? this.associate : undefined;
+  public get courier(): Courier | undefined {
+    return this.is_courier ? this.associate as Courier : undefined;
   }
 
   /**
    * @returns the vendor related with the vendor if linked,
    *          otherwise undefined
    */
-  public get vendor() {
-    return this.is_vendor ? this.associate : undefined;
+  public get vendor(): Vendor | undefined {
+    return this.is_vendor ? this.associate as Vendor : undefined;
+  }
+
+  public get restock(): Restock | undefined {
+    return this.is_invoice ? this.associate as Restock : undefined;
   }
 
   /**
@@ -245,6 +250,13 @@ export default class Expense implements BaseModel {
    */
   public get is_courier(): boolean {
     return this.associate instanceof Courier;
+  }
+
+  /**
+   * @returns true if the expense is an invoice
+   */
+  public get is_invoice(): boolean {
+    return this.associate instanceof Restock;
   }
 
   /**

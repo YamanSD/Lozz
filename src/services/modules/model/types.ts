@@ -277,6 +277,10 @@ export type basicCategory = {
  *   received the payment, iff the payment is for a courier.
  *   Given by user.
  *
+ * - restock_id?: string representing the ID of the restocking that
+ *   is associated with the expense, iff the payment is for an invoice.
+ *   Given by user.
+ *
  * - [SpecialFields.trail]: Auto-generated and auto-modified on actions.
  */
 export type expense = {
@@ -287,19 +291,22 @@ export type expense = {
   vendor_id?: string,
   employee_id?: string,
   courier_id?: string,
+  restock_id?: string,
   [SpecialFields.trail]: TrailType
 };
 
 /**
  * Used for the creation of expenses
+ * Value is undefined for the case of the restock_data
  */
 export type basicExpense = {
   description: string,
-  value: MonetaryType,
+  value?: MonetaryType,
   date: Date,
   vendor_id?: string,
   employee_id?: string,
   courier_id?: string,
+  restock_data?: basicRestock
 };
 
 /**
@@ -339,6 +346,10 @@ export type basicCourier = {
  *   operation.
  *   Given by user.
  *
+ * - costs?: object mapping USIs to their cost.
+ *   This is used when a restocking is linked to an expense.
+ *   Given by user.
+ *
  * - quantities: object mapping USIs to quantities of these products in
  *   the restocking operation.
  *   Can be negative to indicate removing and can use floats for
@@ -366,6 +377,9 @@ export type basicCourier = {
 export type restock = {
   id: string,
   note?: string,
+  costs?: {
+    [usi: string]: MonetaryType
+  }
   quantities: {
     [rusi: string]: number
   },
@@ -384,6 +398,9 @@ export type restock = {
 export type basicRestock = {
   id?: string,
   note?: string,
+  costs?: {
+    [usi: string]: MonetaryType
+  },
   to_inventory?: boolean,
   quantities: {
     [rusi: string]: number
@@ -1026,6 +1043,7 @@ export const RestockSearchSchema: Schema = {
   note: 'string', // Can be empty
   item_count: 'number',
   order_linked: 'boolean',
+  invoice_linked: 'boolean',
   employee_id: 'string',
   quantities: 'string[]' // Only USIs
 };

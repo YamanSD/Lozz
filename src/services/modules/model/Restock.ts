@@ -1,5 +1,6 @@
 import BaseModel from "./BaseModel";
 import { QuantityType, restock, TrailType } from "./types";
+import Monetary from "../local_model/Monetary";
 
 
 /**
@@ -176,6 +177,32 @@ export default class Restock implements BaseModel {
     }
 
     return result;
+  }
+
+  /**
+   * @returns the costs object for the restocking
+   */
+  public get costs() {
+    return this.data.costs;
+  }
+
+  /**
+   * @param value new value of the costs
+   */
+  public set costs(value) {
+    this.data.costs = value;
+  }
+
+  /**
+   * @param rusi whose USI is to be added to the costs
+   * @param value cost of a single unit of the USI
+   */
+  public setCost(rusi: string, value: Monetary): void {
+    if (this.costs === undefined) {
+      this.costs = {};
+    }
+
+    this.costs[Restock.removeTag(rusi)] = value.data;
   }
 
   /**

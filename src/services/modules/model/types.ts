@@ -376,10 +376,15 @@ export type restock = {
 
 /**
  * Used for the creation of restocks
+ *
+ * - to_inventory?: boolean if true, all quantities are set to inventory.
+ *   Otherwise, if false send to display only.
+ *   Otherwise, undefined do nothing.
  */
 export type basicRestock = {
   id?: string,
   note?: string,
+  to_inventory?: boolean,
   quantities: {
     [rusi: string]: number
   },

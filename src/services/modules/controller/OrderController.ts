@@ -183,7 +183,6 @@ export default class OrderController extends BaseController<order> {
     try {
       data.restock_id = await this.restockController.create({
         note: this.generateNote(data),
-        to_inventory: Order.isStatusToInventory(data.status),
         quantities: this.getQuantities(data),
         order_linked: true
       });
@@ -217,8 +216,10 @@ export default class OrderController extends BaseController<order> {
     const order = await this.get(id);
     const oldId = order.id;
 
-    await this.create(order.getBasicData(OrderStatus.confirmed));
+    const result = await this.create(order.getBasicData(OrderStatus.confirmed));
     this.removeCache(oldId);
+
+    return result;
   }
 
   /**
@@ -234,7 +235,7 @@ export default class OrderController extends BaseController<order> {
     } else if (order.status === OrderStatus.confirmed) {
       order.status = OrderStatus.packaged;
 
-      await this.updateQuantities(id, order.quantities, true);
+      await this.restockController.transferToBoth(order.restock.id);
     } else {
       throw new OrderNotConfirmedNorPendingError()
     }
@@ -287,6 +288,7 @@ export default class OrderController extends BaseController<order> {
    */
   public async cancel(id: string) {
     let order = await this.get(id);
+    let revoke = false;
 
     if (order.status === OrderStatus.pending) {
       this.removeCache(id);
@@ -296,25 +298,25 @@ export default class OrderController extends BaseController<order> {
     switch (order.status) {
       case OrderStatus.confirmed:
         order.status = OrderStatus.canceled;
-        order.restock.to_inventory = false;
+        revoke = true;
         break;
       case OrderStatus.packaged:
         order.status = OrderStatus.canceled;
-        order.restock.to_inventory = undefined;
+        revoke = true;
         break;
       case OrderStatus.paid:
       case OrderStatus.sent_to_courier:
         order.status = OrderStatus.canceled_at_courier;
-        order.restock.to_inventory = false;
         break;
       default:
         throw new NoCancelError();
     }
 
-    await this.restockController.revoke(
-      order.restock.id,
-      order.restock.to_inventory
-    );
+    if (revoke) {
+      await this.restockController.revoke(order.restock.id);
+    } else {
+      await this.restockController.transferFromInventory(order.restock.id);
+    }
 
     // Deactivate a canceled order
     this.stamp(order.trail, TrailNature.D);
@@ -331,11 +333,7 @@ export default class OrderController extends BaseController<order> {
       throw new OrderNotAtCourierError();
     }
 
-    await this.updateQuantities(
-      id,
-      order.restock.negativeQuantities,
-      true
-    );
+    await this.restockController.transferToBoth(order.restock.id);
 
     order.status = OrderStatus.received_from_courier;
     await this.update(order);
@@ -390,18 +388,14 @@ export default class OrderController extends BaseController<order> {
   /**
    * @param id of the order
    * @param newQuantities of the order
-   * @param to_inventory if true updates only inventory quantities,
-   *        if false updates only display quantities,
-   *        if undefined updates both
    */
-  public async updateQuantities(id: string,
-                                newQuantities: QuantityType,
-                                to_inventory: boolean | undefined) {
+  public async updateQuantities(id: string, newQuantities: QuantityType) {
     let order = await this.get(id);
 
     try {
       await this.restockController.updateQuantities(
-        order.restock.id, newQuantities, to_inventory
+        order.restock.id,
+        newQuantities
       );
 
       order.total = new Monetary(
@@ -466,14 +460,22 @@ export default class OrderController extends BaseController<order> {
    * Extracts quantities from data
    *
    * @param data whose products object to be separated
+   * @param to_inventory if true, marks quantities to inventory.
+   *        Otherwise, if falsy does nothing.
    * @returns the quantities object
    */
-  public getQuantities(data: basicOrder): QuantityType {
+  public getQuantities(data: basicOrder,
+                       to_inventory?: boolean): QuantityType {
     let result: QuantityType = {};
     const products = data.products;
 
+    if (to_inventory === undefined) {
+      to_inventory = false;
+    }
+
     for (let usi of Object.keys(products)) {
-      result[usi] = products[usi].quantity;
+      const rusi = Restock.getRusi(usi, to_inventory);
+      result[rusi] = products[rusi].quantity;
     }
 
     return result;

@@ -93,6 +93,26 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
+   * @param quantities to be transformed
+   * @param to_inventory if true quantities are for the inventory only
+   *                     undefined for both,
+   *                     false for display only.
+   * @returns quantities for the inventory
+   */
+  public static transformQuantities(quantities: QuantityType,
+                             to_inventory: boolean | undefined): QuantityType {
+    if (to_inventory === undefined) {
+      return quantities;
+    }
+
+    const restock = new Restock({
+      quantities: quantities
+    } as restock);
+
+    return restock.convertDestination(to_inventory);
+  }
+
+  /**
    * @param data basic raw data to create a restocking
    * @throws IdAlreadyExistsError if the name of the restocking is taken
    * @throws EvalError if transaction fails
@@ -101,6 +121,10 @@ export default class RestockController extends BaseController<restock> {
     await this.checkQuantities(data.quantities);
 
     let uploadData = this.fillDataGaps(data);
+    data.quantities = RestockController.transformQuantities(
+      data.quantities,
+      data.to_inventory
+    );
     const id = BaseModel.getRandomTimestamp(2);
 
     /* try to change quantities */

@@ -96,6 +96,18 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * This method is exclusive to pending orders.
+   * If the order is not pending, NO ACTION IS TAKEN.
+   *
+   * @param value new quantities of the order
+   */
+  public set products(value: basicOrder["products"]) {
+    if (this.status === OrderStatus.pending) {
+      (this.data as Generic).products = value;
+    }
+  }
+
+  /**
    * @returns the discount of the order
    */
   public get discount() {
@@ -569,6 +581,11 @@ export default class Order implements BaseModel {
       quantity: number,
       price: MonetaryType,
       cost: MonetaryType}> = {};
+
+    if (this.restock === undefined) {
+      // Has products instead of quantities
+      return (this.data as Generic).products;
+    }
 
     let quantities = this.quantities;
 

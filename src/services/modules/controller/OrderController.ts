@@ -41,6 +41,9 @@ export default class OrderController extends BaseController<order> {
     | ControllerFlag.has_trail
     | ControllerFlag.pivot_not_list;
 
+  /* flag appended to the beginning of an order ID, if it is pending */
+  private static PENDING_FLAG = "pending_";
+
   /**
    * @param server firestore instance for the database
    */
@@ -92,6 +95,7 @@ export default class OrderController extends BaseController<order> {
 
     if (increment) {
       pivot++;
+      this.storage.set(this.pendingPivotName, pivot);
     }
 
     return pivot;
@@ -138,7 +142,9 @@ export default class OrderController extends BaseController<order> {
    * @throws IdDoesNotExistError if the id does not belong to an order
    */
   public async get(id: string): Promise<Order> {
-    if (id === this.pendingPivotName || await this.isIdAvailable(id)) {
+    if (!this.isPending(id)
+      && (id === this.pendingPivotName
+        || await this.isIdAvailable(id))) {
       throw new IdDoesNotExistError();
     }
 
@@ -172,10 +178,15 @@ export default class OrderController extends BaseController<order> {
    */
   public async create(data: basicOrder): Promise<string> {
     if (data.status === OrderStatus.pending) {
-      const id = `pending_${this.pendingPivot(true)}`;
+      const id =
+        `${OrderController.PENDING_FLAG}${this.pendingPivot(true)}`;
+
+      // Additional data such as total & trail are discarded on creation
+      let temp = this.fillDataGaps(data);
+      temp.total = this.generateTotal(data);
 
       // Pending local
-      await this.setCache(id, this.fillDataGaps(data));
+      await this.setCache(id, temp);
 
       return id;
     }
@@ -199,6 +210,30 @@ export default class OrderController extends BaseController<order> {
         throw e;
       }
     }
+  }
+
+  /**
+   * @param id to be checked
+   * @returns true if the ID is for a pending order
+   * @private
+   */
+  private isPending(id: string): boolean {
+    return id.startsWith(OrderController.PENDING_FLAG);
+  }
+
+  /**
+   * @returns set of IDs of pending orders
+   */
+  public get pendingIds(): Set<string> {
+    let result = new Set<string>();
+
+    for (let id of this.storage.getAllKeys()) {
+      if (this.isPending(id)) {
+        result.add(id);
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -368,6 +403,11 @@ export default class OrderController extends BaseController<order> {
    * @throws IdDoesNotExistError if the order does not exist
    */
   public async update(model: Order) {
+    if (this.isPending(model.id)) {
+      await this.updateCache(model.id, model.data);
+      return;
+    }
+
     if (this.pivot < Number(model.id)) {
       throw new IdDoesNotExistError();
     }
@@ -391,6 +431,10 @@ export default class OrderController extends BaseController<order> {
    */
   public async updateQuantities(id: string, newQuantities: QuantityType) {
     let order = await this.get(id);
+
+    if (this.isPending(id)) {
+      return;
+    }
 
     try {
       await this.restockController.updateQuantities(

@@ -988,14 +988,23 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @param collection_name
+   * @returns the collection ID for statistics
+   * @private
+   */
+  private static formId(collection_name: string): string {
+    return `${this.isLoadedId}-${collection_name}`;
+  }
+
+  /**
    * @returns true if the statistics have been loaded previously
    */
-  public static get isLoaded(): boolean {
-    let result = this.storage.getBoolean(StatisticsBlock.isLoadedId);
+  public static isLoaded(collection_name: string): boolean {
+    const id = this.formId(collection_name);
+    let result = this.storage.getBoolean(id);
 
     if (result === undefined) {
-      this.storage.set(StatisticsBlock.isLoadedId, false);
-      result = false;
+      return false;
     }
 
     return result;
@@ -1004,8 +1013,8 @@ export default class StatisticsBlock {
   /**
    * Sets the loaded flag
    */
-  public static setLoaded(): void {
-    this.storage.set(this.isLoadedId, true);
+  public static setLoaded(collection_name: string): void {
+    this.storage.set(this.formId(collection_name), true);
   }
 
   /**

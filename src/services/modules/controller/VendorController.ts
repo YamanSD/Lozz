@@ -3,6 +3,7 @@ import { basicVendor, Generic, SpecialFields, vendor, VendorSearchSchema } from 
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Vendor from "../model/Vendor";
+import { NotStatisticalError } from "./Errors";
 
 
 /**
@@ -83,5 +84,21 @@ export default class VendorController extends BaseController<vendor> {
       phone_numbers: data.phone_numbers ?? [],
       emails: data.emails ?? []
     };
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected insertStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected removeStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
   }
 }

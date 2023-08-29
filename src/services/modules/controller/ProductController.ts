@@ -9,7 +9,7 @@ import {
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Product from "../model/Product";
-import { IdDoesNotExistError } from "./Errors";
+import { IdDoesNotExistError, NotStatisticalError } from "./Errors";
 import CategoryController from "./CategoryController";
 import VendorController from "./VendorController";
 
@@ -177,5 +177,21 @@ export default class ProductController extends BaseController<product> {
       description: data.description,
       available_values: Array.from<string>(available_values.values())
     };
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected insertStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected removeStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
   }
 }

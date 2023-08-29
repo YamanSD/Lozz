@@ -2,7 +2,7 @@ import BaseController, { ControllerFlag } from "./BaseController";
 import { basicProperties, Generic, information, InformationType } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
-import { IdDoesNotExistError, IllegalStateError } from "./Errors";
+import { IdDoesNotExistError, IllegalStateError, NotStatisticalError } from "./Errors";
 import RateInformation from "../model/RateInformation";
 import ProvinceInformation from "../model/ProvinceInformation";
 import ZoneInformation from "../model/ZoneInformation";
@@ -211,5 +211,21 @@ export default class InformationController
    */
   protected fixSearchEngineData(data: information): Generic {
     throw new IllegalStateError();
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected insertStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected removeStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
   }
 }

@@ -26,6 +26,7 @@ import { sum } from "lodash";
 import ProductController from "./ProductController";
 import Product from "../model/Product";
 import CategoryController from "./CategoryController";
+import StatisticsBlock from "../local_model/StatisticsBlock";
 
 
 /**
@@ -35,7 +36,8 @@ export default class RestockController extends BaseController<restock> {
   private static readonly flag: number =
     ControllerFlag.can_update
     | ControllerFlag.has_trail
-    | ControllerFlag.can_deactivate;
+    | ControllerFlag.can_deactivate
+    | ControllerFlag.statistical;
 
   /**
    * @param server firestore instance for the database
@@ -49,10 +51,27 @@ export default class RestockController extends BaseController<restock> {
       RestockSearchSchema
     );
 
-    this.loadSearchData().then(() => {
+    this.loadSearchData().then(async () => {
       this.activateListener();
       this.injectDependency();
+      await this.loadStatistics();
     });
+  }
+
+  /**
+   * Loads the restocks into the statistics iff the operation has not been done
+   * @private
+   */
+  private async loadStatistics(): Promise<void> {
+    if (StatisticsBlock.isLoaded(this.collectionName)) {
+      return;
+    }
+
+    for (let id of this.idSet) {
+      StatisticsBlock.addRestock(await this.get(id));
+    }
+
+    StatisticsBlock.setLoaded(this.collectionName);
   }
 
   /**
@@ -100,8 +119,10 @@ export default class RestockController extends BaseController<restock> {
    *                     null for both.
    * @returns quantities for the inventory
    */
-  public static transformQuantities(quantities: QuantityType,
-                             to_inventory: boolean | undefined | null): QuantityType {
+  public static transformQuantities(
+    quantities: QuantityType,
+    to_inventory: boolean | undefined | null
+  ): QuantityType {
     if (to_inventory === undefined) {
       return quantities;
     }
@@ -474,5 +495,21 @@ export default class RestockController extends BaseController<restock> {
       employee_id: BaseModel.initialEmployee(data[SpecialFields.trail]),
       quantities: Object.keys(data.quantities)
     };
+  }
+
+  /**
+   * @param id of the restock to be inserted to statistics
+   * @protected
+   */
+  protected async insertStatistic(id: string): Promise<void> {
+    StatisticsBlock.addRestock(await this.get(id));
+  }
+
+  /**
+   * @param id of the restock to be removed to statistics
+   * @protected
+   */
+  protected async removeStatistic(id: string): Promise<void> {
+    StatisticsBlock.removeRestock(await this.get(id));
   }
 }

@@ -5,6 +5,7 @@ import CollectionInfo from "../../../CollectionInfo";
 import Employee from "../model/Employee";
 import database from "@react-native-firebase/database";
 import BaseModel from "../model/BaseModel";
+import { NotStatisticalError } from "./Errors";
 
 
 /**
@@ -129,5 +130,21 @@ export default class EmployeeController extends BaseController<employee> {
       left: data.role === EmployeeRole.past,
       join_date: BaseModel.revertDate(data.join_date)
     });
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected insertStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected removeStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
   }
 }

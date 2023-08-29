@@ -3,6 +3,7 @@ import { basicCourier, courier, CourierSearchSchema, Generic, SpecialFields } fr
 import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "../../../CollectionInfo";
 import Courier from "../model/Courier";
+import { NotStatisticalError } from "./Errors";
 
 
 /**
@@ -81,5 +82,21 @@ export default class CourierController extends BaseController<courier> {
       name: data.name,
       provinces: Object.keys(data.shipping_fees),
     };
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected insertStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected removeStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
   }
 }

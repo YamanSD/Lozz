@@ -4,6 +4,7 @@ import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Customer from "../model/Customer";
 import BaseModel from "../model/BaseModel";
+import { NotStatisticalError } from "./Errors";
 
 
 /**
@@ -95,5 +96,21 @@ export default class CustomerController extends BaseController<customer> {
         : undefined,
       is_banned: data.is_banned
     });
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected insertStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected removeStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
   }
 }

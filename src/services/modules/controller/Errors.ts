@@ -140,3 +140,9 @@ export class InvalidInvoiceQuantitiesError extends Error {
     super("InvalidInvoiceQuantitiesError");
   }
 }
+
+export class NotStatisticalError extends Error {
+  public constructor() {
+    super("NotStatisticalError");
+  }
+}

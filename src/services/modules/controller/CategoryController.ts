@@ -3,6 +3,7 @@ import { basicCategory, category, CategorySearchSchema, Generic, SpecialFields }
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Category from "../model/Category";
+import { NotStatisticalError } from "./Errors";
 
 
 /**
@@ -83,5 +84,21 @@ export default class CategoryController extends BaseController<category> {
       name: data.name,
       option_keys: data.option_keys
     };
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected insertStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
+  }
+
+  /**
+   * @param id
+   * @protected
+   */
+  protected removeStatistic(id: string): Promise<void> {
+    throw new NotStatisticalError();
   }
 }

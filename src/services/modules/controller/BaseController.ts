@@ -56,12 +56,13 @@ class InternalDependencyTree {
 
 /* Flags to specify the capabilities of a controller */
 export enum ControllerFlag {
-  no_id_list =      0b000001,
-  pivot_not_list =  0b000010,
-  has_trail =       0b000100,
-  can_deactivate =  0b001000,
-  can_delete =      0b010000,
-  can_update =      0b100000,
+  statistical =     0b0000001,
+  no_id_list =      0b0000010,
+  pivot_not_list =  0b0000100,
+  has_trail =       0b0001000,
+  can_deactivate =  0b0010000,
+  can_delete =      0b0100000,
+  can_update =      0b1000000,
 }
 
 /* Name alias for the search engine type */
@@ -224,6 +225,13 @@ export default abstract class BaseController<RawData extends Generic> {
    */
   public get isPivot(): boolean {
     return this.getAttribute(ControllerFlag.pivot_not_list);
+  }
+
+  /**
+   * @returns true if the controller is statistical
+   */
+  public get isStatistical(): boolean {
+    return this.getAttribute(ControllerFlag.statistical);
   }
 
   /**
@@ -521,7 +529,7 @@ export default abstract class BaseController<RawData extends Generic> {
    */
   public triggerHook(): void {
     // store.dispatch(SlicesMap[this.collectionName]());
-    // TODO
+    // TODO with front-end
   }
 
   /**
@@ -565,8 +573,25 @@ export default abstract class BaseController<RawData extends Generic> {
   protected async setCache(id: string, data: RawData) {
     await this.updateSearchEngine(id, data);
     this.storage.set(id, JSON.stringify(data));
+
+    if (this.isStatistical) {
+      await this.insertStatistic(id);
+    }
+
     this.triggerHook();
   }
+
+  /**
+   * @param id to be inserted into statistics
+   * @protected
+   */
+  protected abstract insertStatistic(id: string): Promise<void>;
+
+  /**
+   * @param id to be removed from statistics
+   * @protected
+   */
+  protected abstract removeStatistic(id: string): Promise<void>;
 
   /**
    * Triggers hook. Updates only values in data
@@ -582,6 +607,7 @@ export default abstract class BaseController<RawData extends Generic> {
       oldData[key] = data[key];
     }
 
+    await this.removeStatistic(id);
     await this.setCache(id, oldData as RawData);
   }
 
@@ -637,7 +663,8 @@ export default abstract class BaseController<RawData extends Generic> {
    * @protected
    */
   public removeCache(id: string): void {
-    this.removeFromSearchEngine(id).then(() => {
+    this.removeFromSearchEngine(id).then(async () => {
+      await this.removeStatistic(id);
       this.storage.delete(id);
       this.triggerHook();
     });

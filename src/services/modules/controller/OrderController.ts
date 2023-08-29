@@ -30,6 +30,7 @@ import { reduxStorage } from "../../../store";
 import ReduxParameters from "../../../ReduxParameters";
 import BaseModel from "../model/BaseModel";
 import Restock from "../model/Restock";
+import StatisticsBlock from "../local_model/StatisticsBlock";
 
 
 /**
@@ -39,7 +40,8 @@ export default class OrderController extends BaseController<order> {
   private static readonly flag: number =
     ControllerFlag.can_update
     | ControllerFlag.has_trail
-    | ControllerFlag.pivot_not_list;
+    | ControllerFlag.pivot_not_list
+    | ControllerFlag.statistical;
 
   /* flag appended to the beginning of an order ID, if it is pending */
   private static PENDING_FLAG = "pending_";
@@ -56,10 +58,27 @@ export default class OrderController extends BaseController<order> {
       OrderSearchSchema
     );
 
-    this.loadSearchData().then(() => {
+    this.loadSearchData().then(async () => {
       this.activateListener();
       this.injectDependency();
+      await this.loadStatistics();
     });
+  }
+
+  /**
+   * Loads the orders into the statistics iff the operation has not been done
+   * @private
+   */
+  private async loadStatistics(): Promise<void> {
+    if (StatisticsBlock.isLoaded(this.collectionName)) {
+      return;
+    }
+
+    for (let id of this.idSet) {
+      StatisticsBlock.addOrder(await this.get(id));
+    }
+
+    StatisticsBlock.setLoaded(this.collectionName);
   }
 
   /**
@@ -587,5 +606,21 @@ export default class OrderController extends BaseController<order> {
       email: data.email ?? "",
       link_id: data.link_id ?? ""
     };
+  }
+
+  /**
+   * @param id of the order to be inserted to statistics
+   * @protected
+   */
+  protected async insertStatistic(id: string): Promise<void> {
+    StatisticsBlock.addOrder(await this.get(id));
+  }
+
+  /**
+   * @param id of the order to be removed to statistics
+   * @protected
+   */
+  protected async removeStatistic(id: string): Promise<void> {
+    StatisticsBlock.removeOrder(await this.get(id));
   }
 }

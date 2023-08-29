@@ -20,6 +20,7 @@ import VendorController from "./VendorController";
 import Restock from "../model/Restock";
 import Product from "../model/Product";
 import Monetary from "../local_model/Monetary";
+import StatisticsBlock from "../local_model/StatisticsBlock";
 
 
 /**
@@ -29,7 +30,8 @@ export default class ExpenseController extends BaseController<expense> {
   private static readonly flag: number =
     ControllerFlag.can_delete
     | ControllerFlag.can_update
-    | ControllerFlag.has_trail;
+    | ControllerFlag.has_trail
+    | ControllerFlag.statistical;
 
   /**
    * @param server firestore instance for the database
@@ -43,10 +45,27 @@ export default class ExpenseController extends BaseController<expense> {
       ExpenseSearchSchema
     );
 
-    this.loadSearchData().then(() => {
+    this.loadSearchData().then(async () => {
       this.activateListener();
       this.injectDependency();
+      await this.loadStatistics();
     });
+  }
+
+  /**
+   * Loads the expenses into the statistics iff the operation has not been done
+   * @private
+   */
+  private async loadStatistics(): Promise<void> {
+    if (StatisticsBlock.isLoaded(this.collectionName)) {
+      return;
+    }
+
+    for (let id of this.idSet) {
+      StatisticsBlock.addExpense(await this.get(id));
+    }
+
+    StatisticsBlock.setLoaded(this.collectionName);
   }
 
   /**
@@ -235,5 +254,21 @@ export default class ExpenseController extends BaseController<expense> {
       employee_id: data.employee_id ?? "",
       courier_id: data.courier_id ?? ""
     };
+  }
+
+  /**
+   * @param id of the expense to be inserted to statistics
+   * @protected
+   */
+  protected async insertStatistic(id: string): Promise<void> {
+    StatisticsBlock.addExpense(await this.get(id));
+  }
+
+  /**
+   * @param id of the expense to be removed to statistics
+   * @protected
+   */
+  protected async removeStatistic(id: string): Promise<void> {
+    StatisticsBlock.removeExpense(await this.get(id));
   }
 }

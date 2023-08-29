@@ -6,6 +6,10 @@ export default {
     "Beqaa", "Keserwan-Jbeil", "Mount Lebanon",
     "Nabatieh", "North", "South", "Unknown"
   ],
+  statistics: {
+    name: "statistics_locale",
+    id: "timestamp"
+  },
   ids: "identifiers",
   online_detection: "online",
   server: firestore,

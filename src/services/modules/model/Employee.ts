@@ -130,7 +130,7 @@ export default class Employee implements BaseModel {
    */
   public get end_date() {
     if (BaseModel.isDeactivated(this.trail)) {
-      BaseModel.extractDate(BaseModel.getLastAction(this.trail));
+      BaseModel.extractDate(BaseModel.getLastTimestamp(this.trail));
     } else {
       return undefined;
     }

@@ -6,6 +6,8 @@ jest.mock('react-native-reanimated', () =>
   require('react-native-reanimated/mock'),
 );
 
+jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter');
+
 jest.mock('redux-persist', () => {
   const real = jest.requireActual('redux-persist');
   return {

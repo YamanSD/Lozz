@@ -57,6 +57,16 @@ export default abstract class BaseModel {
   }
 
   /**
+   * @param trail to use
+   * @returns sorted list of timestamps in ascending order
+   */
+  public static getTimestamps(trail: TrailType): string[] {
+    let timestamps = Object.keys(trail);
+    timestamps.sort();
+    return timestamps;
+  }
+
+  /**
    * @returns the current datetime in the following format (yyyymmddhhMMssnnn)
    */
   public static get currentTimestamp(): string {
@@ -198,7 +208,7 @@ export default abstract class BaseModel {
    * @param trail to get the last action for
    * @returns the last action's information
    */
-  public static getLastAction(trail: TrailType): string {
+  public static getLastTimestamp(trail: TrailType): string {
     return Object.keys(trail).reduce(
       (a, b) => a > b ? a : b
     );

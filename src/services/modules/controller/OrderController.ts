@@ -344,6 +344,16 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
+   * @param id of the order to be finalized
+   */
+  public async finalize(id: string) {
+    let order = await this.get(id);
+    order.status = OrderStatus.finalized;
+
+    await this.update(order);
+  }
+
+  /**
    * @param id of the order to be canceled
    */
   public async cancel(id: string) {

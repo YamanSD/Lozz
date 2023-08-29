@@ -607,7 +607,10 @@ export default abstract class BaseController<RawData extends Generic> {
       oldData[key] = data[key];
     }
 
-    await this.removeStatistic(id);
+    if (this.isStatistical) {
+      await this.removeStatistic(id);
+    }
+
     await this.setCache(id, oldData as RawData);
   }
 
@@ -664,7 +667,10 @@ export default abstract class BaseController<RawData extends Generic> {
    */
   public removeCache(id: string): void {
     this.removeFromSearchEngine(id).then(async () => {
-      await this.removeStatistic(id);
+      if (this.isStatistical) {
+        await this.removeStatistic(id);
+      }
+
       this.storage.delete(id);
       this.triggerHook();
     });

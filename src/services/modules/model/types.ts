@@ -108,6 +108,10 @@ export type MonetaryType = number;
  *      Order has to be cancelled_at_courier.
  *      Order canceled returns its quantities
  *      to their appropriate places in inventory.
+ *   >- finalized:
+ *      Order has to be paid or canceled at any state.
+ *      Quantities not affected.
+ *      These orders are immutable in any shape or form.
  *
  * Used to map Codes to their meaning, in the Order class.
  *
@@ -121,7 +125,8 @@ export enum OrderStatus {
   paid,
   canceled,
   canceled_at_courier,
-  received_from_courier
+  received_from_courier,
+  finalized
 }
 
 /**

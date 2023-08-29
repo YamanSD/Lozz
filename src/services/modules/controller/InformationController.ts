@@ -3,7 +3,7 @@ import { basicProperties, Generic, information, InformationType } from "../model
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import { IdDoesNotExistError, IllegalStateError, NotStatisticalError } from "./Errors";
-import RateInformation from "../model/RateInformation";
+// import RateInformation from "../model/RateInformation";
 import ProvinceInformation from "../model/ProvinceInformation";
 import ZoneInformation from "../model/ZoneInformation";
 import { isEqual } from "lodash";
@@ -14,8 +14,9 @@ import Courier from "../model/Courier";
 /**
  * Alias for all information models
  */
-export type InformationModels =
-  RateInformation | ProvinceInformation | ZoneInformation;
+export type InformationModels = ProvinceInformation | ZoneInformation;
+// export type InformationModels =
+//   RateInformation | ProvinceInformation | ZoneInformation;
 
 /**
  * Class responsible for handling operations on the information collection.
@@ -52,7 +53,16 @@ export default class InformationController
    */
   private async updateModels() {
     for (let [_, type] of Object.entries(InformationType)) {
-      this.updateModel(type, (await this.get(type)).data);
+      try {
+        let model = await this.get(type);
+        this.updateModel(type, model.data);
+      } catch (e) {
+        if (e instanceof IdDoesNotExistError) {
+          return;
+        } else {
+          throw e;
+        }
+      }
     }
   }
 

@@ -325,6 +325,10 @@ export default class Order implements BaseModel {
    * @throws TypeError if the status is not attainable
    */
   public set status(value) {
+    if (this.status === OrderStatus.finalized) {
+      throw new TypeError(`Order ${this.id} finalized`);
+    }
+
     /* Check compatibility */
     switch (value) {
       case OrderStatus.pending:
@@ -357,8 +361,7 @@ export default class Order implements BaseModel {
       case OrderStatus.canceled:
         if (this.status === OrderStatus.canceled ||
             this.status === OrderStatus.canceled_at_courier ||
-            this.status === OrderStatus.received_from_courier ||
-            this.status === OrderStatus.finalized) {
+            this.status === OrderStatus.received_from_courier) {
           throw new TypeError(`Order is ${this.status}, but trying cancel`);
         }
         break;

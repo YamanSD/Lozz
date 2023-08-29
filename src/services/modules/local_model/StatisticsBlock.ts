@@ -29,7 +29,7 @@ export default class StatisticsBlock {
 
   /* persistence instance to store the statistics data */
   private static storage: MMKV = new MMKV({
-    id: `${CollectionInfo.statistics.name}-mmkv`,
+    id: `${CollectionInfo.app_name}-${CollectionInfo.statistics.name}-mmkv`,
     encryptionKey: CollectionInfo.statistics.name
   });
 
@@ -783,6 +783,7 @@ export default class StatisticsBlock {
       [OrderStatus.canceled]: 0,
       [OrderStatus.canceled_at_courier]: 0,
       [OrderStatus.received_from_courier]: 0,
+      [OrderStatus.finalized]: 0,
     }
   }
 

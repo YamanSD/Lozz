@@ -1,6 +1,7 @@
 import firestore from "@react-native-firebase/firestore";
 
 export default {
+  app_name: "Tester",
   provinces: [
     "Akkar", "Baalbek-Hermel", "Beirut",
     "Beqaa", "Keserwan-Jbeil", "Mount Lebanon",

@@ -17,7 +17,7 @@ import {
 } from "./Errors";
 import { Generic, SpecialFields, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
-import CollectionNames from "../../../CollectionInfo";
+import CollectionInfo from "../../../CollectionInfo";
 import { isEqual, pickBy } from "lodash";
 
 
@@ -78,7 +78,7 @@ export default abstract class BaseController<RawData extends Generic> {
   private readonly collection_name: string;
 
   /* name of the ID list collection */
-  private static readonly id_list_collection_name: string = CollectionNames.ids;
+  private static readonly id_list_collection_name: string = CollectionInfo.ids;
 
   /* name of the data field representing a document ID */
   private readonly collection_id: string;
@@ -989,7 +989,7 @@ export default abstract class BaseController<RawData extends Generic> {
    * @returns a unique application ID for the controller
    */
   public uniqueId(collection_name: string) {
-    return `${this.metaServer.name}-${collection_name}`;
+    return `${this.metaServer.name}-${CollectionInfo.app_name}-${collection_name}`;
   }
 
   /**

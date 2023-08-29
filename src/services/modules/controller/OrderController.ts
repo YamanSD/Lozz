@@ -74,8 +74,16 @@ export default class OrderController extends BaseController<order> {
       return;
     }
 
-    for (let id of this.idSet) {
-      StatisticsBlock.addOrder(await this.get(id));
+    let id = 0;
+
+    // Load non-pending orders
+    while (id++ < this.pivot) {
+      StatisticsBlock.addOrder(await this.get(id.toString()));
+    }
+
+    // Load pending orders
+    for (let pendingId of this.pendingIds) {
+      StatisticsBlock.addOrder(await this.get(pendingId));
     }
 
     StatisticsBlock.setLoaded(this.collectionName);
@@ -613,6 +621,10 @@ export default class OrderController extends BaseController<order> {
    * @protected
    */
   protected async insertStatistic(id: string): Promise<void> {
+    if (id === this.pendingPivotName) {
+      return;
+    }
+
     StatisticsBlock.addOrder(await this.get(id));
   }
 
@@ -621,6 +633,10 @@ export default class OrderController extends BaseController<order> {
    * @protected
    */
   protected async removeStatistic(id: string): Promise<void> {
+    if (id === this.pendingPivotName) {
+      return;
+    }
+
     StatisticsBlock.removeOrder(await this.get(id));
   }
 }

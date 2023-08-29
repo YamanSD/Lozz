@@ -112,7 +112,7 @@ export default class Expense implements BaseModel {
    * @returns the date of the expense
    */
   public get date() {
-    return this.data.date;
+    return BaseModel.convertTimestamp(this.data.date);
   }
 
   /**

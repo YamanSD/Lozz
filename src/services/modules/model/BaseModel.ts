@@ -167,15 +167,26 @@ export default abstract class BaseModel {
   }
 
   /**
-   * @param date to be reverted
-   * @returns a string in the form of yyyymmddhhMMssnnn
+   * @param date to be converted
+   * @returns a Date object
+   * @protected
    */
-  public static revertDate(date: Date | RawTimestamp): string {
+  public static convertTimestamp(date: Date | RawTimestamp): Date {
     if (!(date instanceof Date)) {
       date = (
         new firebase.firestore.Timestamp(date.seconds, date.nanoseconds)
       ).toDate();
     }
+
+    return date;
+  }
+
+  /**
+   * @param date to be reverted
+   * @returns a string in the form of yyyymmddhhMMssnnn
+   */
+  public static revertDate(date: Date | RawTimestamp): string {
+    date = this.convertTimestamp(date);
 
     return [
       date.getFullYear(),

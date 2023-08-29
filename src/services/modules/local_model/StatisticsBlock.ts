@@ -33,6 +33,9 @@ export default class StatisticsBlock {
     encryptionKey: CollectionInfo.statistics.name
   });
 
+  /* date accuracy of the timestamps */
+  private static accuracy: number = 10;
+
   /* ID for the is loaded flag */
   private static isLoadedId: string = "isloaded-flag-mmkv";
 
@@ -44,7 +47,15 @@ export default class StatisticsBlock {
    */
   public constructor(data: statisticsBlock) {
     this.dataValue = data;
-    this.dissected_timestamp = StatisticsBlock.dissectTimestamp(data.timestamp);
+    this.dissected_timestamp =
+      StatisticsBlock.dissectTimestamp(data.timestamp);
+  }
+
+  /**
+   * Resets all statistics
+   */
+  public static clear(): void {
+    this.storage.clearAll();
   }
 
   /**
@@ -255,9 +266,13 @@ export default class StatisticsBlock {
    * @protected
    */
   protected recalibrateAverage(order: Order): void {
-    this.sales_avg.multiply(this.order_counts);
-    this.sales_avg.add(order.total ?? Monetary.noValue());
-    this.sales_avg.divide(this.order_counts + 1);
+    let temp = this.sales_avg;
+
+    temp.multiply(this.order_counts);
+    temp.add(order.total ?? Monetary.noValue());
+    temp.divide(this.order_counts + 1);
+
+    this.sales_avg = temp;
   }
 
   /**
@@ -266,7 +281,24 @@ export default class StatisticsBlock {
    * @protected
    */
   protected static extractTimestamp(trail: TrailType): string {
-    return BaseModel.getLastTimestamp(trail);
+    return BaseModel.getLastTimestamp(trail).slice(0, this.accuracy);
+  }
+
+  /**
+   * @param timestamp to be checked
+   * @returns true if the timestamp is complete (yyyymmddhh)
+   * @protected
+   */
+  protected static isCompleteTimestamp(timestamp: string): boolean {
+    return timestamp.length === this.accuracy;
+  }
+
+  /**
+   * @returns true if the instance of this timestamp is complete
+   * @protected
+   */
+  protected get isComplete(): boolean {
+    return StatisticsBlock.isCompleteTimestamp(this.timestamp);
   }
 
   /**
@@ -289,7 +321,10 @@ export default class StatisticsBlock {
         this.sold_quantities[id] += quantities[id];
       }
 
-      StatisticsBlock.addRestockToTimeline(restock);
+      if (this.isComplete) {
+        StatisticsBlock.addRestockToTimeline(restock);
+      }
+
       this.save();
     }
   }
@@ -302,23 +337,26 @@ export default class StatisticsBlock {
     this.orders.push(order.id);
 
     if (order.status !== OrderStatus.pending) {
-      this.sales.add(order.total ?? Monetary.noValue());
-      this.profit.add(order.profit);
+      this.sales = this.sales.addCopy(order.total ?? Monetary.noValue());
+      this.profit = this.profit.addCopy(order.profit);
       this.recalibrateAverage(order);
 
       const delivery = order.delivery?.copy() ?? Monetary.noValue();
 
       if (delivery.isNegative) {
         delivery.multiply(-1);
-        this.shipping_fees.add(delivery);
-        this.total_expenses.add(delivery);
+        this.shipping_fees = this.shipping_fees.addCopy(delivery);
+        this.total_expenses = this.total_expenses.addCopy(delivery);
       }
     }
 
     this.status_counts[order.status]++;
     this.order_counts++;
 
-    StatisticsBlock.addOrderToTimeline(order);
+    if (this.isComplete) {
+      StatisticsBlock.addOrderToTimeline(order);
+    }
+
     this.save();
   }
 
@@ -330,15 +368,19 @@ export default class StatisticsBlock {
     this.expenses.push(expense.id);
 
     if (expense.is_vendor || expense.is_invoice) {
-      this.vendor_payments.add(expense.value);
+      this.vendor_payments = this.vendor_payments.addCopy(expense.value);
     } else if (expense.is_employee) {
-      this.employee_payments.add(expense.value);
+      this.employee_payments = this.employee_payments.addCopy(expense.value);
     } else if (expense.is_courier) {
-      this.shipping_fees.add(expense.value);
+      this.shipping_fees = this.shipping_fees.addCopy(expense.value);
     }
 
-    this.total_expenses.add(expense.value);
-    StatisticsBlock.addExpenseToTimeline(expense);
+    this.total_expenses = this.total_expenses.addCopy(expense.value);
+
+    if (this.isComplete) {
+      StatisticsBlock.addExpenseToTimeline(expense);
+    }
+
     this.save();
   }
 
@@ -376,7 +418,10 @@ export default class StatisticsBlock {
   private removeRestock(restock: Restock): void {
     this.actual_sold -= restock.item_count;
 
-    StatisticsBlock.removeRestockFromTimeline(restock);
+    if (this.isComplete) {
+      StatisticsBlock.removeRestockFromTimeline(restock);
+    }
+
     this.save()
   }
 
@@ -386,11 +431,14 @@ export default class StatisticsBlock {
    */
   private removeOrder(order: Order): void {
     if (order.status !== OrderStatus.pending) {
-      this.sales.subtract(order.total ?? Monetary.noValue());
-      this.profit.subtract(order.profit);
+      this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
+      this.profit = this.profit.subtractCopy(order.profit);
     }
 
-    StatisticsBlock.removeOrderFromTimeline(order);
+    if (this.isComplete) {
+      StatisticsBlock.removeOrderFromTimeline(order);
+    }
+
     this.save()
   }
 
@@ -408,15 +456,19 @@ export default class StatisticsBlock {
     this.expenses.splice(index, 1);
 
     if (expense.is_vendor || expense.is_invoice) {
-      this.vendor_payments.subtract(expense.value);
+      this.vendor_payments = this.vendor_payments.subtractCopy(expense.value);
     } else if (expense.is_employee) {
-      this.employee_payments.subtract(expense.value);
+      this.employee_payments = this.employee_payments.subtractCopy(expense.value);
     } else if (expense.is_courier) {
-      this.shipping_fees.subtract(expense.value);
+      this.shipping_fees = this.shipping_fees.subtractCopy(expense.value);
     }
 
-    this.total_expenses.subtract(expense.value);
-    StatisticsBlock.removeExpenseFromTimeline(expense);
+    this.total_expenses = this.total_expenses.subtractCopy(expense.value);
+
+    if (this.isComplete) {
+      StatisticsBlock.removeExpenseFromTimeline(expense);
+    }
+
     this.save();
   }
 
@@ -449,22 +501,24 @@ export default class StatisticsBlock {
       return;
     }
 
-    this.sales.add(other.sales);
+    this.sales = this.sales.addCopy(other.sales);
     this.sold_products += other.sold_products;
     this.actual_sold += other.actual_sold;
     this.restocks.push(...other.restocks);
     this.orders.push(...other.orders);
     this.expenses.push(...other.expenses);
-    this.profit.add(other.profit);
-    this.total_expenses.add(other.total_expenses);
-    this.shipping_fees.add(other.shipping_fees);
-    this.employee_payments.add(other.employee_payments);
-    this.vendor_payments.add(other.vendor_payments);
+    this.profit = this.profit.addCopy(other.profit);
+    this.total_expenses = this.total_expenses.addCopy(other.total_expenses);
+    this.shipping_fees = this.shipping_fees.addCopy(other.shipping_fees);
+    this.employee_payments = this.employee_payments.addCopy(other.employee_payments);
+    this.vendor_payments = this.vendor_payments.addCopy(other.vendor_payments);
 
-    this.sales_avg.multiply(this.sold_products);
+    let tempThisAvg = this.sales_avg;
+    tempThisAvg.multiply(this.sold_products);
     const tempAvg = other.sales_avg.multiplyCopy(other.sold_products);
-    this.sales_avg.add(tempAvg);
-    this.sales_avg.divide(this.sold_products + other.sold_products);
+    tempThisAvg.add(tempAvg);
+    tempThisAvg.divide(this.sold_products + other.sold_products);
+    this.sales_avg = tempThisAvg;
 
     this.order_counts += other.order_counts;
 
@@ -974,20 +1028,6 @@ export default class StatisticsBlock {
   }
 
   /**
-   * @param t dissected timestamp to be converted
-   * @returns string timestamp using the dissected timestamp
-   * @protected
-   */
-  protected static joinDate(t: dissectedTimestamp): string {
-    return [
-      t.year,
-      t.month,
-      t.day,
-      t.hour
-    ].join('');
-  }
-
-  /**
    * @param collection_name
    * @returns the collection ID for statistics
    * @private
@@ -1041,7 +1081,7 @@ export default class StatisticsBlock {
   /**
    * @returns the data value
    */
-  public get data() {
+  public get data(): statisticsBlock {
     return this.dataValue;
   }
 

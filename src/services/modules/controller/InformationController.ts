@@ -8,7 +8,7 @@ import ProvinceInformation from "../model/ProvinceInformation";
 import ZoneInformation from "../model/ZoneInformation";
 import { isEqual } from "lodash";
 import Courier from "../model/Courier";
-import Monetary from "../local_model/Monetary";
+// import Monetary from "../local_model/Monetary";
 
 
 /**
@@ -66,8 +66,6 @@ export default class InformationController
   private updateModel(type: string, data: information) {
     if (type === InformationType.zones) {
       Courier.zones = new ZoneInformation(data);
-    } else if (type === InformationType.rate) {
-      Monetary.rates = new RateInformation(data);
     } else if (type === InformationType.provinces) {
       Courier.provinces = new ProvinceInformation(data);
     }
@@ -167,8 +165,8 @@ export default class InformationController
     switch (type) {
       case InformationType.provinces:
         return new ProvinceInformation(data);
-      case InformationType.rate:
-        return new RateInformation(data);
+      // case InformationType.rate:
+      //   return new RateInformation(data);
       case InformationType.zones:
         return new ZoneInformation(data);
     }
@@ -181,12 +179,12 @@ export default class InformationController
     return await this.get(InformationType.provinces) as ProvinceInformation;
   }
 
-  /**
-   * @returns the rate information object
-   */
-  public async getRate(): Promise<RateInformation> {
-    return await this.get(InformationType.rate) as RateInformation;
-  }
+  // /**
+  //  * @returns the rate information object
+  //  */
+  // public async getRate(): Promise<RateInformation> {
+  //   return await this.get(InformationType.rate) as RateInformation;
+  // }
 
   /**
    * @returns the zone information object

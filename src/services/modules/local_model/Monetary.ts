@@ -1,6 +1,6 @@
 import { MonetaryDiscountType, MonetaryType } from "../model/types";
 import { isInteger } from "lodash";
-import RateInformation from "../model/RateInformation";
+// import RateInformation from "../model/RateInformation";
 
 
 /**
@@ -15,8 +15,8 @@ export default class Monetary {
   /* Represents the USD portion of the money */
   private usdValue: number;
 
-  /* object containing all the information about currency conversion */
-  private static ratesObject: RateInformation;
+  // /* object containing all the information about currency conversion */
+  // private static ratesObject: RateInformation;
 
   /**
    * @param data MonetaryValue raw data.
@@ -59,47 +59,48 @@ export default class Monetary {
     this.applyRounding();
   }
 
-  /**
-   * @returns the rates object
-   */
-  public static get rates() {
-    return Monetary.ratesObject;
-  }
+  // /**
+  //  * @returns the rates object
+  //  */
+  // public static get rates() {
+  //   return Monetary.ratesObject;
+  // }
 
-  /**
-   * @param value new rates object
-   */
-  public static set rates(value) {
-    Monetary.ratesObject = value;
-  }
+  // /**
+  //  * @param value new rates object
+  //  */
+  // public static set rates(value) {
+  //   Monetary.ratesObject = value;
+  // }
 
-  /**
-   * @returns the nearest round value for LBP.
-   */
-  public static get roundLbpNumber(): number {
-    return Monetary.rates.roundingLbp;
-  }
-
+  // /**
+  //  * @returns the nearest round value for LBP.
+  //  */
+  // public static get roundLbpNumber(): number {
+  //   return Monetary.rates.roundingLbp;
+  // }
+  //
   /**
    * @returns the nearest rounding number for USD.
    */
   public static get roundUsdNumber(): number {
-    return Monetary.rates.roundingUsd;
+    // return Monetary.rates.roundingUsd;
+    return 0.01;
   }
-
-  /**
-   * @returns the selling rate for USD.
-   */
-  public static get sellUsdRate(): number {
-    return Monetary.rates.sellRate;
-  }
-
-  /**
-   * @returns the buying rate for USD.
-   */
-  public static get buyUsdRate(): number {
-    return Monetary.rates.buyRate;
-  }
+  //
+  // /**
+  //  * @returns the selling rate for USD.
+  //  */
+  // public static get sellUsdRate(): number {
+  //   return Monetary.rates.sellRate;
+  // }
+  //
+  // /**
+  //  * @returns the buying rate for USD.
+  //  */
+  // public static get buyUsdRate(): number {
+  //   return Monetary.rates.buyRate;
+  // }
 
   /**
    * @param value to be rounded

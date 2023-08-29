@@ -914,7 +914,7 @@ export type basicOrder = {
  */
 export enum InformationType {
   provinces = "provinces",
-  rate = "rate",
+  // rate = "rate",
   zones = "zones"
 }
 
@@ -939,13 +939,13 @@ export type properties = {
     },
     [SpecialFields.trail]: TrailType
   },
-  [InformationType.rate]: {
-    buyUsdRate: number,
-    sellUsdRate: number,
-    roundToNearestLbp: number,
-    roundToNearestUsd: number,
-    [SpecialFields.trail]: TrailType
-  }
+  // [InformationType.rate]: {
+  //   buyUsdRate: number,
+  //   sellUsdRate: number,
+  //   roundToNearestLbp: number,
+  //   roundToNearestUsd: number,
+  //   [SpecialFields.trail]: TrailType
+  // }
 }
 
 /**
@@ -965,12 +965,12 @@ export type basicProperties = {
       }
     },
   },
-  [InformationType.rate]: {
-    buyUsdRate: number,
-    sellUsdRate: number,
-    roundToNearestLbp: number,
-    roundToNearestUsd: number,
-  }
+  // [InformationType.rate]: {
+  //   buyUsdRate: number,
+  //   sellUsdRate: number,
+  //   roundToNearestLbp: number,
+  //   roundToNearestUsd: number,
+  // }
 }
 
 /**
@@ -978,10 +978,10 @@ export type basicProperties = {
  */
 export type provinceInformation = properties[InformationType.provinces];
 
-/**
- * Rate information type
- */
-export type rateInformation = properties[InformationType.rate];
+// /**
+//  * Rate information type
+//  */
+// export type rateInformation = properties[InformationType.rate];
 
 /**
  * Zone information type
@@ -998,7 +998,8 @@ export type zoneInformation = properties[InformationType.zones];
  */
 export type information = {
   type: InformationType,
-  data: provinceInformation | rateInformation | zoneInformation
+  // data: provinceInformation | rateInformation | zoneInformation
+  data: provinceInformation | zoneInformation
 }
 
 /**

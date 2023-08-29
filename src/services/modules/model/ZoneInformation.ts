@@ -49,7 +49,6 @@ export default class ZoneInformation implements BaseModel {
       return Monetary.noDiscount();
     }
 
-    const usd = value.transformToUsdCopy().usd;
     let boundaries = Object.keys(shipping_discounts);
 
     boundaries.sort((a, b) => {
@@ -59,7 +58,7 @@ export default class ZoneInformation implements BaseModel {
     for (let i in boundaries) {
       const bound = Number(boundaries[i]);
 
-      if (bound <= usd) {
+      if (bound <= value.usd) {
         return shipping_discounts[bound];
       }
     }
@@ -81,7 +80,6 @@ export default class ZoneInformation implements BaseModel {
       return Monetary.noDiscount();
     }
 
-    const usd = value.transformToUsdCopy().usd;
     let boundaries = Object.keys(total_discounts);
 
     boundaries.sort((a, b) => {
@@ -91,7 +89,7 @@ export default class ZoneInformation implements BaseModel {
     for (let i in boundaries) {
       const bound = Number(boundaries[i]);
 
-      if (bound <= usd) {
+      if (bound <= value.usd) {
         return total_discounts[bound];
       }
     }

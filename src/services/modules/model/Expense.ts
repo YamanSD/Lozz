@@ -171,7 +171,8 @@ export default class Expense implements BaseModel {
   public set value(value) {
     if (value.isNegative) {
       throw new EvalError(
-        `Invalid expense monetary value USD: ${value.usd}, LBP: ${value.lbp}`
+        // `Invalid expense monetary value USD: ${value.usd}, LBP: ${value.lbp}`
+        `Invalid expense monetary value USD: ${value.usd}`
       );
     }
 

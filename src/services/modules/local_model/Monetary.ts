@@ -9,8 +9,8 @@ import RateInformation from "../model/RateInformation";
  * Used mainly by other ModelClasses.
  */
 export default class Monetary {
-  /* Represents the LBP portion of the money */
-  private lbpValue: number;
+  // /* Represents the LBP portion of the money */
+  // private lbpValue: number;
 
   /* Represents the USD portion of the money */
   private usdValue: number;
@@ -24,8 +24,8 @@ export default class Monetary {
    * Values are automatically rounded based on user preferences.
    */
   public constructor(data: MonetaryType) {
-    this.lbpValue = data[1];
-    this.usdValue = data[0];
+    // this.lbpValue = data[1];
+    this.usdValue = data;
     this.applyRounding();
   }
 
@@ -35,7 +35,7 @@ export default class Monetary {
    * @returns a Monetary representing zero value.
    */
   public static noValue(): Monetary {
-    return new Monetary([0, 0]);
+    return new Monetary(0);
   }
 
   /**
@@ -44,7 +44,10 @@ export default class Monetary {
    * @returns a Monetary discount of zero.
    */
   public static noDiscount(): MonetaryDiscountType {
-    return {usd: 0, lbp: 0};
+    return {
+      usd: 0,
+      // lbp: 0
+    };
   }
 
   /**
@@ -52,7 +55,7 @@ export default class Monetary {
    */
   public applyDiscount(value: MonetaryDiscountType) {
     this.usd *= 1 - value.usd;
-    this.lbp *= 1 - value.lbp;
+    // this.lbp *= 1 - value.lbp;
     this.applyRounding();
   }
 
@@ -121,16 +124,16 @@ export default class Monetary {
    * The rounding is based on the roundLbpNumber and roundUsdNumber.
    */
   public applyRounding(): void {
-    this.lbp = Monetary.round(this.lbp, Monetary.roundLbpNumber);
+    // this.lbp = Monetary.round(this.lbp, Monetary.roundLbpNumber);
     this.usd = Monetary.round(this.usd, Monetary.roundUsdNumber);
   }
 
-  /**
-   * @returns the LBP portion of the value.
-   */
-  public get lbp(): number {
-    return this.lbpValue;
-  }
+  // /**
+  //  * @returns the LBP portion of the value.
+  //  */
+  // public get lbp(): number {
+  //   return this.lbpValue;
+  // }
 
   /**
    * @returns the USD portion of the value.
@@ -139,12 +142,12 @@ export default class Monetary {
     return this.usdValue;
   }
 
-  /**
-   * @param value new LBP value.
-   */
-  public set lbp(value: number) {
-    this.lbpValue = value;
-  }
+  // /**
+  //  * @param value new LBP value.
+  //  */
+  // public set lbp(value: number) {
+  //   this.lbpValue = value;
+  // }
 
   /**
    * @param value new USD value.
@@ -159,7 +162,7 @@ export default class Monetary {
    * Applies rounding after the operation to insure consistency.
    */
   public add(other: Monetary): void {
-    this.lbp += other.lbp;
+    // this.lbp += other.lbp;
     this.usd += other.usd;
     this.applyRounding();
   }
@@ -170,7 +173,7 @@ export default class Monetary {
    * Applies rounding after the operation to insure consistency.
    */
   public subtract(other: Monetary): void {
-    this.lbp -= other.lbp;
+    // this.lbp -= other.lbp;
     this.usd -= other.usd;
     this.applyRounding();
   }
@@ -182,7 +185,7 @@ export default class Monetary {
    * Applies rounding after the operation to insure consistency.
    */
   public multiply(value: number): void {
-    this.lbp *= value;
+    // this.lbp *= value;
     this.usd *= value;
     this.applyRounding();
   }
@@ -194,7 +197,7 @@ export default class Monetary {
    * Applies rounding after the operation to insure consistency.
    */
   public divide(value: number): void {
-    this.lbp /= value;
+    // this.lbp /= value;
     this.usd /= value;
     this.applyRounding();
   }
@@ -276,16 +279,16 @@ export default class Monetary {
   public percent(other: Monetary) {
     return {
       usd: other.usd / this.usd,
-      lbp: other.lbp / this.lbp
+      // lbp: other.lbp / this.lbp
     };
   }
 
-  /**
-   * @returns the LBP value as a string.
-   */
-  public get lbpString(): string {
-    return this.lbp.toString();
-  }
+  // /**
+  //  * @returns the LBP value as a string.
+  //  */
+  // public get lbpString(): string {
+  //   return this.lbp.toString();
+  // }
 
   /**
    * @returns the USD value as a string.
@@ -301,86 +304,87 @@ export default class Monetary {
    * Used mostly for debugging and logging.
    */
   public toString(): string {
-    return `(${this.usdString}, ${this.lbpString})`;
+    // return `(${this.usdString}, ${this.lbpString})`;
+    return `$${this.usdString}`;
   }
 
-  /**
-   * @param lbpPortion? portion of the LBP value to transform to USD.
-   *        If not given, all LBP is transformed.
-   * @throws RangeError if the given portion is greater than this
-   *         instance LBP value.
-   *
-   * Transforms the LBP of this instance into USD, according to the
-   * buyUsdRate.
-   */
-  public transformToUsd(lbpPortion?: number): void {
-    if (lbpPortion != undefined && this.lbp < lbpPortion) {
-      throw new RangeError(
-        `Invalid LBP portion ${lbpPortion}, 
-         must be <= to stored ${this.lbp}`
-      );
-    } else if (lbpPortion == undefined) {
-      lbpPortion = this.lbp;
-    }
+  // /**
+  //  * @param lbpPortion? portion of the LBP value to transform to USD.
+  //  *        If not given, all LBP is transformed.
+  //  * @throws RangeError if the given portion is greater than this
+  //  *         instance LBP value.
+  //  *
+  //  * Transforms the LBP of this instance into USD, according to the
+  //  * buyUsdRate.
+  //  */
+  // public transformToUsd(lbpPortion?: number): void {
+    // if (lbpPortion != undefined && this.lbp < lbpPortion) {
+    //   throw new RangeError(
+    //     `Invalid LBP portion ${lbpPortion},
+    //      must be <= to stored ${this.lbp}`
+    //   );
+    // } else if (lbpPortion == undefined) {
+    //   lbpPortion = this.lbp;
+    // }
+    //
+    // this.usd += lbpPortion / Monetary.buyUsdRate;
+    // this.lbp -= lbpPortion;
+  // }
 
-    this.usd += lbpPortion / Monetary.buyUsdRate;
-    this.lbp -= lbpPortion;
-  }
+  // /**
+  //  * @param usdPortion? portion of the USD value to transform to LBP.
+  //  *        If not given, all USD is transformed.
+  //  * @throws RangeError if the given portion is greater than this
+  //  *         instance USD value.
+  //  *
+  //  * Transforms the USD of this instance into USD, according to the
+  //  * sellUsdRate.
+  //  */
+  // public transformToLbp(usdPortion?: number): void {
+  //   if (usdPortion != undefined && this.usd < usdPortion) {
+  //     throw new RangeError(
+  //       `Invalid USD portion ${usdPortion},
+  //        must be <= to stored ${this.usd}`
+  //     );
+  //   } else if (usdPortion == undefined) {
+  //     usdPortion = this.usd;
+  //   }
+  //
+  //   this.lbp += usdPortion * Monetary.sellUsdRate;
+  //   this.usd -= usdPortion;
+  // }
 
-  /**
-   * @param usdPortion? portion of the USD value to transform to LBP.
-   *        If not given, all USD is transformed.
-   * @throws RangeError if the given portion is greater than this
-   *         instance USD value.
-   *
-   * Transforms the USD of this instance into USD, according to the
-   * sellUsdRate.
-   */
-  public transformToLbp(usdPortion?: number): void {
-    if (usdPortion != undefined && this.usd < usdPortion) {
-      throw new RangeError(
-        `Invalid USD portion ${usdPortion}, 
-         must be <= to stored ${this.usd}`
-      );
-    } else if (usdPortion == undefined) {
-      usdPortion = this.usd;
-    }
+  // /**
+  //  * @param lbpPortion? portion of the LBP value to transform to USD.
+  //  *        If not given, all LBP is transformed.
+  //  * @returns the transformed copy.
+  //  *
+  //  * Transforms the LBP of a copy of this instance into USD,
+  //  * according to the buyUsdRate.
+  //  */
+  // public transformToLbpCopy(lbpPortion?: number): Monetary {
+  //   let temp = this.copy();
+  //
+  //   temp.transformToLbp(lbpPortion);
+  //
+  //   return temp;
+  // }
 
-    this.lbp += usdPortion * Monetary.sellUsdRate;
-    this.usd -= usdPortion;
-  }
-
-  /**
-   * @param lbpPortion? portion of the LBP value to transform to USD.
-   *        If not given, all LBP is transformed.
-   * @returns the transformed copy.
-   *
-   * Transforms the LBP of a copy of this instance into USD,
-   * according to the buyUsdRate.
-   */
-  public transformToLbpCopy(lbpPortion?: number): Monetary {
-    let temp = this.copy();
-
-    temp.transformToLbp(lbpPortion);
-
-    return temp;
-  }
-
-  /**
-   * @param usdPortion? portion of the USD value to transform to LBP.
-   *        If not given, all USD is transformed.
-   * @returns the transformed copy.
-   *
-   * Transforms the USD of a copy of this instance into USD,
-   * according to the sellUsdRate.
-   */
-  public transformToUsdCopy(usdPortion?: number): Monetary {
-    let temp = this.copy();
-
-    temp.transformToUsd(usdPortion);
-
-    return temp;
-  }
+  // /**
+  //  * @param usdPortion? portion of the USD value to transform to LBP.
+  //  *        If not given, all USD is transformed.
+  //  * @returns the transformed copy.
+  //  *
+  //  * Transforms the USD of a copy of this instance into USD,
+  //  * according to the sellUsdRate.
+  //  */
+  // public transformToUsdCopy(usdPortion?: number): Monetary {
+  //   let temp = this.copy();
+  //
+  //   temp.transformToUsd(usdPortion);
+  //
+  //   return temp;
+  // }
 
   /**
    * @param other Monetary value to compare against
@@ -388,7 +392,8 @@ export default class Monetary {
    *         after converting both to USD.
    */
   public lessThan(other: Monetary): boolean {
-    return this.transformToUsdCopy().usd < other.transformToUsdCopy().usd;
+    // return this.transformToUsdCopy().usd < other.transformToUsdCopy().usd;
+    return this.usd < other.usd;
   }
 
   /**
@@ -421,13 +426,15 @@ export default class Monetary {
    * @returns true if the USD is negative or the LBP is negative
    */
   public get isNegative(): boolean {
-    return this.usd < 0 || this.lbp < 0;
+    // return this.usd < 0 || this.lbp < 0;
+    return this.usd < 0;
   }
 
   /**
    * @returns the MonetaryType data of the class.
    */
   public get data(): MonetaryType {
-    return [this.usd, this.lbp];
+    // return [this.usd, this.lbp];
+    return this.usd;
   }
 }

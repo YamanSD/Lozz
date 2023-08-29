@@ -4,6 +4,7 @@ import Monetary from "../local_model/Monetary";
 import { NoZonesError } from "../controller/Errors";
 import ZoneInformation from "./ZoneInformation";
 import ProvinceInformation from "./ProvinceInformation";
+import { isNumber } from "lodash";
 
 
 /**
@@ -97,7 +98,7 @@ export default class Courier implements BaseModel {
     let result = new Monetary(this.shipping_fees[zone]);
     const discount = Courier.zones.getShippingDiscount(value, zone);
 
-    if (Array.isArray(discount)) { // MonetaryType
+    if (isNumber(discount)) { // MonetaryType
       result.add(new Monetary(discount as MonetaryType));
     } else {
       result.applyDiscount(discount);

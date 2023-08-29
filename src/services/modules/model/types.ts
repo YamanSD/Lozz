@@ -57,11 +57,16 @@ export type TrailType = {
 
 /**
  * Describes a monetary value (payment, order value, etc...).
+ *
+ * DEPRECATED [
  * First value is the USD portion of the value,
  * Second value is the LBP portion of the value.
- * Both can be floats and can be negative.
+ * Both can be floats and can be negative ].
+ *
+ * Represents the value in USD.
+ * Can be a float and/or negative.
  */
-export type MonetaryType = [number, number];
+export type MonetaryType = number;
 
 /**
  * Values can be:
@@ -710,7 +715,7 @@ export type basicProduct = {
  */
 export type MonetaryDiscountType = {
   usd: number,
-  lbp: number
+  // lbp: number
 };
 
 /**

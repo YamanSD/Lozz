@@ -146,3 +146,15 @@ export class NotStatisticalError extends Error {
     super("NotStatisticalError");
   }
 }
+
+export class CheckDirError extends Error {
+  public constructor() {
+    super("CheckDirError");
+  }
+}
+
+export class ImageDownloadError extends Error {
+  public constructor() {
+    super("ImageDownloadError");
+  }
+}

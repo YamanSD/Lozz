@@ -8,7 +8,7 @@ import CollectionInfo from "../../../CollectionInfo";
 /**
  * Class responsible for the retrieving images and saving.
  */
-export default class ImageManager {
+export default class ImagesManager {
   /* path for the directory */
   private static directory =
     `file://+${
@@ -27,7 +27,7 @@ export default class ImageManager {
         return;
       }
 
-      await RNFS.mkdir(ImageManager.directory);
+      await RNFS.mkdir(this.directory);
     } catch (error) {
       throw new CheckDirError();
     }
@@ -116,7 +116,7 @@ export default class ImageManager {
     if (await RNFS.exists(imagePath)) {
       return imagePath;
     } else {
-      return ImageManager.downloadImage(imageUrl);
+      return await this.downloadImage(imageUrl);
     }
   }
 

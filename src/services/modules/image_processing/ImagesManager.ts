@@ -15,7 +15,7 @@ export default class ImagesManager {
     Platform.OS === 'android' 
       ? RNFS.DocumentDirectoryPath 
       : RNFS.MainBundlePath
-  }/images/`;
+  }/${CollectionInfo.app_name}/images/`;
 
   /**
    * Check the cache directory, if it exists do nothing.

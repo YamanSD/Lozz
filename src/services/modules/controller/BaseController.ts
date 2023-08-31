@@ -300,10 +300,6 @@ export default abstract class BaseController<RawData extends Generic> {
    * @protected
    */
   protected async getServer(id: string) {
-    if (!BaseController.isConnected) {
-      throw new NoConnectionError();
-    }
-
     const document = await this.collection.doc(id).get();
 
     if (document.exists) {
@@ -323,10 +319,6 @@ export default abstract class BaseController<RawData extends Generic> {
    * @protected
    */
   protected async createServer(id: string, data: RawData) {
-    if (!BaseController.isConnected) {
-      throw new NoConnectionError();
-    }
-
     this.cleanData(data);
     await this.collection.doc(id).set(data);
     this.addId(id);
@@ -347,10 +339,6 @@ export default abstract class BaseController<RawData extends Generic> {
 
     if (!(this.canUpdate || noStamp)) {
       throw new NoUpdateError();
-    }
-
-    if (!BaseController.isConnected) {
-      throw new NoConnectionError();
     }
 
     if (!noStamp) {
@@ -380,10 +368,6 @@ export default abstract class BaseController<RawData extends Generic> {
   public async deleteServer(id: string) {
     if (!this.canDelete) {
       throw new NoDeleteError();
-    }
-
-    if (!BaseController.isConnected) {
-      throw new NoConnectionError();
     }
 
     this.removeId(id);
@@ -804,10 +788,6 @@ export default abstract class BaseController<RawData extends Generic> {
    */
   public async runTransaction(body:
       (transaction: FirebaseFirestoreTypes.Transaction) => any) {
-    if (!BaseController.isConnected) {
-      throw new NoConnectionError();
-    }
-
     return await this.server.runTransaction(body);
   }
 
@@ -891,10 +871,6 @@ export default abstract class BaseController<RawData extends Generic> {
   private async getIdSetServer(): Promise<Set<string>> {
     if (this.noSet) {
       return new Set<string>();
-    }
-
-    if (!BaseController.isConnected) {
-      throw new NoConnectionError();
     }
 
     const document = await this.idSetDocument.get();

@@ -1181,14 +1181,14 @@ export type statisticsBlock = {
   timestamp: string,
   sales: MonetaryType,
   sold_products: number,
-  actual_sold_products: number,
+  actual_sold_count: number,
   restocks: string[],
   orders: string[],
   expenses: string[],
-  sold_quantities: {
+  quantities: {
     [product_id: string]: {
-      aggregate: number,
-      actual: number
+      sold: number,
+      moved: number
     }
   },
   status_counts: {

@@ -90,15 +90,15 @@ export default class StatisticsBlock {
   /**
    * @returns the actual number of sold products
    */
-  public get actual_sold() {
-    return this.data.actual_sold_products;
+  public get actual_sold_count() {
+    return this.data.actual_sold_count;
   }
 
   /**
    * @returns the sold_quantities in the block
    */
-  public get sold_quantities() {
-    return this.data.sold_quantities;
+  public get quantities() {
+    return this.data.quantities;
   }
 
   /**
@@ -169,8 +169,8 @@ export default class StatisticsBlock {
    * @param value new value of the actual_sold_products in the block
    * @protected
    */
-  protected set actual_sold(value) {
-    this.data.actual_sold_products = value;
+  protected set actual_sold_count(value) {
+    this.data.actual_sold_count = value;
   }
 
   /**
@@ -201,8 +201,8 @@ export default class StatisticsBlock {
    * @param value new value of the sold_quantities in the block
    * @protected
    */
-  protected set sold_quantities(value) {
-    this.data.sold_quantities = value;
+  protected set quantities(value) {
+    this.data.quantities = value;
   }
 
   /**
@@ -306,31 +306,35 @@ export default class StatisticsBlock {
    * @private
    */
   private addRestock(restock: Restock): void {
+    this.restocks.push(restock.id);
+
     if (restock.order_linked) {
-      this.restocks.push(restock.id);
-
       this.sold_products += restock.item_count;
-      this.actual_sold += restock.item_count;
-      const quantities = restock.quantities;
-
-      for (let id of Object.keys(quantities)) {
-        if (!(id in this.sold_quantities)) {
-          this.sold_quantities[id] = {
-            aggregate: 0,
-            actual: 0
-          };
-        }
-
-        this.sold_quantities[id].actual += quantities[id];
-        this.sold_quantities[id].aggregate += quantities[id];
-      }
-
-      if (this.isComplete) {
-        StatisticsBlock.addRestockToTimeline(restock);
-      }
-
-      this.save();
+      this.actual_sold_count += restock.item_count;
     }
+
+    const quantities = restock.quantities;
+
+    for (let id of Object.keys(quantities)) {
+      if (!(id in this.quantities)) {
+        this.quantities[id] = {
+          sold: 0,
+          moved: 0
+        };
+      }
+
+      this.quantities[id].moved += quantities[id];
+
+      if (restock.order_linked) {
+        this.quantities[id].sold += quantities[id];
+      }
+    }
+
+    if (this.isComplete) {
+      StatisticsBlock.addRestockToTimeline(restock);
+    }
+
+    this.save();
   }
 
   /**
@@ -421,26 +425,26 @@ export default class StatisticsBlock {
    */
   private removeRestock(restock: Restock): void {
     if (restock.order_linked) {
-      this.actual_sold -= restock.item_count;
-
-      const quantities = restock.quantities;
-      for (let id of Object.keys(quantities)) {
-        if (!(id in this.sold_quantities)) {
-          this.sold_quantities[id] = {
-            aggregate: 0,
-            actual: 0
-          };
-        }
-
-        this.sold_quantities[id].actual -= quantities[id];
-      }
-
-      if (this.isComplete) {
-        StatisticsBlock.removeRestockFromTimeline(restock);
-      }
-
-      this.save()
+      this.actual_sold_count -= restock.item_count;
     }
+
+    const quantities = restock.quantities;
+    for (let id of Object.keys(quantities)) {
+      if (!(id in this.quantities)) {
+        this.quantities[id] = {
+          sold: 0,
+          moved: 0
+        };
+      }
+
+      this.quantities[id].moved -= quantities[id];
+    }
+
+    if (this.isComplete) {
+      StatisticsBlock.removeRestockFromTimeline(restock);
+    }
+
+    this.save()
   }
 
   /**
@@ -522,7 +526,7 @@ export default class StatisticsBlock {
 
     this.sales = this.sales.addCopy(other.sales);
     this.sold_products += other.sold_products;
-    this.actual_sold += other.actual_sold;
+    this.actual_sold_count += other.actual_sold_count;
     this.restocks.push(...other.restocks);
     this.orders.push(...other.orders);
     this.expenses.push(...other.expenses);
@@ -541,18 +545,18 @@ export default class StatisticsBlock {
 
     this.order_counts += other.order_counts;
 
-    for (let productId of Object.keys(other.sold_quantities)) {
-      if (!(productId in this.sold_quantities)) {
-        this.sold_quantities[productId] = {
-          aggregate: 0,
-          actual: 0
+    for (let productId of Object.keys(other.quantities)) {
+      if (!(productId in this.quantities)) {
+        this.quantities[productId] = {
+          sold: 0,
+          moved: 0
         };
       }
 
-      this.sold_quantities[productId].actual +=
-        other.sold_quantities[productId].actual;
-      this.sold_quantities[productId].aggregate +=
-        other.sold_quantities[productId].aggregate;
+      this.quantities[productId].moved +=
+        other.quantities[productId].moved;
+      this.quantities[productId].sold +=
+        other.quantities[productId].sold;
     }
 
     for (let status of Object.keys(this.status_counts)) {
@@ -828,7 +832,7 @@ export default class StatisticsBlock {
       orders: [],
       restocks: [],
       expenses: [],
-      sold_quantities: {},
+      quantities: {},
       status_counts: this.zeroOrderCounts,
       profit: Monetary.noValue().data,
       total_expenses: Monetary.noValue().data,
@@ -837,7 +841,7 @@ export default class StatisticsBlock {
       vendor_payments: Monetary.noValue().data,
       sales_avg: Monetary.noValue().data,
       order_counts: 0,
-      actual_sold_products: 0
+      actual_sold_count: 0
     });
   }
 

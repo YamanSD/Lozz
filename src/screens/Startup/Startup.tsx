@@ -17,7 +17,7 @@ const Startup = ({ navigation }: ApplicationScreenProps) => {
     NetInfo.addEventListener(state => {
       reduxStorage.setItem(ReduxParameters.connectionType, state.type);
       reduxStorage.setItem(ReduxParameters.isConnected,
-        state.isConnected && state.isInternetReachable
+        state.isConnected == true && state.isInternetReachable === true
       );
     });
 

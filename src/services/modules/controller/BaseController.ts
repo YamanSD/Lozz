@@ -123,6 +123,9 @@ export default abstract class BaseController<RawData extends Generic> {
   /* search schema for the collection */
   private readonly searchSchema?: Schema;
 
+  /* used to trigger updates */
+  private hookData?: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
+
   /**
    * @param collection_name name of the controlled collection
    * @param collection_id name of the data field
@@ -560,11 +563,21 @@ export default abstract class BaseController<RawData extends Generic> {
   }
 
   /**
+   * @param value new RN hook to be triggered on updates
+   */
+  public set hook(value: typeof this.hookData) {
+    this.hookData = value;
+  }
+
+  /**
    * Triggers the RN hook for front-end updates.
    */
   public triggerHook(): void {
-    // store.dispatch(SlicesMap[this.collectionName]());
-    // TODO with front-end
+    if (this.hookData === undefined) {
+      return;
+    }
+
+    this.hookData[1](!this.hookData[0]);
   }
 
   /**

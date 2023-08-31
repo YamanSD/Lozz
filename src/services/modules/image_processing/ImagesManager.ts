@@ -1,8 +1,9 @@
 import RNFS from 'react-native-fs';
 import { Platform } from "react-native";
-import { CheckDirError, ImageDownloadError } from "../controller/Errors";
+import { CheckDirError, ImageDownloadError, NoConnectionError } from "../controller/Errors";
 import { firebase } from '@react-native-firebase/storage';
 import CollectionInfo from "../../../CollectionInfo";
+import BaseController from "../controller/BaseController";
 
 
 /**
@@ -47,6 +48,10 @@ export default class ImagesManager {
    * @returns Promise that resolves to the local path of the downloaded image.
    */
   private static async downloadImage(imageUrl: string): Promise<string> {
+    if (!BaseController.isConnected) {
+      throw new NoConnectionError();
+    }
+
     /* check the images directory */
     await this.checkDirectory();
 
@@ -90,6 +95,10 @@ export default class ImagesManager {
    * @returns the upload task and the download URL
    */
   public static async uploadImage(src: string) {
+    if (!BaseController.isConnected) {
+      throw new NoConnectionError();
+    }
+
     const reference = this.storage.ref(src);
     const url = await reference.getDownloadURL();
 

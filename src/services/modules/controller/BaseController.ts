@@ -8,7 +8,7 @@ import {
 } from "@orama/orama";
 import {
   IdAlreadyExistsError,
-  IdDoesNotExistError,
+  IdDoesNotExistError, NoConnectionError,
   NoDataError,
   NoDeactivateError,
   NoDeleteError,
@@ -19,6 +19,8 @@ import { Generic, SpecialFields, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
 import CollectionInfo from "../../../CollectionInfo";
 import { isEqual, pickBy } from "lodash";
+import { reduxStorage } from "../../../store";
+import ReduxParameters from "../../../ReduxParameters";
 
 
 /**
@@ -164,6 +166,13 @@ export default abstract class BaseController<RawData extends Generic> {
   }
 
   /**
+   * @returns true if the device is connected to the internet
+   */
+  public static get isConnected(): boolean {
+    return reduxStorage.getItem(ReduxParameters.isConnected) ?? false;
+  }
+
+  /**
    * @returns the name of the collection id
    */
   public get collectionId() {
@@ -197,6 +206,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * @returns the firestore instance
    */
   public get server() {
+    if (!BaseController.isConnected) {
+      throw new NoConnectionError();
+    }
+
     return this.serverInstance();
   }
 
@@ -287,6 +300,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * @protected
    */
   protected async getServer(id: string) {
+    if (!BaseController.isConnected) {
+      throw new NoConnectionError();
+    }
+
     const document = await this.collection.doc(id).get();
 
     if (document.exists) {
@@ -306,6 +323,10 @@ export default abstract class BaseController<RawData extends Generic> {
    * @protected
    */
   protected async createServer(id: string, data: RawData) {
+    if (!BaseController.isConnected) {
+      throw new NoConnectionError();
+    }
+
     this.cleanData(data);
     await this.collection.doc(id).set(data);
     this.addId(id);
@@ -326,6 +347,10 @@ export default abstract class BaseController<RawData extends Generic> {
 
     if (!(this.canUpdate || noStamp)) {
       throw new NoUpdateError();
+    }
+
+    if (!BaseController.isConnected) {
+      throw new NoConnectionError();
     }
 
     if (!noStamp) {
@@ -355,6 +380,10 @@ export default abstract class BaseController<RawData extends Generic> {
   public async deleteServer(id: string) {
     if (!this.canDelete) {
       throw new NoDeleteError();
+    }
+
+    if (!BaseController.isConnected) {
+      throw new NoConnectionError();
     }
 
     this.removeId(id);
@@ -858,6 +887,10 @@ export default abstract class BaseController<RawData extends Generic> {
   private async getIdSetServer(): Promise<Set<string>> {
     if (this.noSet) {
       return new Set<string>();
+    }
+
+    if (!BaseController.isConnected) {
+      throw new NoConnectionError();
     }
 
     const document = await this.idSetDocument.get();

@@ -5,11 +5,22 @@ import { Brand } from '../../components';
 import { setDefaultTheme } from '../../store/theme';
 import { ApplicationScreenProps } from '../../../@types/navigation';
 import DependencyTree from "../../services/modules/controller/DependencyTree";
+import NetInfo from "@react-native-community/netinfo";
+import { reduxStorage } from "../../store";
+import ReduxParameters from "../../ReduxParameters";
 
 const Startup = ({ navigation }: ApplicationScreenProps) => {
   const { Layout, Gutters } = useTheme();
 
   const init = async () => {
+    /* activate connection listener */
+    NetInfo.addEventListener(state => {
+      reduxStorage.setItem(ReduxParameters.connectionType, state.type);
+      reduxStorage.setItem(ReduxParameters.isConnected,
+        state.isConnected && state.isInternetReachable
+      );
+    });
+
     await DependencyTree.loadControllers();
 
     /* Artificial timeout */

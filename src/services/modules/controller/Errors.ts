@@ -158,3 +158,9 @@ export class ImageDownloadError extends Error {
     super("ImageDownloadError");
   }
 }
+
+export class NoConnectionError extends Error {
+  public constructor() {
+    super("NoConnectionError");
+  }
+}

@@ -210,7 +210,7 @@ export default abstract class BaseController<RawData extends Generic> {
       throw new NoConnectionError();
     }
 
-    return this.serverInstance();
+    return this.metaServer();
   }
 
   /**

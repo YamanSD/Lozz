@@ -315,10 +315,14 @@ export default class StatisticsBlock {
 
       for (let id of Object.keys(quantities)) {
         if (!(id in this.sold_quantities)) {
-          this.sold_quantities[id] = 0;
+          this.sold_quantities[id] = {
+            aggregate: 0,
+            actual: 0
+          };
         }
 
-        this.sold_quantities[id] += quantities[id];
+        this.sold_quantities[id].actual += quantities[id];
+        this.sold_quantities[id].aggregate += quantities[id];
       }
 
       if (this.isComplete) {
@@ -416,13 +420,27 @@ export default class StatisticsBlock {
    * @private
    */
   private removeRestock(restock: Restock): void {
-    this.actual_sold -= restock.item_count;
+    if (restock.order_linked) {
+      this.actual_sold -= restock.item_count;
 
-    if (this.isComplete) {
-      StatisticsBlock.removeRestockFromTimeline(restock);
+      const quantities = restock.quantities;
+      for (let id of Object.keys(quantities)) {
+        if (!(id in this.sold_quantities)) {
+          this.sold_quantities[id] = {
+            aggregate: 0,
+            actual: 0
+          };
+        }
+
+        this.sold_quantities[id].actual -= quantities[id];
+      }
+
+      if (this.isComplete) {
+        StatisticsBlock.removeRestockFromTimeline(restock);
+      }
+
+      this.save()
     }
-
-    this.save()
   }
 
   /**
@@ -433,6 +451,7 @@ export default class StatisticsBlock {
     if (order.status !== OrderStatus.pending) {
       this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
       this.profit = this.profit.subtractCopy(order.profit);
+      this.status_counts[order.status]++;
     }
 
     if (this.isComplete) {
@@ -523,7 +542,17 @@ export default class StatisticsBlock {
     this.order_counts += other.order_counts;
 
     for (let productId of Object.keys(other.sold_quantities)) {
-      this.sold_quantities[productId] += other.sold_quantities[productId];
+      if (!(productId in this.sold_quantities)) {
+        this.sold_quantities[productId] = {
+          aggregate: 0,
+          actual: 0
+        };
+      }
+
+      this.sold_quantities[productId].actual +=
+        other.sold_quantities[productId].actual;
+      this.sold_quantities[productId].aggregate +=
+        other.sold_quantities[productId].aggregate;
     }
 
     for (let status of Object.keys(this.status_counts)) {
@@ -822,14 +851,11 @@ export default class StatisticsBlock {
   private static combineFromTo(t0: string,
                            t1: string,
                            unit: TimeUnit): StatisticsBlock {
-    const date1 = this.wrapTimestamp(t1);
-    let result: StatisticsBlock = this.noValue(`${t0}${t1}`) ;
-    let current = this.getInstance(t0);
-    result.combine(current)
+    let result: StatisticsBlock = this.noValue(`${t0}->${t1}`) ;
 
-    while (current.date < date1) {
-      this.incrementDate(result.date, unit);
-      result.combine(current);
+    while (t0 < t1) {
+      result.combine(this.getInstance(t0));
+      t0 = this.incrementTimestamp(t0, unit);
     }
 
     return result;

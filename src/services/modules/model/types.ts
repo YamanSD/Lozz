@@ -691,7 +691,7 @@ export type basicProduct = {
   images?: {
     [usp: string]: [...string[]]
   },
-  quantities: QuantityType,
+  quantities?: QuantityType,
   increment?: number,
   minimum_quantity?: QuantityType,
   price: MonetaryType,
@@ -1186,7 +1186,10 @@ export type statisticsBlock = {
   orders: string[],
   expenses: string[],
   sold_quantities: {
-    [product_id: string]: number
+    [product_id: string]: {
+      aggregate: number,
+      actual: number
+    }
   },
   status_counts: {
     [status in OrderStatus]: number

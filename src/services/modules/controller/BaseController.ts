@@ -25,6 +25,7 @@ import { isEqual, pickBy } from "lodash";
  * Class responsible for storing & retrieving application dependencies.
  */
 class InternalDependencyTree {
+  /* object containing the monotone instances */
   private static instances: Generic = {};
 
   /**
@@ -74,6 +75,20 @@ type SearchEngine = Orama<ProvidedTypes>;
  * Forms the base class for the rest of the controllers.
  */
 export default abstract class BaseController<RawData extends Generic> {
+  /* object containing operational counters */
+  public static readonly cacheCounter = {
+    read: 0,
+    write: 0,
+    delete: 0,
+  };
+
+  /* object containing operational counters */
+  public static readonly serverCounter = {
+    read: 0,
+    write: 0,
+    delete: 0,
+  };
+
   /* collection name */
   private readonly collection_name: string;
 
@@ -276,6 +291,7 @@ export default abstract class BaseController<RawData extends Generic> {
       await this.setCache(id, document.data() as RawData);
     }
 
+    BaseController.serverCounter.read++;
     return document;
   }
 
@@ -291,6 +307,7 @@ export default abstract class BaseController<RawData extends Generic> {
     this.cleanData(data);
     await this.collection.doc(id).set(data);
     this.addId(id);
+    BaseController.serverCounter.write++;
   }
 
   /**
@@ -331,7 +348,7 @@ export default abstract class BaseController<RawData extends Generic> {
    * @param id to be deleted completely
    * @protected
    */
-  public async removeServer(id: string) {
+  public async deleteServer(id: string) {
     if (!this.canDelete) {
       throw new NoDeleteError();
     }
@@ -339,6 +356,7 @@ export default abstract class BaseController<RawData extends Generic> {
     this.removeId(id);
     await this.uploadIds();
     await this.collection.doc(id).delete();
+    BaseController.serverCounter.delete++;
   }
 
   /**
@@ -351,7 +369,7 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     for (let id of ids) {
-      await this.removeServer(id);
+      await this.deleteServer(id);
     }
 
     await this.uploadIds();
@@ -557,6 +575,7 @@ export default abstract class BaseController<RawData extends Generic> {
 
       result[this.collectionId] = id;
 
+      BaseController.cacheCounter.read++;
       return result;
     }
 
@@ -578,6 +597,7 @@ export default abstract class BaseController<RawData extends Generic> {
       await this.insertStatistic(id);
     }
 
+    BaseController.cacheCounter.write++;
     this.triggerHook();
   }
 
@@ -672,6 +692,7 @@ export default abstract class BaseController<RawData extends Generic> {
       }
 
       this.storage.delete(id);
+      BaseController.cacheCounter.delete++;
       this.triggerHook();
     });
   }
@@ -1063,7 +1084,7 @@ export default abstract class BaseController<RawData extends Generic> {
    * @returns raw data suitable for upload
    * @protected
    */
-  protected abstract fillDataGaps(data: Generic): RawData;
+  protected abstract fillDataGaps(data: Generic): RawData | Promise<RawData>;
 
   /**
    * @param data to be cleaned
@@ -1141,7 +1162,7 @@ export default abstract class BaseController<RawData extends Generic> {
       throw new IdAlreadyExistsError();
     }
 
-    await this.createServer(id, this.fillDataGaps(data));
+    await this.createServer(id, await this.fillDataGaps(data));
     await this.uploadIds();
   }
 }

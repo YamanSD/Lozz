@@ -117,7 +117,7 @@ export default class Courier implements BaseModel {
       throw new NoZonesError();
     }
 
-    return zone in Courier.zones;
+    return zone in Courier.zones.zones;
   }
 
   /**

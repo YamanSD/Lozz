@@ -89,6 +89,21 @@ export default class ProductController extends BaseController<product> {
    * @throws IdAlreadyExistsError if the name of the product is taken
    */
   public async create(data: basicProduct) {
+    const category = await this.categoryController.get(data.category_id);
+
+    // Add missing quantities
+    if (data.quantities === undefined) {
+      data.quantities = Product.emptyQuantities(category);
+    } else {
+      const baseQuantities = Product.emptyQuantities(category);
+
+      for (let usp of Object.keys(baseQuantities)) {
+        if (!(usp in data.quantities)) {
+          data.quantities[usp] = 0;
+        }
+      }
+    }
+
     return await this.genericCreate(data, data.id);
   }
 

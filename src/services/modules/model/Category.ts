@@ -4,6 +4,20 @@ import { category, TrailNature, TrailType } from "./types";
 
 
 /**
+ * @param arrays double array
+ * @returns a double array containing the cartesian product of the arrays
+ */
+export function cartesianProduct(arrays: any[][]) {
+  return arrays.reduce(function(a, b){
+    return a.map(function(x: any){
+      return b.map(function(y: any){
+        return x.concat([y]);
+      })
+    }).reduce(function(a: any[], b: any[]){ return a.concat(b) },[])
+  }, [[]])
+}
+
+/**
  * Class encapsulating the category data.
  */
 export default class Category implements BaseModel {
@@ -137,5 +151,22 @@ export default class Category implements BaseModel {
    */
   public get copy() {
     return new Category(this.dataCopy);
+  }
+
+  /**
+   * @returns all possible option value combinations
+   */
+  public get optionValues(): string[][] {
+    if (this.option_keys === undefined || this.option_sets === undefined) {
+      return [];
+    }
+
+    let sets = [];
+
+    for (let optionKey of this.option_keys) {
+      sets.push(this.option_sets[optionKey]);
+    }
+
+    return cartesianProduct(sets);
   }
 }

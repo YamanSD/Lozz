@@ -14,7 +14,7 @@ import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../../CollectionInfo";
 import Order from "../model/Order";
 import {
-  IdDoesNotExistError,
+  IdDoesNotExistError, IllegalStateError,
   InsufficientQuantitiesError,
   NoCancelError,
   OrderNotAtCourierError,
@@ -169,9 +169,11 @@ export default class OrderController extends BaseController<order> {
    * @throws IdDoesNotExistError if the id does not belong to an order
    */
   public async get(id: string): Promise<Order> {
-    if (!this.isPending(id)
-      && (id === this.pendingPivotName
-        || await this.isIdAvailable(id))) {
+    if (id === this.pendingPivotName) {
+      throw new IllegalStateError();
+    }
+
+    if (!this.isPending(id) && await this.isIdAvailable(id)) {
       throw new IdDoesNotExistError();
     }
 
@@ -209,7 +211,7 @@ export default class OrderController extends BaseController<order> {
         `${OrderController.PENDING_FLAG}${this.pendingPivot(true)}`;
 
       // Additional data such as total & trail are discarded on creation
-      let temp = this.fillDataGaps(data);
+      let temp = await this.fillDataGaps(data);
       temp.total = this.generateTotal(data);
 
       // Pending local
@@ -222,12 +224,13 @@ export default class OrderController extends BaseController<order> {
       data.restock_id = await this.restockController.create({
         note: this.generateNote(data),
         quantities: this.getQuantities(data),
-        to_inventory: Order.isStatusToInventory(data.status)
+        to_inventory: Order.isStatusToInventory(data.status),
+        order_linked: true
       });
 
       data.id = await this.generateId();
 
-      await this.createServer(data.id, this.fillDataGaps(data));
+      await this.createServer(data.id, await this.fillDataGaps(data));
 
       return data.id;
     } catch (e) {
@@ -577,17 +580,19 @@ export default class OrderController extends BaseController<order> {
    * @returns order data suitable for upload
    * @protected
    */
-  protected fillDataGaps(data: basicOrder): order {
+  protected async fillDataGaps(data: basicOrder): Promise<order> {
+    const total = this.generateTotal(data);
+
     return super.fixDataGaps({
       id: data.id,
       note: data.note,
       discount: data.discount,
       status: data.status,
-      total: this.generateTotal(data),
+      total: total,
       zone: data.zone,
       province: data.province,
       address: data.address,
-      delivery: data.delivery,
+      delivery: await this.getShippingFees(total, data),
       courier_id: data.courier_id,
       customer_id: data.customer_id,
       restock_id: data.restock_id, // Added to data by create function
@@ -599,6 +604,27 @@ export default class OrderController extends BaseController<order> {
       link_id: data.link_id,
       trail: this.generateInitialTrail()
     });
+  }
+
+  /**
+   * @param total calculated total of the order
+   * @param data basic raw data
+   * @returns the suitable shipping fees for the raw data
+   * @protected
+   */
+  protected async getShippingFees(total: MonetaryType, data: basicOrder):
+    Promise<undefined | MonetaryType> {
+    if (data.delivery !== undefined) {
+      return data.delivery;
+    }
+
+    if (data.courier_id === undefined) {
+      return undefined;
+    }
+
+    let courier = await this.courierController.get(data.courier_id);
+
+    return courier.getShippingFees(new Monetary(total), data.zone).data;
   }
 
   /**

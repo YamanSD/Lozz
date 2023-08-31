@@ -83,7 +83,7 @@ export default class DependencyTree {
   public static get Employees(): EmployeeController {
     return BaseController.getDependency(
       CollectionInfo.employee.name,
-      ExpenseController,
+      EmployeeController,
       CollectionInfo.server
     );
   }

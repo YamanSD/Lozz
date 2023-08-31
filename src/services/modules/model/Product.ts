@@ -133,6 +133,57 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param usp to check
+   * @param property to check for in the USP
+   * @returns true if the property is in the usp
+   * @private
+   */
+  private static hasProperty(usp: string, property: string): boolean {
+    return this.invertUsp(usp).indexOf(property) !== -1;
+  }
+
+  /**
+   * @param usp to get the images for
+   * @returns a set of image URLs
+   */
+  public getImages(usp: string): Set<string> {
+    if (this.images === undefined) {
+      return new Set<string>();
+    }
+
+    let result = new Set<string>();
+
+    for (let property of Object.keys(this.images)) {
+      if (Product.hasProperty(usp, property)) {
+        this.images[property].forEach(image => {
+          result.add(image);
+        });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * @returns list of all product images
+   */
+  public get imageSet() {
+    if (this.images === undefined) {
+      return new Set<string>();
+    }
+
+    let result = new Set<string>();
+
+    for (let imageList of Object.values(this.images)) {
+      imageList.forEach(image => {
+        result.add(image);
+      });
+    }
+
+    return result;
+  }
+
+  /**
    * @returns the quantities object for the product
    */
   public get quantities() {
@@ -214,11 +265,21 @@ export default class Product implements BaseModel {
    * @returns the added price for the given USP
    */
   public getAddedPrice(usp: string): Monetary {
-    if (this.added_price === undefined || !(usp in this.added_price)) {
+    const added = this.added_price;
+
+    if (added === undefined) {
       return Monetary.noValue();
     }
 
-    return new Monetary(this.added_price[usp]);
+    let result = Monetary.noValue();
+
+    for (let property of Object.keys(added)) {
+      if (Product.hasProperty(usp, property)) {
+        result.add(new Monetary(added[property]));
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -226,11 +287,35 @@ export default class Product implements BaseModel {
    * @returns the added cost for the given USP
    */
   public getAddedCost(usp: string): Monetary {
-    if (this.added_costs === undefined || !(usp in this.added_costs)) {
+    const added = this.added_costs;
+
+    if (added === undefined) {
       return Monetary.noValue();
     }
 
-    return new Monetary(this.added_costs[usp]);
+    let result = Monetary.noValue();
+
+    for (let property of Object.keys(added)) {
+      if (Product.hasProperty(usp, property)) {
+        result.add(new Monetary(added[property]));
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * @param category to get the quantities for
+   * @returns empty quantities of the given category
+   */
+  public static emptyQuantities(category: Category): QuantityType {
+    let result: QuantityType = {};
+
+    category.optionValues.forEach((p: string[]) => {
+      result[this.createUsp(p)] = 0;
+    });
+
+    return result;
   }
 
   /**

@@ -79,6 +79,7 @@ export default abstract class BaseController<RawData extends Generic> {
   public static readonly cacheCounter = {
     read: 0,
     write: 0,
+    update: 0,
     delete: 0,
   };
 
@@ -86,6 +87,7 @@ export default abstract class BaseController<RawData extends Generic> {
   public static readonly serverCounter = {
     read: 0,
     write: 0,
+    update: 0,
     delete: 0,
   };
 
@@ -339,6 +341,8 @@ export default abstract class BaseController<RawData extends Generic> {
       async (transaction) => {
       transaction.update(this.collection.doc(id), this.fixDataGaps(data));
     });
+
+    BaseController.serverCounter.update++;
   }
 
   /**
@@ -631,6 +635,7 @@ export default abstract class BaseController<RawData extends Generic> {
       await this.removeStatistic(id);
     }
 
+    BaseController.cacheCounter.update++;
     await this.setCache(id, oldData as RawData);
   }
 

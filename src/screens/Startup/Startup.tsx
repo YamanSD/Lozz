@@ -19,6 +19,9 @@ const Startup = ({ navigation }: ApplicationScreenProps) => {
       reduxStorage.setItem(ReduxParameters.isConnected,
         state.isConnected == true && state.isInternetReachable === true
       );
+      reduxStorage.setItem(ReduxParameters.connectionDetails,
+        JSON.stringify(state.details)
+      );
     });
 
     await DependencyTree.loadControllers();

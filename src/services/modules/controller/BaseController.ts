@@ -804,6 +804,10 @@ export default abstract class BaseController<RawData extends Generic> {
    */
   public async runTransaction(body:
       (transaction: FirebaseFirestoreTypes.Transaction) => any) {
+    if (!BaseController.isConnected) {
+      throw new NoConnectionError();
+    }
+
     return await this.server.runTransaction(body);
   }
 

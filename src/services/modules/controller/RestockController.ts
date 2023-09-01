@@ -220,7 +220,7 @@ export default class RestockController extends BaseController<restock> {
    *          to their USP quantities
    * @private
    */
-  public static processRusi(quantities: QuantityType): {
+  private static processRusi(quantities: QuantityType): {
     productQuantities: JointQuantityType,
     productIds: string[]
   } {
@@ -380,7 +380,6 @@ export default class RestockController extends BaseController<restock> {
     await this.create({
       note: reason,
       quantities: quantities,
-      order_linked: false
     });
   }
 
@@ -473,7 +472,6 @@ export default class RestockController extends BaseController<restock> {
       note: data.note,
       quantities: data.quantities,
       costs: data.costs,
-      order_linked: data.order_linked,
       item_count: RestockController.countItems(data.quantities),
       trail: this.generateInitialTrail()
     });
@@ -491,7 +489,6 @@ export default class RestockController extends BaseController<restock> {
       note: data.note,
       invoice_linked: data.costs !== undefined,
       item_count: data.item_count,
-      order_linked: data.order_linked,
       employee_id: BaseModel.initialEmployee(data[SpecialFields.trail]),
       quantities: Object.keys(data.quantities)
     };

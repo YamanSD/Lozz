@@ -7,6 +7,7 @@ import Restock from "../model/Restock";
 import Order from "../model/Order";
 import Expense from "../model/Expense";
 import { isEqual } from "lodash";
+import Product from "../model/Product";
 
 
 /**
@@ -90,15 +91,15 @@ export default class StatisticsBlock {
   /**
    * @returns the actual number of sold products
    */
-  public get actual_sold_count() {
-    return this.data.actual_sold_count;
+  public get actual_sold() {
+    return this.data.actual_sold_products;
   }
 
   /**
    * @returns the sold_quantities in the block
    */
-  public get quantities() {
-    return this.data.quantities;
+  public get sold_quantities() {
+    return this.data.sold_quantities;
   }
 
   /**
@@ -169,8 +170,8 @@ export default class StatisticsBlock {
    * @param value new value of the actual_sold_products in the block
    * @protected
    */
-  protected set actual_sold_count(value) {
-    this.data.actual_sold_count = value;
+  protected set actual_sold(value) {
+    this.data.actual_sold_products = value;
   }
 
   /**
@@ -201,8 +202,8 @@ export default class StatisticsBlock {
    * @param value new value of the sold_quantities in the block
    * @protected
    */
-  protected set quantities(value) {
-    this.data.quantities = value;
+  protected set sold_quantities(value) {
+    this.data.sold_quantities = value;
   }
 
   /**
@@ -302,32 +303,50 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @returns the moved quantities object in the block
+   */
+  public get moved_quantities() {
+    return this.data.moved_quantities;
+  }
+
+  /**
+   * @param value new value of moved_quantities
+   * @protected
+   */
+  protected set moved_quantities(value) {
+    this.data.moved_quantities = value;
+  }
+
+  /**
+   * @returns the moved products in the block
+   */
+  public get moved_products() {
+    return this.data.moved_products;
+  }
+
+  /**
+   * @param value new moved products count in the block
+   * @protected
+   */
+  protected set moved_products(value) {
+    this.data.moved_products = value;
+  }
+
+  /**
    * @param restock to be added to this block
    * @private
    */
   private addRestock(restock: Restock): void {
     this.restocks.push(restock.id);
-
-    if (restock.order_linked) {
-      this.sold_products += restock.item_count;
-      this.actual_sold_count += restock.item_count;
-    }
-
     const quantities = restock.quantities;
 
     for (let id of Object.keys(quantities)) {
-      if (!(id in this.quantities)) {
-        this.quantities[id] = {
-          sold: 0,
-          moved: 0
-        };
+      if (!(id in this.moved_quantities)) {
+        this.moved_quantities[id] = 0;
       }
 
-      this.quantities[id].moved += quantities[id];
-
-      if (restock.order_linked) {
-        this.quantities[id].sold += quantities[id];
-      }
+      this.moved_products += quantities[id];
+      this.moved_quantities[id] += quantities[id];
     }
 
     if (this.isComplete) {
@@ -345,9 +364,32 @@ export default class StatisticsBlock {
     this.orders.push(order.id);
 
     if (order.status !== OrderStatus.pending) {
-      this.sales = this.sales.addCopy(order.total ?? Monetary.noValue());
-      this.profit = this.profit.addCopy(order.profit);
-      this.recalibrateAverage(order);
+      if (!order.isDeactivated) {
+        this.sales = this.sales.addCopy(order.total ?? Monetary.noValue());
+        this.profit = this.profit.addCopy(order.profit);
+        this.recalibrateAverage(order);
+      }
+
+      for (let usi of order.usiSet) {
+        const id = Product.invertUsi(usi).id;
+
+        if (!(id in this.sold_quantities)) {
+          this.sold_quantities[id] = {
+            aggregate: 0,
+            actual: 0
+          };
+        }
+
+        if (order.isDeactivated) {
+          this.sold_quantities[id].actual -= order.getQuantity(usi);
+          this.actual_sold -= order.item_count;
+        } else {
+          this.sold_quantities[id].aggregate += order.getQuantity(usi);
+          this.sold_products += order.item_count;
+          this.sold_quantities[id].actual += order.getQuantity(usi);
+          this.actual_sold += order.item_count;
+        }
+      }
 
       const delivery = order.delivery?.copy() ?? Monetary.noValue();
 
@@ -358,7 +400,8 @@ export default class StatisticsBlock {
       }
     }
 
-    this.status_counts[order.status]++;
+    this.status_counts[order.status].actual++;
+    this.status_counts[order.status].aggregate++;
     this.order_counts++;
 
     if (this.isComplete) {
@@ -424,20 +467,15 @@ export default class StatisticsBlock {
    * @private
    */
   private removeRestock(restock: Restock): void {
-    if (restock.order_linked) {
-      this.actual_sold_count -= restock.item_count;
-    }
-
     const quantities = restock.quantities;
+
     for (let id of Object.keys(quantities)) {
-      if (!(id in this.quantities)) {
-        this.quantities[id] = {
-          sold: 0,
-          moved: 0
-        };
+      if (!(id in this.moved_quantities)) {
+        this.moved_quantities[id] = 0;
       }
 
-      this.quantities[id].moved -= quantities[id];
+      this.moved_products -= quantities[id];
+      this.moved_quantities[id] -= quantities[id];
     }
 
     if (this.isComplete) {
@@ -455,7 +493,14 @@ export default class StatisticsBlock {
     if (order.status !== OrderStatus.pending) {
       this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
       this.profit = this.profit.subtractCopy(order.profit);
-      this.status_counts[order.status]++;
+      this.status_counts[order.status].actual--;
+
+      for (let usi of order.usiSet) {
+        const id = Product.invertUsi(usi).id;
+
+        this.sold_quantities[id].actual -= order.getQuantity(usi);
+        this.actual_sold -= order.item_count;
+      }
     }
 
     if (this.isComplete) {
@@ -526,7 +571,7 @@ export default class StatisticsBlock {
 
     this.sales = this.sales.addCopy(other.sales);
     this.sold_products += other.sold_products;
-    this.actual_sold_count += other.actual_sold_count;
+    this.actual_sold += other.actual_sold;
     this.restocks.push(...other.restocks);
     this.orders.push(...other.orders);
     this.expenses.push(...other.expenses);
@@ -545,23 +590,31 @@ export default class StatisticsBlock {
 
     this.order_counts += other.order_counts;
 
-    for (let productId of Object.keys(other.quantities)) {
-      if (!(productId in this.quantities)) {
-        this.quantities[productId] = {
-          sold: 0,
-          moved: 0
+    // Handle quantities
+    for (let productId of Object.keys(other.sold_quantities)) {
+      if (!(productId in this.sold_quantities)) {
+        this.sold_quantities[productId] = {
+          aggregate: 0,
+          actual: 0
         };
       }
 
-      this.quantities[productId].moved +=
-        other.quantities[productId].moved;
-      this.quantities[productId].sold +=
-        other.quantities[productId].sold;
+      if (!(productId in this.moved_quantities)) {
+        this.moved_quantities[productId] = 0;
+      }
+
+      this.sold_quantities[productId].actual +=
+        other.sold_quantities[productId].actual;
+      this.sold_quantities[productId].aggregate +=
+        other.sold_quantities[productId].aggregate;
+      this.moved_products += other.moved_products;
     }
 
     for (let status of Object.keys(this.status_counts)) {
       // @ts-ignore
-      this.status_counts[status] += other.status_counts[status];
+      this.status_counts[status].actual += other.status_counts[status].actual;
+      // @ts-ignore
+      this.status_counts[status].aggregate += other.status_counts[status].aggregate;
     }
   }
 
@@ -807,16 +860,21 @@ export default class StatisticsBlock {
    * @private
    */
   private static get zeroOrderCounts() {
+    const zero = {
+      actual: 0,
+      aggregate: 0
+    };
+
     return {
-      [OrderStatus.pending]: 0,
-      [OrderStatus.confirmed]: 0,
-      [OrderStatus.packaged]: 0,
-      [OrderStatus.sent_to_courier]: 0,
-      [OrderStatus.paid]: 0,
-      [OrderStatus.canceled]: 0,
-      [OrderStatus.canceled_at_courier]: 0,
-      [OrderStatus.received_from_courier]: 0,
-      [OrderStatus.finalized]: 0,
+      [OrderStatus.pending]: BaseModel.deepCopy(zero),
+      [OrderStatus.confirmed]: BaseModel.deepCopy(zero),
+      [OrderStatus.packaged]: BaseModel.deepCopy(zero),
+      [OrderStatus.sent_to_courier]: BaseModel.deepCopy(zero),
+      [OrderStatus.paid]: BaseModel.deepCopy(zero),
+      [OrderStatus.canceled]: BaseModel.deepCopy(zero),
+      [OrderStatus.canceled_at_courier]: BaseModel.deepCopy(zero),
+      [OrderStatus.received_from_courier]: BaseModel.deepCopy(zero),
+      [OrderStatus.finalized]: BaseModel.deepCopy(zero),
     }
   }
 
@@ -828,11 +886,11 @@ export default class StatisticsBlock {
     return new StatisticsBlock({
       timestamp: timestamp,
       sales: Monetary.noValue().data,
-      sold_products: 0,
       orders: [],
       restocks: [],
       expenses: [],
-      quantities: {},
+      sold_quantities: {},
+      moved_quantities: {},
       status_counts: this.zeroOrderCounts,
       profit: Monetary.noValue().data,
       total_expenses: Monetary.noValue().data,
@@ -841,7 +899,9 @@ export default class StatisticsBlock {
       vendor_payments: Monetary.noValue().data,
       sales_avg: Monetary.noValue().data,
       order_counts: 0,
-      actual_sold_count: 0
+      actual_sold_products: 0,
+      moved_products: 0,
+      sold_products: 0,
     });
   }
 

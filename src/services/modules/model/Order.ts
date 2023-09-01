@@ -3,8 +3,17 @@ import CartProduct from "../local_model/CartProduct";
 import Courier from "./Courier";
 import Customer from "./Customer";
 import Monetary from "../local_model/Monetary";
-import Restock from "./Restock";
-import { basicOrder, Generic, MonetaryType, order, OrderStatus, TrailNature, TrailType } from "./types";
+import {
+  basicOrder,
+  Generic,
+  ItemQuantityType,
+  MonetaryType,
+  order, OrderProductQuantities,
+  orderProducts,
+  OrderStatus,
+  TrailNature,
+  TrailType
+} from "./types";
 import { InvalidOrderCreationStatusError } from "../controller/Errors";
 import CollectionInfo from "../../../CollectionInfo";
 
@@ -15,9 +24,6 @@ import CollectionInfo from "../../../CollectionInfo";
 export default class Order implements BaseModel {
   /* raw order data */
   private dataValue: order;
-
-  /* restock instance containing the values */
-  private readonly restockInstance: Restock;
 
   /* courier instance that will deliver the order */
   private courierInstance?: Courier;
@@ -30,18 +36,15 @@ export default class Order implements BaseModel {
 
   /**
    * @param data raw order data
-   * @param restock representing the order
    * @param customer of the order
    * @param courier of the order
    * @param link associated link order
    */
   public constructor(data: order,
-                     restock: Restock,
                      customer: Customer,
                      courier?: Courier,
                      link?: Order) {
     this.dataValue = data;
-    this.restockInstance = restock;
     this.customerInstance = customer;
     this.courierInstance = courier;
 
@@ -54,17 +57,98 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @param product item quantity to extract the quantities from
+   * @returns the quantity and inventory quantity
+   */
+  public static extractQuantities(product: ItemQuantityType) {
+    return {
+      quantity: product.quantity,
+      inv_quantity: product.inv_quantity
+    }
+  }
+
+  /**
+   * @param products to convert
+   * @param to_inventory if true all products become to inventory.
+   *        Otherwise, all products become to display.
+   * @returns converted products
+   */
+  public static convertDestination(products: orderProducts,
+                                   to_inventory: boolean): orderProducts {
+    let result: orderProducts = {};
+
+    for (let usi of Object.keys(products)) {
+      if (!(usi in result)) {
+        result[usi] = products[usi];
+      }
+
+      if (to_inventory) {
+        if (result[usi].inv_quantity === 0 && result[usi].quantity !== 0) {
+          result[usi].inv_quantity = result[usi].quantity;
+        }
+
+        result[usi].quantity = 0;
+      } else {
+        if (result[usi].quantity === 0 && result[usi].inv_quantity !== 0) {
+          result[usi].quantity = result[usi].inv_quantity;
+        }
+
+        result[usi].inv_quantity = 0;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * @param to_inventory if true all products become to inventory.
+   *        Otherwise, all products become to display.
+   * @returns converted products
+   */
+  public convertDestination(to_inventory: boolean): orderProducts {
+    return Order.convertDestination(this.products, to_inventory);
+  }
+
+  /**
+   * Quantities not in the inventory are added to the inventory.
+   * Quantities not on display are added to the on display.
+   *
+   * @param products to be converted
+   * @returns the duplicated products according to the above criteria
+   */
+  public static duplicateProducts(products: orderProducts): orderProducts {
+    let result: orderProducts = {};
+
+    for (let usi of Object.keys(products)) {
+      if (!(usi in result)) {
+        result[usi] = products[usi];
+      }
+
+      if (result[usi].inv_quantity === 0) {
+        result[usi].inv_quantity = result[usi].quantity;
+      } else if (result[usi].quantity === 0) {
+        result[usi].quantity = result[usi].inv_quantity;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Quantities not in the inventory are added to the inventory.
+   * Quantities not on display are added to the on display.
+   *
+   * @returns the duplicated products according to the above criteria
+   */
+  public get duplicateProducts(): orderProducts {
+    return Order.duplicateProducts(this.products);
+  }
+
+  /**
    * @returns the stored raw data
    */
   public get data(): order {
     return this.dataValue;
-  }
-
-  /**
-   * @returns the negative quantities of the order
-   */
-  public get negativeQuantities() {
-    return this.restock.negativeQuantities;
   }
 
   /**
@@ -89,10 +173,34 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @returns the RUSI set in the order
+   */
+  public get usiSet() {
+    return Object.keys(this.products);
+  }
+
+  /**
    * @returns the quantities object for the order
    */
   public get quantities() {
-    return this.restock.quantities;
+    return Order.getQuantities(this.products);
+  }
+
+  /**
+   * @param products to extract quantities from
+   * @returns the quantities in the products object
+   */
+  public static getQuantities(products: orderProducts) {
+    let result: OrderProductQuantities = {};
+
+    for (let usi of Object.keys(products)) {
+      result[usi] = {
+        quantity: products[usi].quantity,
+        inv_quantity: products[usi].inv_quantity
+      };
+    }
+
+    return result;
   }
 
   /**
@@ -101,7 +209,7 @@ export default class Order implements BaseModel {
    *
    * @param value new quantities of the order
    */
-  public set products(value: basicOrder["products"]) {
+  public set products(value: orderProducts) {
     if (this.status === OrderStatus.pending) {
       (this.data as Generic).products = value;
     }
@@ -180,7 +288,7 @@ export default class Order implements BaseModel {
     }
 
     result.subtract(discount);
-    const products = this.prices;
+    const products = this.products;
 
     for (let usi of Object.keys(products)) {
       const cost = new Monetary(products[usi].cost);
@@ -229,13 +337,6 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @returns the restock instance associated with the order
-   */
-  public get restock() {
-    return this.restockInstance;
-  }
-
-  /**
    * @returns the payment associated with the order
    */
   public get payment() {
@@ -259,10 +360,10 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @returns the prices of the products in the order
+   * @returns the products mapping in the order
    */
-  public get prices() {
-    return this.data.prices;
+  public get products() {
+    return this.data.products;
   }
 
   /**
@@ -464,10 +565,10 @@ export default class Order implements BaseModel {
    * @param value price value of the product
    */
   public addToPrices(usi: string, value: Monetary): void {
-    this.prices[usi].price = value.data;
+    this.products[usi].price = value.data;
 
     if (this.getQuantity(usi) === 0) {
-      delete this.prices[usi];
+      delete this.products[usi];
     }
   }
 
@@ -476,10 +577,10 @@ export default class Order implements BaseModel {
    * @param value price value of the product
    */
   public addToCosts(usi: string, value: Monetary): void {
-    this.prices[usi].cost = value.data;
+    this.products[usi].cost = value.data;
 
     if (this.getQuantity(usi) === 0) {
-      delete this.prices[usi];
+      delete this.products[usi];
     }
   }
 
@@ -490,10 +591,32 @@ export default class Order implements BaseModel {
    * @param quantity value to be added
    * @param value price of the product
    * @param cost value of the product
+   * @param to_inventory if true the quantities are added to the inventory.
+   *        Otherwise, if false, to display only.
+   *        Otherwise, if null to both
    */
   public add(usi: string, quantity: number,
-             value: Monetary, cost: Monetary): void {
-    this.restock.add(usi, quantity, false);
+             value: Monetary, cost: Monetary,
+             to_inventory: boolean | null): void {
+    if (!(usi in this.products)) {
+      this.products[usi] = {
+        inv_quantity: 0,
+        quantity: 0,
+        price: value.data,
+        cost: cost.data
+      }
+    }
+
+    this.item_count += Math.abs(quantity);
+
+    if (to_inventory !== false) {
+      this.products[usi].inv_quantity += quantity;
+    }
+
+    if (to_inventory !== true) {
+      this.products[usi].quantity += quantity;
+    }
+
     this.addToTotal(value, quantity);
     this.addToPrices(usi, value);
     this.addToCosts(usi, cost);
@@ -503,7 +626,10 @@ export default class Order implements BaseModel {
    * @param usi to check quantity for
    */
   public getQuantity(usi: string): number {
-    return this.restock.getQuantity(usi);
+    const quantity = this.products[usi]?.quantity ?? 0;
+    const invQuantity = this.products[usi]?.inv_quantity ?? 0;
+
+    return quantity === 0 ? invQuantity : quantity;
   }
 
   /**
@@ -512,14 +638,21 @@ export default class Order implements BaseModel {
    * Adds the given cart product to the order
    */
   public addCartProduct(product: CartProduct): void {
-    this.add(product.usi, product.quantity, product.price, product.cost);
+    this.add(product.usi, product.quantity, product.price, product.cost, false);
   }
 
   /**
    * @returns the total item count in the order
    */
   public get item_count() {
-    return this.restock.item_count;
+    return this.data.item_count;
+  }
+
+  /**
+   * @param value new item_count value
+   */
+  public set item_count(value) {
+    this.data.item_count = value;
   }
 
   /**
@@ -584,10 +717,25 @@ export default class Order implements BaseModel {
   public get copy() {
     return new Order(
       this.dataCopy,
-      this.restock,
       this.customer,
       this.courier
     );
+  }
+
+  /**
+   * @param usi to get the price for
+   * @returns the price for the given USI
+   */
+  public getPrice(usi: string): MonetaryType {
+    return this.products[usi].price;
+  }
+
+  /**
+   * @param usi to get the cost for
+   * @returns the cost for the given USI
+   */
+  public getCost(usi: string): MonetaryType {
+    return this.products[usi].price;
   }
 
   /**
@@ -595,23 +743,16 @@ export default class Order implements BaseModel {
    * @private
    */
   private generateBasicQuantities() {
-    let result: Generic<{
-      quantity: number,
-      price: MonetaryType,
-      cost: MonetaryType}> = {};
-
-    if (this.restock === undefined) {
-      // Has products instead of quantities
-      return (this.data as Generic).products;
-    }
+    let result: orderProducts = {};
 
     let quantities = this.quantities;
 
     for (let usi of Object.keys(quantities)) {
       result[usi] = {
-        quantity: quantities[usi],
-        price: this.prices[usi].price,
-        cost: this.prices[usi].cost
+        quantity: quantities[usi].quantity,
+        inv_quantity: quantities[usi].inv_quantity,
+        price: this.getPrice(usi),
+        cost: this.getCost(usi)
       };
     }
 
@@ -656,6 +797,24 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @returns a copy of the quantities, but values are zeros
+   */
+  public get zeroQuantityProducts() {
+    let result: orderProducts = {};
+
+    for (let usi of Object.keys(this.products)) {
+      result[usi] = {
+        price: this.products[usi].price,
+        cost: this.products[usi].cost,
+        quantity: 0,
+        inv_quantity: 0
+      };
+    }
+
+    return result;
+  }
+
+  /**
    * @returns the name of the province of the order
    */
   public get provinceName() {
@@ -674,7 +833,7 @@ export default class Order implements BaseModel {
    * @private
    */
   private static creationStatusToInventory: {
-    [status: number]: boolean | undefined | null
+    [status: number]: boolean | null
   } = {
     [OrderStatus.confirmed]: false,
     [OrderStatus.packaged]: null,
@@ -687,7 +846,7 @@ export default class Order implements BaseModel {
    * @returns the type of inventory change needed for the given status
    */
   public static isStatusToInventory(status: OrderStatus):
-    boolean | undefined | null {
+    boolean | null {
     if (status in Order.creationStatusToInventory) {
       return Order.creationStatusToInventory[status];
     }

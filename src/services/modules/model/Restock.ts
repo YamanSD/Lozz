@@ -246,13 +246,6 @@ export default class Restock implements BaseModel {
   }
 
   /**
-   * @returns true if the restocking is linked to an order
-   */
-  public get order_linked() {
-    return this.data.order_linked ?? false;
-  }
-
-  /**
    * @returns true if the restocking belongs to a canceled order
    */
   public get forCanceledOrder() {

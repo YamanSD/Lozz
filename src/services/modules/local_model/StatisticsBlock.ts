@@ -67,7 +67,7 @@ export default class StatisticsBlock {
    * @returns the MMKV storage instance for the statistics
    * @private
    */
-  private get storage() {
+  protected get storage() {
     return StatisticsBlock.storage;
   }
 
@@ -380,7 +380,7 @@ export default class StatisticsBlock {
    * @param restock to be added to this block
    * @private
    */
-  private addRestock(restock: Restock): void {
+  protected addRestock(restock: Restock): void {
     if (this.restocks.indexOf(restock.id) === -1) {
       this.restocks.push(restock.id);
     }
@@ -411,7 +411,7 @@ export default class StatisticsBlock {
    * @param order to be added to this block
    * @private
    */
-  private addOrder(order: Order): void {
+  protected addOrder(order: Order): void {
     if (this.orders.indexOf(order.id) === -1) {
       this.orders.push(order.id);
     }
@@ -496,7 +496,7 @@ export default class StatisticsBlock {
    * @param expense to be added to this block
    * @private
    */
-  private addExpense(expense: Expense): void {
+  protected addExpense(expense: Expense): void {
     if (this.expenses.indexOf(expense.id) === -1) {
       this.expenses.push(expense.id);
     }
@@ -549,7 +549,7 @@ export default class StatisticsBlock {
    * @param restock to be subtracted from this statistics block
    * @private
    */
-  private subtractRestock(restock: Restock): void {
+  protected subtractRestock(restock: Restock): void {
     const quantities = restock.quantities;
 
     for (let id of Object.keys(quantities)) {
@@ -572,7 +572,7 @@ export default class StatisticsBlock {
    * @param order to be subtracted from this statistics block
    * @private
    */
-  private subtractOrder(order: Order): void {
+  protected subtractOrder(order: Order): void {
     const status = order.status;
     let notSkipDelivery = true;
 
@@ -642,7 +642,7 @@ export default class StatisticsBlock {
    * @param expense to be subtracted from this statistics block
    * @private
    */
-  private subtractExpense(expense: Expense): void {
+  protected subtractExpense(expense: Expense): void {
     if (expense.is_vendor || expense.is_invoice) {
       this.vendor_payments = this.vendor_payments.subtractCopy(expense.value);
     } else if (expense.is_employee) {
@@ -907,7 +907,7 @@ export default class StatisticsBlock {
    * @param data represented by the key
    * @private
    */
-  private static setValue(key: string, data: statisticsBlock): void {
+  protected static setValue(key: string, data: statisticsBlock): void {
     this.storage.set(key, JSON.stringify(data));
   }
 
@@ -916,7 +916,7 @@ export default class StatisticsBlock {
    * @returns the raw data of the statistics block represented by the key
    * @private
    */
-  private static getValue(key: string): statisticsBlock {
+  protected static getValue(key: string): statisticsBlock {
     return JSON.parse(
       this.storage.getString(key) as string
     ) as statisticsBlock;
@@ -927,7 +927,7 @@ export default class StatisticsBlock {
    * @returns the raw data wrapped in a StatisticsBlock
    * @private
    */
-  private static getInstance(key: string): StatisticsBlock {
+  protected static getInstance(key: string): StatisticsBlock {
     key = this.trimmedTimestamp(key);
 
     if (!this.checkCache(key)) {
@@ -981,7 +981,7 @@ export default class StatisticsBlock {
    * @returns default zeroed order counts
    * @private
    */
-  private static get zeroOrderCounts() {
+  protected static get zeroOrderCounts() {
     const zero = {
       actual: 0,
       aggregate: 0
@@ -1033,7 +1033,7 @@ export default class StatisticsBlock {
    * @returns combined statisticsBlocks from [t0, t1] under step 'unit'.
    * @private
    */
-  private static combineFromTo(t0: string,
+  protected static combineFromTo(t0: string,
                            t1: string,
                            unit: TimeUnit): StatisticsBlock {
     let result: StatisticsBlock = this.noValue(`${t0}->${t1}`) ;
@@ -1101,7 +1101,7 @@ export default class StatisticsBlock {
    * @returns List of statisticsBlocks from [t0, t1] under step 'unit'.
    * @private
    */
-  private static getFromTo(t0: string,
+  protected static getFromTo(t0: string,
                            t1: string,
                            unit: TimeUnit): StatisticsBlock[] {
     let result: StatisticsBlock[] = [];
@@ -1244,7 +1244,7 @@ export default class StatisticsBlock {
    * @returns the collection ID for statistics
    * @private
    */
-  private static formId(collection_name: string): string {
+  protected static formId(collection_name: string): string {
     return `${this.isLoadedId}-${collection_name}`;
   }
 

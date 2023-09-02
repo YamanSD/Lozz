@@ -333,7 +333,7 @@ export default class OrderController extends BaseController<order> {
     id: string,
     newProducts: orderProducts,
     stamp: TrailNature,
-    status: OrderStatus) {
+    status?: OrderStatus) {
     const oldOrder = await this.get(id);
 
     let products = OrderController.combineProducts(
@@ -348,6 +348,8 @@ export default class OrderController extends BaseController<order> {
     let data = {
       id: oldOrder.id,
       products: newProducts,
+      total: this.generateTotal(newProducts),
+      item_count: this.getItemCount(newProducts),
       [SpecialFields.trail]: trail
     } as order;
 
@@ -355,8 +357,16 @@ export default class OrderController extends BaseController<order> {
       data.status = status;
     }
 
-    // Also updates restock
+    // Also updates order
     await this.performQuantityTransaction(products, data, false);
+  }
+
+  /**
+   * @param id of the order whose quantities updated
+   * @param newProducts new products in the order
+   */
+  public async updateQuantities(id: string, newProducts: orderProducts) {
+    return await this.updateProducts(id, newProducts, TrailNature.U);
   }
 
   /**
@@ -364,20 +374,6 @@ export default class OrderController extends BaseController<order> {
    * @throws InsufficientQuantitiesError if the name of the order is taken
    */
   public async create(data: basicOrder): Promise<string> {
-    if (data.status === OrderStatus.pending) {
-      const id =
-        `${OrderController.PENDING_FLAG}${this.pendingPivot(true)}`;
-
-      // Additional data such as total & trail are discarded on creation
-      let temp = await this.fillDataGaps(data);
-      temp.total = this.generateTotal(data);
-
-      // Pending local
-      await this.setCache(id, temp);
-
-      return id;
-    }
-
     // Fix quantities
     for (let usi of Object.keys(data.products)) {
       if (data.products[usi].inv_quantity !== undefined) {
@@ -385,6 +381,20 @@ export default class OrderController extends BaseController<order> {
       }
 
       data.products[usi].inv_quantity = 0;
+    }
+
+    if (data.status === OrderStatus.pending) {
+      const id =
+        `${OrderController.PENDING_FLAG}${this.pendingPivot(true)}`;
+
+      // Additional data such as total & trail are discarded on creation
+      let temp = await this.fillDataGaps(data);
+      temp.total = this.generateTotal(data.products as orderProducts);
+
+      // Pending local
+      await this.setCache(id, temp);
+
+      return id;
     }
 
     const dest = Order.isStatusToInventory(data.status);
@@ -673,16 +683,6 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
-   * @param id of the order to be finalized
-   */
-  public async finalize(id: string) {
-    let order = await this.get(id);
-    order.status = OrderStatus.finalized;
-
-    await this.update(order);
-  }
-
-  /**
    * @param id of the order to be canceled
    */
   public async cancel(id: string) {
@@ -768,14 +768,13 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
-   * @param data to generate the total for
+   * @param products to generate the total for
    * @returns the total monetary value for the order, not accounting
    *          for discounts or delivery.
    */
-  public generateTotal(data: basicOrder): MonetaryType {
+  public generateTotal(products: orderProducts): MonetaryType {
     let result = Monetary.noValue();
     let temp: Monetary;
-    const products = data.products;
 
     for (let usi of Object.keys(products)) {
       temp = new Monetary(products[usi].price);
@@ -814,13 +813,13 @@ export default class OrderController extends BaseController<order> {
   /**
    * Extracts item count from data
    *
-   * @param data whose items counted
+   * @param products whose quantities counted
    * @returns the item count
    */
-  public getItemCount(data: basicOrder): number {
+  public getItemCount(products: orderProducts): number {
     let result = 0;
 
-    for (let info of Object.values(data.products)) {
+    for (let info of Object.values(products)) {
       result += Math.abs(
         info.quantity === 0 ? info.inv_quantity ?? 0 : info.quantity
       );
@@ -835,7 +834,7 @@ export default class OrderController extends BaseController<order> {
    * @protected
    */
   protected async fillDataGaps(data: basicOrder): Promise<order> {
-    const total = this.generateTotal(data);
+    const total = this.generateTotal(data.products as orderProducts);
 
     return super.fixDataGaps({
       id: data.id,
@@ -850,7 +849,7 @@ export default class OrderController extends BaseController<order> {
       courier_id: data.courier_id,
       customer_id: data.customer_id,
       products: data.products,
-      item_count: this.getItemCount(data),
+      item_count: this.getItemCount(data.products as orderProducts),
       payment: undefined,
       commission_percent: this.currentEmployee?.commission_percent,
       phone_number: data.phone_number,
@@ -927,6 +926,6 @@ export default class OrderController extends BaseController<order> {
       return;
     }
 
-    StatisticsBlock.removeOrder(await this.get(id));
+    StatisticsBlock.subtractOrder(await this.get(id));
   }
 }

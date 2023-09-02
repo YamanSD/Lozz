@@ -21,6 +21,7 @@ import CollectionInfo from "../../../CollectionInfo";
 import { isEqual, pickBy } from "lodash";
 import { reduxStorage } from "../../../store";
 import ReduxParameters from "../../../ReduxParameters";
+import StatisticsBlock from "../local_model/StatisticsBlock";
 
 
 /**
@@ -77,7 +78,7 @@ type SearchEngine = Orama<ProvidedTypes>;
  * Forms the base class for the rest of the controllers.
  */
 export default abstract class BaseController<RawData extends Generic> {
-  /* object containing operational counters */
+  /* object containing standard operational counters */
   public static readonly cacheCounter = {
     read: 0,
     write: 0,
@@ -85,12 +86,13 @@ export default abstract class BaseController<RawData extends Generic> {
     delete: 0,
   };
 
-  /* object containing operational counters */
+  /* object containing standard operational counters */
   public static readonly serverCounter = {
     read: 0,
     write: 0,
     update: 0,
     delete: 0,
+    transactions: 0
   };
 
   /* collection name */
@@ -122,6 +124,9 @@ export default abstract class BaseController<RawData extends Generic> {
 
   /* search schema for the collection */
   private readonly searchSchema?: Schema;
+
+  /* used to trigger updates */
+  private hookData?: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
 
   /**
    * @param collection_name name of the controlled collection
@@ -560,11 +565,21 @@ export default abstract class BaseController<RawData extends Generic> {
   }
 
   /**
+   * @param value new RN hook to be triggered on updates
+   */
+  public set hook(value: typeof this.hookData) {
+    this.hookData = value;
+  }
+
+  /**
    * Triggers the RN hook for front-end updates.
    */
   public triggerHook(): void {
-    // store.dispatch(SlicesMap[this.collectionName]());
-    // TODO with front-end
+    if (this.hookData === undefined) {
+      return;
+    }
+
+    this.hookData[1](!this.hookData[0]);
   }
 
   /**
@@ -788,6 +803,7 @@ export default abstract class BaseController<RawData extends Generic> {
    */
   public async runTransaction(body:
       (transaction: FirebaseFirestoreTypes.Transaction) => any) {
+    BaseController.serverCounter.transactions++;
     return await this.server.runTransaction(body);
   }
 
@@ -889,6 +905,10 @@ export default abstract class BaseController<RawData extends Generic> {
   public async clearCache() {
     for (let id of this.storage.getAllKeys()) {
       await this.removeFromSearchEngine(id);
+    }
+
+    if (this.isStatistical) {
+      StatisticsBlock.clear();
     }
 
     this.storage.clearAll();

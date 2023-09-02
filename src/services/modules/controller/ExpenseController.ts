@@ -269,6 +269,6 @@ export default class ExpenseController extends BaseController<expense> {
    * @protected
    */
   protected async removeStatistic(id: string): Promise<void> {
-    StatisticsBlock.removeExpense(await this.get(id));
+    StatisticsBlock.subtractExpense(await this.get(id));
   }
 }

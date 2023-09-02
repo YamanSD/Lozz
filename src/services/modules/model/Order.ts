@@ -8,7 +8,8 @@ import {
   Generic,
   ItemQuantityType,
   MonetaryType,
-  order, OrderProductQuantities,
+  order,
+  OrderProductQuantities,
   orderProducts,
   OrderStatus,
   TrailNature,
@@ -323,13 +324,6 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @returns true if the order is immutable
-   */
-  public get immutable(): boolean {
-    return this.status === OrderStatus.finalized;
-  }
-
-  /**
    * @returns the customer instance associated with the order
    */
   public get customer() {
@@ -426,10 +420,6 @@ export default class Order implements BaseModel {
    * @throws TypeError if the status is not attainable
    */
   public set status(value) {
-    if (this.status === OrderStatus.finalized) {
-      throw new TypeError(`Order ${this.id} finalized`);
-    }
-
     /* Check compatibility */
     switch (value) {
       case OrderStatus.pending:
@@ -476,13 +466,6 @@ export default class Order implements BaseModel {
         if (this.status !== OrderStatus.canceled_at_courier) {
           throw new TypeError(`Order is ${this.status}
           , but trying to receive from courier`);
-        }
-        break;
-      case OrderStatus.finalized:
-        if (this.status !== OrderStatus.canceled
-          && this.status !== OrderStatus.canceled_at_courier
-          && this.status !== OrderStatus.paid) {
-          throw new TypeError(`Order is ${this.status}, but trying to finalize`);
         }
         break;
       default:
@@ -687,7 +670,13 @@ export default class Order implements BaseModel {
    * @returns whether the object is deactivated
    */
   public get isDeactivated(): boolean {
-    return BaseModel.isDeactivated(this.trail);
+    for (let timestamp of Object.keys(this.trail)) {
+      if (this.trail[timestamp].nature === TrailNature.D) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

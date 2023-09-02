@@ -183,6 +183,30 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @param value new value of the restocks in the block
+   * @protected
+   */
+  protected set restocks(value) {
+    this.data.restocks = value;
+  }
+
+  /**
+   * @param value new value of the orders in the block
+   * @protected
+   */
+  protected set orders(value) {
+    this.data.orders = value;
+  }
+
+  /**
+   * @param value new value of the expenses in the block
+   * @protected
+   */
+  protected set expenses(value) {
+    this.data.expenses = value;
+  }
+
+  /**
    * @param value new value of the sales in the block
    * @protected
    */
@@ -264,25 +288,32 @@ export default class StatisticsBlock {
 
   /**
    * @param order to be considered into the average
+   * @param remove if true, the order is removed rather than added
    * @protected
    */
-  protected recalibrateAverage(order: Order): void {
+  protected recalibrateAverage(order: Order, remove?: boolean): void {
     let temp = this.sales_avg;
 
     temp.multiply(this.order_counts);
-    temp.add(order.total ?? Monetary.noValue());
-    temp.divide(this.order_counts + 1);
+
+    if (remove) {
+      temp.subtract(order.total ?? Monetary.noValue());
+      temp.divide(this.order_counts - 1);
+    } else {
+      temp.add(order.total ?? Monetary.noValue());
+      temp.divide(this.order_counts + 1);
+    }
 
     this.sales_avg = temp;
   }
 
   /**
    * @param trail to extract the timestamp from
-   * @returns the most recent timestamp of the trail
+   * @returns the first timestamp of the trail
    * @protected
    */
   protected static extractTimestamp(trail: TrailType): string {
-    return BaseModel.getLastTimestamp(trail).slice(0, this.accuracy);
+    return BaseModel.initialTimestamp(trail).slice(0, this.accuracy);
   }
 
   /**
@@ -298,7 +329,7 @@ export default class StatisticsBlock {
    * @returns true if the instance of this timestamp is complete
    * @protected
    */
-  protected get isComplete(): boolean {
+  protected get isAtomic(): boolean {
     return StatisticsBlock.isCompleteTimestamp(this.timestamp);
   }
 
@@ -337,7 +368,7 @@ export default class StatisticsBlock {
    * @private
    */
   private addRestock(restock: Restock): void {
-    this.restocks.push(restock.id);
+    this.restocks.add(restock.id);
     const quantities = restock.quantities;
 
     for (let id of Object.keys(quantities)) {
@@ -349,7 +380,7 @@ export default class StatisticsBlock {
       this.moved_quantities[id] += quantities[id];
     }
 
-    if (this.isComplete) {
+    if (this.isAtomic) {
       StatisticsBlock.addRestockToTimeline(restock);
     }
 
@@ -361,36 +392,59 @@ export default class StatisticsBlock {
    * @private
    */
   private addOrder(order: Order): void {
-    this.orders.push(order.id);
+    if (this.orders.has(order.id)) {
+      return;
+    }
 
-    if (order.status !== OrderStatus.pending) {
-      if (!order.isDeactivated) {
+    const status = order.status;
+    let notSkipDelivery = true;
+    this.orders.add(order.id);
+
+    switch (status) {
+      case OrderStatus.received_from_courier:
+      case OrderStatus.pending:
+        notSkipDelivery = !notSkipDelivery;
+        break;
+      case OrderStatus.confirmed:
+      case OrderStatus.packaged:
+      case OrderStatus.paid:
         this.sales = this.sales.addCopy(order.total ?? Monetary.noValue());
         this.profit = this.profit.addCopy(order.profit);
         this.recalibrateAverage(order);
-      }
 
-      for (let usi of order.usiSet) {
-        const id = Product.invertUsi(usi).id;
+        for (let usi of order.usiSet) {
+          const id = Product.invertUsi(usi).id;
 
-        if (!(id in this.sold_quantities)) {
-          this.sold_quantities[id] = {
-            aggregate: 0,
-            actual: 0
-          };
-        }
+          if (!(id in this.sold_quantities)) {
+            this.sold_quantities[id] = {
+              aggregate: 0,
+              actual: 0
+            };
+          }
 
-        if (order.isDeactivated) {
-          this.sold_quantities[id].actual -= order.getQuantity(usi);
-          this.actual_sold -= order.item_count;
-        } else {
           this.sold_quantities[id].aggregate += order.getQuantity(usi);
           this.sold_products += order.item_count;
           this.sold_quantities[id].actual += order.getQuantity(usi);
           this.actual_sold += order.item_count;
         }
-      }
+        break;
+      case OrderStatus.canceled_at_courier:
+      case OrderStatus.canceled:
+        this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
+        this.profit = this.profit.subtractCopy(order.profit);
 
+        for (let usi of order.usiSet) {
+          const id = Product.invertUsi(usi).id;
+          this.sold_quantities[id].actual -= order.getQuantity(usi);
+        }
+
+        this.actual_sold -= order.item_count;
+        break;
+      default:
+        throw new Error("Missing order status in statistics block");
+    }
+
+    if (notSkipDelivery) {
       const delivery = order.delivery?.copy() ?? Monetary.noValue();
 
       if (delivery.isNegative) {
@@ -404,7 +458,7 @@ export default class StatisticsBlock {
     this.status_counts[order.status].aggregate++;
     this.order_counts++;
 
-    if (this.isComplete) {
+    if (this.isAtomic) {
       StatisticsBlock.addOrderToTimeline(order);
     }
 
@@ -416,7 +470,7 @@ export default class StatisticsBlock {
    * @private
    */
   private addExpense(expense: Expense): void {
-    this.expenses.push(expense.id);
+    this.expenses.add(expense.id);
 
     if (expense.is_vendor || expense.is_invoice) {
       this.vendor_payments = this.vendor_payments.addCopy(expense.value);
@@ -428,7 +482,7 @@ export default class StatisticsBlock {
 
     this.total_expenses = this.total_expenses.addCopy(expense.value);
 
-    if (this.isComplete) {
+    if (this.isAtomic) {
       StatisticsBlock.addExpenseToTimeline(expense);
     }
 
@@ -463,10 +517,10 @@ export default class StatisticsBlock {
   }
 
   /**
-   * @param restock to be removed from this statistics block
+   * @param restock to be subtracted from this statistics block
    * @private
    */
-  private removeRestock(restock: Restock): void {
+  private subtractRestock(restock: Restock): void {
     const quantities = restock.quantities;
 
     for (let id of Object.keys(quantities)) {
@@ -478,50 +532,94 @@ export default class StatisticsBlock {
       this.moved_quantities[id] -= quantities[id];
     }
 
-    if (this.isComplete) {
-      StatisticsBlock.removeRestockFromTimeline(restock);
+    if (this.isAtomic) {
+      StatisticsBlock.subtractRestockFromTimeline(restock);
     }
 
     this.save()
   }
 
   /**
-   * @param order to be removed from this statistics block
+   * @param order to be subtracted from this statistics block
    * @private
    */
-  private removeOrder(order: Order): void {
-    if (order.status !== OrderStatus.pending) {
-      this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
-      this.profit = this.profit.subtractCopy(order.profit);
-      this.status_counts[order.status].actual--;
-
-      for (let usi of order.usiSet) {
-        const id = Product.invertUsi(usi).id;
-
-        this.sold_quantities[id].actual -= order.getQuantity(usi);
-        this.actual_sold -= order.item_count;
-      }
-    }
-
-    if (this.isComplete) {
-      StatisticsBlock.removeOrderFromTimeline(order);
-    }
-
-    this.save()
-  }
-
-  /**
-   * @param expense to be removed from this statistics block
-   * @private
-   */
-  private removeExpense(expense: Expense): void {
-    const index = this.expenses.indexOf(expense.id);
-
-    if (index === -1) {
+  private subtractOrder(order: Order): void {
+    if (!this.orders.has(order.id)) {
       return;
     }
 
-    this.expenses.splice(index, 1);
+    const status = order.status;
+    let notSkipDelivery = true;
+    this.orders.delete(order.id);
+
+    switch (status) {
+      case OrderStatus.received_from_courier:
+      case OrderStatus.pending:
+        notSkipDelivery = !notSkipDelivery;
+        break;
+      case OrderStatus.confirmed:
+      case OrderStatus.packaged:
+      case OrderStatus.paid:
+        this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
+        this.profit = this.profit.subtractCopy(order.profit);
+        this.recalibrateAverage(order, true);
+
+        for (let usi of order.usiSet) {
+          const id = Product.invertUsi(usi).id;
+
+          if (!(id in this.sold_quantities)) {
+            this.sold_quantities[id] = {
+              aggregate: 0,
+              actual: 0
+            };
+          }
+
+          this.sold_quantities[id].actual -= order.getQuantity(usi);
+          this.actual_sold -= order.item_count;
+        }
+        break;
+      case OrderStatus.canceled_at_courier:
+      case OrderStatus.canceled:
+        this.sales = this.sales.addCopy(order.total ?? Monetary.noValue());
+        this.profit = this.profit.addCopy(order.profit);
+
+        for (let usi of order.usiSet) {
+          const id = Product.invertUsi(usi).id;
+          this.sold_quantities[id].actual += order.getQuantity(usi);
+        }
+
+        this.actual_sold += order.item_count;
+        break;
+      default:
+        throw new Error("Missing order status in statistics block");
+    }
+
+    if (notSkipDelivery) {
+      const delivery = order.delivery?.copy() ?? Monetary.noValue();
+
+      if (delivery.isNegative) {
+        delivery.multiply(-1);
+        this.shipping_fees = this.shipping_fees.subtractCopy(delivery);
+        this.total_expenses = this.total_expenses.subtractCopy(delivery);
+      }
+    }
+
+    this.status_counts[order.status].actual--;
+    this.order_counts--;
+
+    if (this.isAtomic) {
+      StatisticsBlock.subtractOrderFromTimeline(order);
+    }
+
+    this.save();
+  }
+
+  /**
+   * @param expense to be subtracted from this statistics block
+   * @private
+   */
+  private subtractExpense(expense: Expense): void {
+    this.expenses.delete(expense.id);
 
     if (expense.is_vendor || expense.is_invoice) {
       this.vendor_payments = this.vendor_payments.subtractCopy(expense.value);
@@ -533,32 +631,32 @@ export default class StatisticsBlock {
 
     this.total_expenses = this.total_expenses.subtractCopy(expense.value);
 
-    if (this.isComplete) {
-      StatisticsBlock.removeExpenseFromTimeline(expense);
+    if (this.isAtomic) {
+      StatisticsBlock.subtractExpenseFromTimeline(expense);
     }
 
     this.save();
   }
 
   /**
-   * @param restock to be removed from the current statistic block
+   * @param restock to be subtracted from the current statistic block
    */
-  public static removeRestock(restock: Restock): void {
-    this.getInstance(this.currentTimestamp).removeRestock(restock);
+  public static subtractRestock(restock: Restock): void {
+    this.getInstance(this.currentTimestamp).subtractRestock(restock);
   }
 
   /**
-   * @param order to be removed from the current statistic block
+   * @param order to be subtracted from the current statistic block
    */
-  public static removeOrder(order: Order): void {
-    this.getInstance(this.currentTimestamp).removeOrder(order);
+  public static subtractOrder(order: Order): void {
+    this.getInstance(this.currentTimestamp).subtractOrder(order);
   }
 
   /**
-   * @param expense to be removed from the current statistic block
+   * @param expense to be subtracted from the current statistic block
    */
-  public static removeExpense(expense: Expense): void {
-    this.getInstance(this.invertDate(expense.date)).removeExpense(expense);
+  public static subtractExpense(expense: Expense): void {
+    this.getInstance(this.invertDate(expense.date)).subtractExpense(expense);
   }
 
   /**
@@ -572,9 +670,9 @@ export default class StatisticsBlock {
     this.sales = this.sales.addCopy(other.sales);
     this.sold_products += other.sold_products;
     this.actual_sold += other.actual_sold;
-    this.restocks.push(...other.restocks);
-    this.orders.push(...other.orders);
-    this.expenses.push(...other.expenses);
+    this.restocks = new Set<string>([...this.restocks, ...other.restocks]);
+    this.orders = new Set<string>([...this.orders, ...other.orders]);
+    this.expenses = new Set<string>([...this.expenses, ...other.expenses]);
     this.profit = this.profit.addCopy(other.profit);
     this.total_expenses = this.total_expenses.addCopy(other.total_expenses);
     this.shipping_fees = this.shipping_fees.addCopy(other.shipping_fees);
@@ -671,15 +769,15 @@ export default class StatisticsBlock {
    *        (i.e. to the year, month, & day).
    * @protected
    */
-  protected static removeRestockFromTimeline(restock: Restock): void {
+  protected static subtractRestockFromTimeline(restock: Restock): void {
     const timestamp = this.extractTimestamp(restock.trail);
     const year = timestamp.slice(0, 4);
     const month = timestamp.slice(0, 6);
     const day = timestamp.slice(0, 8);
 
-    this.getInstance(year).removeRestock(restock);
-    this.getInstance(month).removeRestock(restock);
-    this.getInstance(day).removeRestock(restock);
+    this.getInstance(year).subtractRestock(restock);
+    this.getInstance(month).subtractRestock(restock);
+    this.getInstance(day).subtractRestock(restock);
   }
 
   /**
@@ -687,15 +785,15 @@ export default class StatisticsBlock {
    *        (i.e. to the year, month, & day).
    * @protected
    */
-  protected static removeOrderFromTimeline(order: Order): void {
+  protected static subtractOrderFromTimeline(order: Order): void {
     const timestamp = this.extractTimestamp(order.trail);
     const year = timestamp.slice(0, 4);
     const month = timestamp.slice(0, 6);
     const day = timestamp.slice(0, 8);
 
-    this.getInstance(year).removeOrder(order);
-    this.getInstance(month).removeOrder(order);
-    this.getInstance(day).removeOrder(order);
+    this.getInstance(year).subtractOrder(order);
+    this.getInstance(month).subtractOrder(order);
+    this.getInstance(day).subtractOrder(order);
   }
 
   /**
@@ -703,15 +801,15 @@ export default class StatisticsBlock {
    *        (i.e. to the year, month, & day).
    * @protected
    */
-  protected static removeExpenseFromTimeline(expense: Expense): void {
+  protected static subtractExpenseFromTimeline(expense: Expense): void {
     const timestamp = this.invertDate(expense.date);
     const year = timestamp.slice(0, 4);
     const month = timestamp.slice(0, 6);
     const day = timestamp.slice(0, 8);
 
-    this.getInstance(year).removeExpense(expense);
-    this.getInstance(month).removeExpense(expense);
-    this.getInstance(day).removeExpense(expense);
+    this.getInstance(year).subtractExpense(expense);
+    this.getInstance(month).subtractExpense(expense);
+    this.getInstance(day).subtractExpense(expense);
   }
 
   /**
@@ -787,7 +885,13 @@ export default class StatisticsBlock {
    * @param data represented by the key
    * @private
    */
-  private static setValue(key: string, data: Generic): void {
+  private static setValue(key: string, data: statisticsBlock): void {
+    let temp = BaseModel.deepCopy(data) as Generic;
+
+    temp.orders = Array.from(temp.orders);
+    temp.restocks = Array.from(temp.restocks);
+    temp.expenses = Array.from(temp.expenses);
+
     this.storage.set(key, JSON.stringify(data));
   }
 
@@ -797,9 +901,15 @@ export default class StatisticsBlock {
    * @private
    */
   private static getValue(key: string): statisticsBlock {
-    return JSON.parse(
+    let data = JSON.parse(
       this.storage.getString(key) as string
     ) as statisticsBlock;
+
+    data.restocks = new Set<string>(data.restocks);
+    data.orders = new Set<string>(data.orders);
+    data.expenses = new Set<string>(data.expenses);
+
+    return data;
   }
 
   /**
@@ -873,8 +983,7 @@ export default class StatisticsBlock {
       [OrderStatus.paid]: BaseModel.deepCopy(zero),
       [OrderStatus.canceled]: BaseModel.deepCopy(zero),
       [OrderStatus.canceled_at_courier]: BaseModel.deepCopy(zero),
-      [OrderStatus.received_from_courier]: BaseModel.deepCopy(zero),
-      [OrderStatus.finalized]: BaseModel.deepCopy(zero),
+      [OrderStatus.received_from_courier]: BaseModel.deepCopy(zero)
     }
   }
 
@@ -886,9 +995,9 @@ export default class StatisticsBlock {
     return new StatisticsBlock({
       timestamp: timestamp,
       sales: Monetary.noValue().data,
-      orders: [],
-      restocks: [],
-      expenses: [],
+      orders: new Set<string>(),
+      restocks: new Set<string>(),
+      expenses: new Set<string>(),
       sold_quantities: {},
       moved_quantities: {},
       status_counts: this.zeroOrderCounts,

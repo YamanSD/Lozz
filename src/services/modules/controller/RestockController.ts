@@ -507,6 +507,6 @@ export default class RestockController extends BaseController<restock> {
    * @protected
    */
   protected async removeStatistic(id: string): Promise<void> {
-    StatisticsBlock.removeRestock(await this.get(id));
+    StatisticsBlock.subtractRestock(await this.get(id));
   }
 }

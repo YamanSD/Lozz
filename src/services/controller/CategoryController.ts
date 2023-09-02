@@ -1,15 +1,15 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import { basicCourier, courier, CourierSearchSchema, Generic, SpecialFields } from "../model/types";
+import { basicCategory, category, CategorySearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionNames from "../../../CollectionInfo";
-import Courier from "../model/Courier";
+import CollectionInfo from "../../CollectionInfo";
+import Category from "../model/Category";
 import { NotStatisticalError } from "./Errors";
 
 
 /**
- * Class responsible for handling operations on the couriers' collection.
+ * Class responsible for handling operations on the vendors' collection.
  */
-export default class CourierController extends BaseController<courier> {
+export default class CategoryController extends BaseController<category> {
   private static readonly flag: number =
     ControllerFlag.can_deactivate
     | ControllerFlag.can_update
@@ -20,11 +20,11 @@ export default class CourierController extends BaseController<courier> {
    */
   public constructor(server?: typeof firestore) {
     super(
-      CollectionNames.courier.name,
-      CollectionNames.courier.id,
+      CollectionInfo.category.name,
+      CollectionInfo.category.id,
       server ?? firestore,
-      CourierController.flag,
-      CourierSearchSchema
+      CategoryController.flag,
+      CategorySearchSchema
     );
 
     this.loadSearchData().then(() => {
@@ -34,39 +34,41 @@ export default class CourierController extends BaseController<courier> {
   }
 
   /**
-   * @param name of the courier to be fetched
-   * @returns courier data
-   * @throws IdDoesNotExistError if the name does not belong to a courier
+   * @param name of the category to be fetched
+   * @returns category data
+   * @throws IdDoesNotExistError if the name does not belong to a category
    */
   public async get(name: string) {
-    return await this.genericGet(Courier, name);
+    return await this.genericGet(Category, name);
   }
 
   /**
-   * @param data basic raw data to create a courier
-   * @throws IdAlreadyExistsError if the name of the courier is taken
+   * @param data basic raw data to create a category
+   * @throws IdAlreadyExistsError if the name of the category is taken
    */
-  public async create(data: basicCourier) {
+  public async create(data: basicCategory) {
     return await this.genericCreate(data, data.name);
   }
 
   /**
-   * @param model new model of the courier
-   * @throws IdDoesNotExistError if the courier does not exist
+   * @param model new model of the category
+   * @throws IdDoesNotExistError if the category does not exist
    */
-  public async update(model: Courier) {
+  public async update(model: Category) {
     return await this.genericUpdate(model, model.name);
   }
 
   /**
-   * @param data basic courier data
-   * @returns courier data suitable for upload
+   * @param data basic category data
+   * @returns category data suitable for upload
    * @protected
    */
-  protected fillDataGaps(data: basicCourier): courier {
+  protected fillDataGaps(data: basicCategory): category {
     return super.fixDataGaps({
       name: data.name,
-      shipping_fees: data.shipping_fees,
+      option_keys: data.option_keys,
+      option_sets: data.option_sets,
+      added_price: data.added_price,
       [SpecialFields.trail]: this.generateInitialTrail()
     });
   }
@@ -76,11 +78,11 @@ export default class CourierController extends BaseController<courier> {
    * @returns data suitable for the search engine insertion schema
    * @protected
    */
-  protected fixSearchEngineData(data: courier): Generic {
+  protected fixSearchEngineData(data: category): Generic {
     return {
       id: data.name,
       name: data.name,
-      provinces: Object.keys(data.shipping_fees),
+      option_keys: data.option_keys
     };
   }
 

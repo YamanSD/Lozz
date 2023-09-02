@@ -1,7 +1,7 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicCustomer, customer, CustomerSearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import Customer from "../model/Customer";
 import BaseModel from "../model/BaseModel";
 import { NotStatisticalError } from "./Errors";

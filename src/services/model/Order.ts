@@ -16,7 +16,7 @@ import {
   TrailType
 } from "./types";
 import { InvalidOrderCreationStatusError } from "../controller/Errors";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 
 
 /**

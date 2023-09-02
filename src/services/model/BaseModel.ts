@@ -1,9 +1,9 @@
 import auth from "@react-native-firebase/auth";
 import { TrailNature, TrailType } from "./types";
 import { cloneDeep } from "lodash";
-import { reduxStorage } from "../../../store";
-import ReduxParameters from "../../../ReduxParameters";
-import CollectionInfo from "../../../CollectionInfo";
+import { reduxStorage } from "../../store";
+import ReduxParameters from "../../ReduxParameters";
+import CollectionInfo from "../../CollectionInfo";
 import { firebase } from "@react-native-firebase/firestore";
 import { IllegalStateError } from "../controller/Errors";
 

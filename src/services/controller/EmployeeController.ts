@@ -1,7 +1,7 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicEmployee, employee, EmployeeRole, EmployeeSearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import Employee from "../model/Employee";
 import database from "@react-native-firebase/database";
 import BaseModel from "../model/BaseModel";

@@ -1,5 +1,5 @@
 import BaseController from "./BaseController";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import CategoryController from "./CategoryController";
 import CourierController from "./CourierController";
 import CustomerController from "./CustomerController";

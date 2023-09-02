@@ -4,21 +4,32 @@ import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { Brand } from "../../components";
 import { useTheme } from "../../hooks";
-import { useLazyFetchOneQuery } from "../../services/modules/users";
+// import { useLazyFetchOneQuery } from "../../services/modules/users";
 import { changeTheme, ThemeState } from "../../store/theme";
 import i18next from "i18next";
-import { reduxStorage, store } from "../../store";
-import ReduxParameters from "../../ReduxParameters";
-import DependencyTree from "../../services/modules/controller/DependencyTree";
-import { EmployeeRole, InformationType } from "../../services/modules/model/types";
-
-
-enum test {
-  a = 0,
-  b
-}
+import { store } from "../../store";
+import DependencyTree from "../../services/controller/DependencyTree";
+import StatisticsBlock from "../../services/local_model/StatisticsBlock";
+import { OrderStatus } from "../../services/model/types";
 
 const Example = () => {
+  const [url, setUrl] = useState("");
+  const [hook, setHook] = useState(false);
+  const b = "https://cdn.wallpapersafari.com/18/9/eviHxF.jpg";
+  const r = "https://wallpapertag.com/wallpaper/full/8/4/8/793922-red-color-wallpaper-2048x1536-for-phones.jpg";
+  const g = "https://getwallpapers.com/wallpaper/full/c/1/f/108144.jpg";
+
+  useEffect(() => {
+    // ImageManager.get(r).then(s => {
+    //   setUrl(s);
+    // })
+    setUrl(r);
+  }, []);
+
+  useEffect(() => {
+    console.log("UPDATED");
+  }, [hook]);
+
   const { t } = useTranslation(['example', 'welcome']);
   const {
     Common,
@@ -32,18 +43,8 @@ const Example = () => {
 
   let [i, setI] = useState(0);
 
-  const [fetchOne, { data, isSuccess, isLoading, isFetching }] =
-    useLazyFetchOneQuery();
-
-  useEffect(() => {
-    if (isSuccess && data?.name) {
-      Alert.alert(t('example:helloUser', { name: data.name }));
-    }
-  }, [isSuccess, data]);
-
-  useEffect(() => {
-    reduxStorage.setItem(ReduxParameters.testing, true);
-  }, []);
+  // const [fetchOne, { data, isSuccess, isLoading, isFetching }] =
+    // useLazyFetchOneQuery();
 
   const onChangeTheme = ({ theme, darkMode }: Partial<ThemeState>) => {
     store.dispatch(changeTheme({ theme, darkMode }));
@@ -206,120 +207,131 @@ const Example = () => {
         >
           <TouchableOpacity
             style={[Common.button.circle, Gutters.regularBMargin]}
-            onPress={() => fetchOne(`${Math.ceil(Math.random() * 10 + 1)}`)}
+            onPress={async () => {
+              let controller = DependencyTree.Products;
+
+              for (let id of ["22"]) {
+                controller.get(id).then((p) => {
+                  console.log("ID:  ", id);
+                  console.log("INV: ", p.inventory_quantities);
+                  console.log("DIS: ", p.quantities);
+                });
+              }
+
+              console.log("--------------------------------------------\n");
+            }}
           >
-            {isFetching || isLoading ? (
-              <ActivityIndicator />
-            ) : (
-              <Image
-                source={Images.icons.send}
-                style={{ tintColor: isDark ? '#A6A4F0' : '#44427D' }}
-              />
-            )}
+            {/*{isFetching || isLoading ? (*/}
+            {/*  <ActivityIndicator />*/}
+            {/*) : (*/}
+            {/*  <Image*/}
+            {/*    source={Images.icons.send}*/}
+            {/*    style={{ tintColor: isDark ? '#A6A4F0' : '#44427D' }}*/}
+            {/*  />*/}
+            {/*)}*/}
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[Common.button.circle, Gutters.regularBMargin]}
             onPress={async () => {
-              onChangeTheme({ darkMode: !isDark });
-
-              // let controller = DependencyTree.Restocks;
+              let controller = DependencyTree.Orders;
+              let rController = DependencyTree.Restocks;
+              let eController = DependencyTree.Employees;
               let pController = DependencyTree.Products;
+              let exController = DependencyTree.Expenses;
+              // await rController.revoke("2023073022171093374");
 
-              // pController.removeCache("88");
+              // exController.hook = [hook, setHook];
 
-              // await controller.create({
-              //   to_inventory: false,
-              //   note: "Restock Display only Test",
+              // await rController.create({
               //   quantities: {
-              //     "88_red_s": 100
+              //     "22_xl_black": -100,
+              //     "22_xl_black_INV": -100,
+              //     "11_xl_black": -100,
+              //     "11_xl_black_INV": -100,
+              //     "11_xl_red": -100,
+              //     "11_xl_red_INV": -100,
+              //     "11_s_black": -100,
+              //     "11_s_black_INV": -100,
+              //     "11_s_green": -100,
+              //     "11_s_green_INV": -100,
               //   }
               // });
 
-              // await controller.revoke("2023071819154525281", null);
+              // controller.hook = useState(false);
 
+              // StatisticsBlock.clear();
 
-              // for (let id of controller.idSet) {
-              //   console.log((await controller.get(id)).data);
-              // }
-
-              // console.log((await pController.get("88")).quantities);
-              // console.log((await pController.get("88")).inventory_quantities)
+              // let p22 = await pController.get("22");
+              // let p11 = await pController.get("11");
 
               // await controller.create({
-              //   [InformationType.provinces]: {
-              //     names: ["Beirut", "Outside-Beirut"]
-              //   },
-              //   [InformationType.rate]: {
-              //     buyUsdRate: 89_000,
-              //     sellUsdRate: 90_000,
-              //     roundToNearestLbp: 5_000,
-              //     roundToNearestUsd: 0.01
+              //   zone: "Beirut",
+              //   customer_id: "+96176182206",
+              //   province: 2,
+              //   phone_number: "+96176182206",
+              //   address: "Beirut, Haret Al-Kilab, Al-Hamir Building 1st floor",
+              //   note: "Good customer",
+              //   courier_id: "Aramex",
+              //   status: OrderStatus.confirmed,
+              //   products: {
+              //     "22_xl_black": {
+              //       quantity: -5,
+              //       price: p22.getTotalPrice("xl_black").data,
+              //       cost: p22.getTotalCost("xl_black").data
+              //     }
               //   }
               // });
 
+              // await controller.receive("9");
+
+              // await exController.create({
+              //   value: 10,
+              //   date: new Date(),
+              //   description: "Cash withdraw",
+              //   employee_id: CollectionInfo.testing_id
+              // });
+
+              // StatisticsBlock.clear();
+
+              // console.log(StatisticsBlock.getYearStatistics("2023"))
+
+              // await eController.create({
+              //   phone_number: CollectionInfo.testing_id,
+              //   salary: 0,
+              //   role: EmployeeRole.owner,
+              //   first_name: "Yaman",
+              //   last_name: "Seraj",
+              //   birthday: new Date(2003, 4, 3),
+              //   gender: true,
+              //   commission_percent: 0.10
+              // });
+
+              // await controller.cancel("1");
+
               // await controller.create({
-              //   name: "Bravo",
-              //   shipping_fees: {
-              //     "Beirut": [1.5, 0],
-              //     "Outside-Beirut": [2, 0]
+              //   zone: "Beirut",
+              //   province: 6,
+              //   phone_number: "+96172222222",
+              //   customer_id: "+96172222222",
+              //   status: OrderStatus.pending,
+              //   products: {
+              //     "99_blue_l": {
+              //       quantity: -5,
+              //       cost: p99.getTotalCost("blue_l").data,
+              //       price: p99.getTotalPrice("blue_l").data
+              //     },
+              //     "88_blue_l": {
+              //       quantity: -5,
+              //       cost: p88.getTotalCost("blue_l").data,
+              //       price: p88.getTotalPrice("blue_l").data
+              //     },
               //   }
               // });
 
-              // await controller.create({
-              //   name: "Bravo",
-              // });
-
-              // await controller.create({
-              //   name: "Cotton",
-              //   description: "100% Cotton Pyjama, made in turkey",
-              //   discount: {
-              //     "red_s": [0.5, 0]
-              //   },
-              //   instructions: {
-              //     "Washing": "Do not boil over 150 degrees C"
-              //   },
-              //   id: "88",
-              //   cost: [2.5, 0],
-              //   price: [5, 0],
-              //   quantities: {
-              //     red_s: 20,
-              //     red_m: 15,
-              //     red_l: 10,
-              //     green_s: 20,
-              //     green_m: 15,
-              //     green_l: 0,
-              //     blue_s: 20,
-              //     blue_m: 15,
-              //     blue_l: 10,
-              //   },
-              //   added_price: {
-              //     green_l: [2, 0]
-              //   },
-              //   vendor_id: "Saleh",
-              //   category_id: "Pyjamas",
-              //   images: {
-              //     red_s: ["http://dreamicus.com/red.html"],
-              //     green_s: ["https://imageonline.co/downloading.php?imagename=B21.png&color=green"],
-              //   }
-              // });
-
-              // console.log(await controller.getLocalProperties());
-              // await controller.pushUpdateProperties();
-              // let controller = DependencyTree.Vendors;
-              //
-              // let Saleh = await controller.get("Saleh");
-              // console.log(Saleh.data);
-              // controller.triggerHook();
-              // const mohamad = await controller.get("Mohamad");
-              // mohamad.emails = ["yamansirajbs@gmail.com"];
-              //
-              // await controller.update(mohamad);
-              //
-              // // setI(i + 1);
-              // // console.log(controller.idSet);
-              console.log((await pController.get("88")).data);
-              Alert.alert("DONE");
+              // let o1p = await controller.get("pending_3");
+              // await controller.confirm("pending_3");
+              Alert.alert("DONE 2");
             }}
           >
             <Image
@@ -331,7 +343,9 @@ const Example = () => {
           <TouchableOpacity
             style={[Common.button.circle, Gutters.regularBMargin]}
             onPress={async () => {
-                onChangeLanguage(i18next.language === 'fr' ? 'en' : 'fr');
+                StatisticsBlock.clear();
+
+                Alert.alert("DONE 3");
               }
             }
           >

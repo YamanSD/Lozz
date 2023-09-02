@@ -8,7 +8,7 @@ import {
   SpecialFields
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import Expense, { Associate } from "../model/Expense";
 import BaseModel from "../model/BaseModel";
 import { IdDoesNotExistError, InvalidInvoiceQuantitiesError } from "./Errors";

@@ -4,7 +4,7 @@ import {
   statisticsBlock,
   TrailType } from "../model/types";
 import { MMKV } from "react-native-mmkv";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import Monetary from "./Monetary";
 import BaseModel from "../model/BaseModel";
 import Restock from "../model/Restock";

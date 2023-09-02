@@ -4,7 +4,7 @@ import { useTheme } from '../../hooks';
 import { Brand } from '../../components';
 import { setDefaultTheme } from '../../store/theme';
 import { ApplicationScreenProps } from '../../../@types/navigation';
-import DependencyTree from "../../services/modules/controller/DependencyTree";
+import DependencyTree from "../../services/controller/DependencyTree";
 import NetInfo from "@react-native-community/netinfo";
 import { reduxStorage } from "../../store";
 import ReduxParameters from "../../ReduxParameters";

@@ -11,7 +11,7 @@ import {
   TrailNature,
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import Restock from "../model/Restock";
 import {
   EmptyRestockError,

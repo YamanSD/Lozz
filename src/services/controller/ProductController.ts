@@ -7,7 +7,7 @@ import {
   SpecialFields
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import Product from "../model/Product";
 import { IdDoesNotExistError, NotStatisticalError } from "./Errors";
 import CategoryController from "./CategoryController";

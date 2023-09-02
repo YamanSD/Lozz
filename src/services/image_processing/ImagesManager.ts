@@ -2,7 +2,7 @@ import RNFS from 'react-native-fs';
 import { Platform } from "react-native";
 import { CheckDirError, ImageDownloadError, NoConnectionError } from "../controller/Errors";
 import { firebase } from '@react-native-firebase/storage';
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import BaseController from "../controller/BaseController";
 
 

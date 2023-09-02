@@ -17,10 +17,10 @@ import {
 } from "./Errors";
 import { Generic, SpecialFields, TrailNature, TrailType } from "../model/types";
 import BaseModel from "../model/BaseModel";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import { isEqual, pickBy } from "lodash";
-import { reduxStorage } from "../../../store";
-import ReduxParameters from "../../../ReduxParameters";
+import { reduxStorage } from "../../store";
+import ReduxParameters from "../../ReduxParameters";
 import StatisticsBlock from "../local_model/StatisticsBlock";
 
 

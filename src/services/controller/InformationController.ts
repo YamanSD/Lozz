@@ -1,7 +1,7 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicProperties, Generic, information, InformationType } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import { IdDoesNotExistError, IllegalStateError, NotStatisticalError } from "./Errors";
 // import RateInformation from "../model/RateInformation";
 import ProvinceInformation from "../model/ProvinceInformation";

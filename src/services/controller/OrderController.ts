@@ -13,7 +13,7 @@ import {
   TrailNature
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionInfo from "../../../CollectionInfo";
+import CollectionInfo from "../../CollectionInfo";
 import Order from "../model/Order";
 import {
   IdDoesNotExistError,
@@ -31,8 +31,8 @@ import CourierController from "./CourierController";
 import CustomerController from "./CustomerController";
 import Monetary from "../local_model/Monetary";
 import Employee from "../model/Employee";
-import { reduxStorage } from "../../../store";
-import ReduxParameters from "../../../ReduxParameters";
+import { reduxStorage } from "../../store";
+import ReduxParameters from "../../ReduxParameters";
 import BaseModel from "../model/BaseModel";
 import Product from "../model/Product";
 import ProductController from "./ProductController";

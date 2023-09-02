@@ -8,9 +8,9 @@ import ApplicationNavigator from './navigators/Application';
 import './translations';
 import auth from "@react-native-firebase/auth";
 import ReduxParameters from "./ReduxParameters";
-import { NotAuthorizedError } from "./services/modules/controller/Errors";
+import { NotAuthorizedError } from "./services/controller/Errors";
 import CollectionNames from "./CollectionInfo";
-import DependencyTree from "./services/modules/controller/DependencyTree";
+import DependencyTree from "./services/controller/DependencyTree";
 
 
 const App = () => {

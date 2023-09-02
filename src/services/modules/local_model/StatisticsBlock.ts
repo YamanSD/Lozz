@@ -1,4 +1,8 @@
-import { dissectedTimestamp, Generic, OrderStatus, statisticsBlock, TrailType } from "../model/types";
+import {
+  dissectedTimestamp,
+  OrderStatus,
+  statisticsBlock,
+  TrailType } from "../model/types";
 import { MMKV } from "react-native-mmkv";
 import CollectionInfo from "../../../CollectionInfo";
 import Monetary from "./Monetary";
@@ -368,7 +372,14 @@ export default class StatisticsBlock {
    * @private
    */
   private addRestock(restock: Restock): void {
-    this.restocks.add(restock.id);
+    if (this.restocks.indexOf(restock.id) === -1) {
+      this.restocks.push(restock.id);
+    }
+
+    if (restock.isDeactivated) {
+      return this.subtractRestock(restock);
+    }
+
     const quantities = restock.quantities;
 
     for (let id of Object.keys(quantities)) {
@@ -392,13 +403,12 @@ export default class StatisticsBlock {
    * @private
    */
   private addOrder(order: Order): void {
-    if (this.orders.has(order.id)) {
-      return;
+    if (this.orders.indexOf(order.id) === -1) {
+      this.orders.push(order.id);
     }
 
     const status = order.status;
     let notSkipDelivery = true;
-    this.orders.add(order.id);
 
     switch (status) {
       case OrderStatus.received_from_courier:
@@ -435,6 +445,14 @@ export default class StatisticsBlock {
 
         for (let usi of order.usiSet) {
           const id = Product.invertUsi(usi).id;
+
+          if (!(id in this.sold_quantities)) {
+            this.sold_quantities[id] = {
+              aggregate: 0,
+              actual: 0
+            };
+          }
+
           this.sold_quantities[id].actual -= order.getQuantity(usi);
         }
 
@@ -470,7 +488,9 @@ export default class StatisticsBlock {
    * @private
    */
   private addExpense(expense: Expense): void {
-    this.expenses.add(expense.id);
+    if (this.expenses.indexOf(expense.id) === -1) {
+      this.expenses.push(expense.id);
+    }
 
     if (expense.is_vendor || expense.is_invoice) {
       this.vendor_payments = this.vendor_payments.addCopy(expense.value);
@@ -544,13 +564,8 @@ export default class StatisticsBlock {
    * @private
    */
   private subtractOrder(order: Order): void {
-    if (!this.orders.has(order.id)) {
-      return;
-    }
-
     const status = order.status;
     let notSkipDelivery = true;
-    this.orders.delete(order.id);
 
     switch (status) {
       case OrderStatus.received_from_courier:
@@ -619,8 +634,6 @@ export default class StatisticsBlock {
    * @private
    */
   private subtractExpense(expense: Expense): void {
-    this.expenses.delete(expense.id);
-
     if (expense.is_vendor || expense.is_invoice) {
       this.vendor_payments = this.vendor_payments.subtractCopy(expense.value);
     } else if (expense.is_employee) {
@@ -670,9 +683,9 @@ export default class StatisticsBlock {
     this.sales = this.sales.addCopy(other.sales);
     this.sold_products += other.sold_products;
     this.actual_sold += other.actual_sold;
-    this.restocks = new Set<string>([...this.restocks, ...other.restocks]);
-    this.orders = new Set<string>([...this.orders, ...other.orders]);
-    this.expenses = new Set<string>([...this.expenses, ...other.expenses]);
+    this.restocks.push(...other.restocks);
+    this.orders.push(...other.orders);
+    this.expenses.push(...other.expenses);
     this.profit = this.profit.addCopy(other.profit);
     this.total_expenses = this.total_expenses.addCopy(other.total_expenses);
     this.shipping_fees = this.shipping_fees.addCopy(other.shipping_fees);
@@ -886,12 +899,6 @@ export default class StatisticsBlock {
    * @private
    */
   private static setValue(key: string, data: statisticsBlock): void {
-    let temp = BaseModel.deepCopy(data) as Generic;
-
-    temp.orders = Array.from(temp.orders);
-    temp.restocks = Array.from(temp.restocks);
-    temp.expenses = Array.from(temp.expenses);
-
     this.storage.set(key, JSON.stringify(data));
   }
 
@@ -901,15 +908,9 @@ export default class StatisticsBlock {
    * @private
    */
   private static getValue(key: string): statisticsBlock {
-    let data = JSON.parse(
+    return JSON.parse(
       this.storage.getString(key) as string
     ) as statisticsBlock;
-
-    data.restocks = new Set<string>(data.restocks);
-    data.orders = new Set<string>(data.orders);
-    data.expenses = new Set<string>(data.expenses);
-
-    return data;
   }
 
   /**
@@ -995,9 +996,9 @@ export default class StatisticsBlock {
     return new StatisticsBlock({
       timestamp: timestamp,
       sales: Monetary.noValue().data,
-      orders: new Set<string>(),
-      restocks: new Set<string>(),
-      expenses: new Set<string>(),
+      orders: [],
+      restocks: [],
+      expenses: [],
       sold_quantities: {},
       moved_quantities: {},
       status_counts: this.zeroOrderCounts,

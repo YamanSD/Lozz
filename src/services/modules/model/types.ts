@@ -1187,9 +1187,9 @@ export type statisticsBlock = {
   sales: MonetaryType,
   sold_products: number,
   actual_sold_products: number,
-  restocks: Set<string>,
-  orders: Set<string>,
-  expenses: Set<string>,
+  restocks: string[],
+  orders: string[],
+  expenses: string[],
   sold_quantities: {
     [product_id: string]: {
       aggregate: number,

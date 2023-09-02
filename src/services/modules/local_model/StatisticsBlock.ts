@@ -317,7 +317,16 @@ export default class StatisticsBlock {
    * @protected
    */
   protected static extractTimestamp(trail: TrailType): string {
-    return BaseModel.initialTimestamp(trail).slice(0, this.accuracy);
+    return this.trimmedTimestamp(BaseModel.initialTimestamp(trail));
+  }
+
+  /**
+   * @param timestamp to be trimmed
+   * @returns a timestamp trimmed according to the accuracy
+   * @protected
+   */
+  protected static trimmedTimestamp(timestamp: string): string {
+    return timestamp.slice(0, this.accuracy);
   }
 
   /**
@@ -919,6 +928,8 @@ export default class StatisticsBlock {
    * @private
    */
   private static getInstance(key: string): StatisticsBlock {
+    key = this.trimmedTimestamp(key);
+
     if (!this.checkCache(key)) {
       return this.noValue(key);
     }

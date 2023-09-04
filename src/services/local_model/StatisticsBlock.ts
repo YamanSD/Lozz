@@ -25,6 +25,19 @@ enum TimeUnit {
 }
 
 /**
+ * This function is the default mapping function.
+ *
+ * @param block to be processed
+ * @returns the block unchanged
+ */
+function defaultMapping(block: StatisticsBlock): StatisticsBlock {
+  return block;
+}
+
+/* type of mapping functions */
+type MappingFunction = (block: StatisticsBlock) => any;
+
+/**
  * Class encapsulating raw statistics block data.
  * Responsible for loading & saving statistical data
  */
@@ -1098,17 +1111,24 @@ export default class StatisticsBlock {
    * @param t0 first timestamp
    * @param t1 second timestamp
    * @param unit time unit
-   * @returns List of statisticsBlocks from [t0, t1] under step 'unit'.
+   * @param map applied to each block in the timeframe
+   * @returns List of statisticsBlocks information from [t0, t1] under step 'unit'.
    * @private
    */
-  protected static getFromTo(t0: string,
-                           t1: string,
-                           unit: TimeUnit): StatisticsBlock[] {
+  protected static getFromTo(
+    t0: string,
+    t1: string,
+    unit: TimeUnit,
+    map?: MappingFunction): any[] {
+    if (map === undefined) {
+      map = defaultMapping;
+    }
+
     let result: StatisticsBlock[] = [];
     let currentTimestamp = t0;
 
     while (currentTimestamp < t1) {
-      result.push(this.getInstance(currentTimestamp));
+      result.push(map(this.getInstance(currentTimestamp)));
       currentTimestamp = this.incrementTimestamp(currentTimestamp, unit);
     }
 
@@ -1121,10 +1141,13 @@ export default class StatisticsBlock {
    *
    * @param y0 starting year
    * @param y1 end year
+   * @param map applied to each block in the timeframe
    * @returns array of statistics from [y0, y1].
    */
-  public static getFromYearTo(y0: string, y1: string): StatisticsBlock[] {
-    return this.getFromTo(y0, y1, TimeUnit.year);
+  public static getFromYearTo(y0: string,
+                              y1: string,
+                              map?: MappingFunction): StatisticsBlock[] {
+    return this.getFromTo(y0, y1, TimeUnit.year, map);
   }
 
   /**
@@ -1133,10 +1156,13 @@ export default class StatisticsBlock {
    *
    * @param m0 starting month
    * @param m1 end month
+   * @param map applied to each block in the timeframe
    * @returns array of statistics from [m0, m1].
    */
-  public static getFromMonthTo(m0: string, m1: string): StatisticsBlock[] {
-    return this.getFromTo(m0, m1, TimeUnit.month);
+  public static getFromMonthTo(m0: string,
+                               m1: string,
+                               map?: MappingFunction): StatisticsBlock[] {
+    return this.getFromTo(m0, m1, TimeUnit.month, map);
   }
 
   /**
@@ -1145,10 +1171,13 @@ export default class StatisticsBlock {
    *
    * @param d0 starting day
    * @param d1 end day
+   * @param map applied to each block in the timeframe
    * @returns array of statistics from [d0, d1].
    */
-  public static getFromDayTo(d0: string, d1: string): StatisticsBlock[] {
-    return this.getFromTo(d0, d1, TimeUnit.day);
+  public static getFromDayTo(d0: string,
+                             d1: string,
+                             map?: MappingFunction): StatisticsBlock[] {
+    return this.getFromTo(d0, d1, TimeUnit.day, map);
   }
 
   /**
@@ -1157,10 +1186,13 @@ export default class StatisticsBlock {
    *
    * @param h0 starting hour
    * @param h1 end hour
+   * @param map applied to each block in the timeframe
    * @returns array of statistics from [h0, h1].
    */
-  public static getFromHourTo(h0: string, h1: string): StatisticsBlock[] {
-    return this.getFromTo(h0, h1, TimeUnit.hour);
+  public static getFromHourTo(h0: string,
+                              h1: string,
+                              map?: MappingFunction): StatisticsBlock[] {
+    return this.getFromTo(h0, h1, TimeUnit.hour, map);
   }
 
   /**

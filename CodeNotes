@@ -1,0 +1,7 @@
+import { changeTheme, ThemeState } from "../../store/theme";
+import { store } from "../../store";
+const onChangeTheme = ({ theme, darkMode }: Partial<ThemeState>) => {
+  store.dispatch(changeTheme({ theme, darkMode }));
+};
+// This code is used to change the Dark mode to light mode;
+

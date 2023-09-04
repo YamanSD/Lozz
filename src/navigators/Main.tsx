@@ -1,15 +1,16 @@
 import React from 'react';
-import { Example } from '../screens';
-import { createStackNavigator } from '@react-navigation/stack';
+import { Home } from "../screens";
+import { createMaterialBottomTabNavigator }
+  from '@react-navigation/material-bottom-tabs';
 
-const Stack = createStackNavigator();
+const BottomNavigator = createMaterialBottomTabNavigator();
 
 // @refresh reset
 const MainNavigator = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Home" component={Example} />
-    </Stack.Navigator>
+    <BottomNavigator.Navigator>
+      <BottomNavigator.Screen name="Home" component={Home} />
+    </BottomNavigator.Navigator>
   );
 };
 

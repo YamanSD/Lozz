@@ -1,15 +1,21 @@
-import React from 'react';
+import React from "react";
 import { SafeAreaView, StatusBar } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import {
   NavigationContainer,
-  useNavigationContainerRef,
-} from '@react-navigation/native';
+  useNavigationContainerRef
+} from "@react-navigation/native";
 import { Startup } from '../screens';
 import { useTheme } from '../hooks';
 import MainNavigator from './Main';
 import { ApplicationStackParamList } from '../../@types/navigation';
+import PaperConfig from "../PaperConfig";
+import { PaperProvider } from "react-native-paper";
+import { DarkTheme, LightTheme } from "../theme/PaperThemes";
 
+/**
+ * Stack navigator in the application
+ */
 const Stack = createStackNavigator<ApplicationStackParamList>();
 
 // @refresh reset
@@ -21,13 +27,15 @@ const ApplicationNavigator = () => {
 
   return (
     <SafeAreaView style={[Layout.fill, { backgroundColor: colors.card }]}>
-      <NavigationContainer theme={NavigationTheme} ref={navigationRef}>
-        <StatusBar barStyle={darkMode ? 'light-content' : 'dark-content'} />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Startup" component={Startup} />
-          <Stack.Screen name="Main" component={MainNavigator} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <PaperProvider settings={PaperConfig} theme={darkMode ? DarkTheme : LightTheme}>
+        <NavigationContainer theme={NavigationTheme} ref={navigationRef}>
+          <StatusBar barStyle={darkMode ? 'light-content' : 'dark-content'} />
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Startup" component={Startup} />
+            <Stack.Screen name="Main" component={MainNavigator} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </PaperProvider>
     </SafeAreaView>
   );
 };

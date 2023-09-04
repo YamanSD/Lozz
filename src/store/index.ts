@@ -1,5 +1,5 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import { setupListeners } from "@reduxjs/toolkit/query";
+// import { setupListeners } from "@reduxjs/toolkit/query";
 import {
   FLUSH,
   PAUSE,
@@ -13,12 +13,12 @@ import {
 } from "redux-persist";
 import { MMKV } from "react-native-mmkv";
 
-import { api } from "../services/api";
+// import { api } from "../services/api";
 import theme from "./theme";
 
 const reducers = combineReducers({
   theme,
-  [api.reducerPath]: api.reducer,
+  // [api.reducerPath]: api.reducer,
 });
 
 const storage = new MMKV();
@@ -57,12 +57,13 @@ const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(api.middleware);
+    })
+    // }).concat(api.middleware);
   },
 });
 
 const persistor = persistStore(store);
 
-setupListeners(store.dispatch);
+// setupListeners(store.dispatch);
 
 export { store, persistor };

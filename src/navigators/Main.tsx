@@ -9,15 +9,20 @@ const BottomNavigator = createMaterialBottomTabNavigator();
 
 // @refresh reset
 const MainNavigator = () => {
+  /* to ensure consistency */
+  const IconGenerator = (name: string) => {
+    return ({ color }: { color: string }) => (
+      <MaterialCommunityIcons name={name} color={color} size={21} />
+    );
+  }
+
   return (
     <BottomNavigator.Navigator labeled={false} barStyle={{
       height: 70
     }}>
       <BottomNavigator.Screen name="Home" component={Home} options={{
         tabBarLabel: 'Home',
-        tabBarIcon: ({ color }) => (
-          <MaterialCommunityIcons name="home" color={color} size={21} />
-        ),
+        tabBarIcon: IconGenerator("home"),
       }} />
     </BottomNavigator.Navigator>
   );

@@ -6376,7 +6376,7 @@ react-native-fs@^2.20.0:
     base-64 "^0.1.0"
     utf8 "^3.0.0"
 
-react-native-gesture-handler@^2.12.0, "react-native-gesture-handler@>= 1.0.0":
+react-native-gesture-handler@^2.12.0, "react-native-gesture-handler@>= 1.0.0", react-native-gesture-handler@>=2.0.0:
   version "2.12.0"
   resolved "https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.12.0.tgz"
   integrity sha512-rr+XwVzXAVpY8co25ukvyI38fKCxTQjz7WajeZktl8qUPdh1twnSExgpT47DqDi4n+m+OiJPAnHfZOkqqAQMOg==
@@ -6401,7 +6401,12 @@ react-native-paper@^5.10.3, "react-native-paper@>= 3.0.0":
     color "^3.1.2"
     use-latest-callback "^0.1.5"
 
-react-native-reanimated@^3.3.0, "react-native-reanimated@>= 1.0.0":
+react-native-reanimated-carousel@^3.5.1:
+  version "3.5.1"
+  resolved "https://registry.npmjs.org/react-native-reanimated-carousel/-/react-native-reanimated-carousel-3.5.1.tgz"
+  integrity sha512-9BBQV6JAYSQm2lV7MFtT4mzapXmW4IZO6s38gfiJL84Jg23ivGB1UykcNQauKgtHyhtW2NuZJzItb1s42lM+hA==
+
+react-native-reanimated@^3.3.0, "react-native-reanimated@>= 1.0.0", react-native-reanimated@>=3.0.0:
   version "3.3.0"
   resolved "https://registry.npmjs.org/react-native-reanimated/-/react-native-reanimated-3.3.0.tgz"
   integrity sha512-LzfpPZ1qXBGy5BcUHqw3pBC0qSd22qXS3t8hWSbozXNrBkzMhhOrcILE/nEg/PHpNNp1xvGOW8NwpAMF006roQ==
@@ -6440,7 +6445,7 @@ react-native-vector-icons@*, react-native-vector-icons@^10.0.0, "react-native-ve
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
-react-native@*, "react-native@>= 0.50.0", react-native@>=0.57, react-native@>=0.59, react-native@>=0.71.0, react-native@0.72.1:
+react-native@*, "react-native@>= 0.50.0", react-native@>=0.57, react-native@>=0.59, react-native@>=0.6.0, react-native@>=0.71.0, react-native@0.72.1:
   version "0.72.1"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.72.1.tgz"
   integrity sha512-O9cIVD++kt2XQl0XLCUGUgwSKr8xp+yo0ho5QK6KYWJrCFnnvQLTKL0+HD0rZUcuqFfGknHQJh3h0moQO2EMDg==

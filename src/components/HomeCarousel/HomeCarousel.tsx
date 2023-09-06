@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import Animated, {
   Extrapolate,
   interpolate,
@@ -10,8 +10,9 @@ import Carousel from "react-native-reanimated-carousel";
 
 import { SBItem } from "./SBItem";
 import SButton from "./SButton";
+import { ScreenDimensions } from "../../theme/Variables";
 
-const PAGE_WIDTH = 400;
+const PAGE_WIDTH = ScreenDimensions.width;
 const colors = [
   "#26292E",
   "#899F9C",
@@ -21,7 +22,27 @@ const colors = [
   "#F1F1F1",
 ];
 
-const HomeCarousel = () => {
+/**
+ * - bottom: Component to be displayed under the pagination dots.
+ * - top: Component to be displayed above the pagination dots.
+ */
+type CarouselProps = {
+  top: Element,
+  bottom: Element,
+};
+
+/**
+ * Prop-type for the HomeCarousel component
+ */
+type Properties = {
+  components: CarouselProps[]
+};
+
+/**
+ * Carousel used in the home screen to display components.
+ * @constructor
+ */
+const HomeCarousel = ({ components }: Properties) => {
   const [isVertical, setIsVertical] = React.useState(false);
   const [autoPlay, setAutoPlay] = React.useState(false);
   const [pagingEnabled, setPagingEnabled] = React.useState<boolean>(true);
@@ -45,11 +66,9 @@ const HomeCarousel = () => {
     alignItems: "center",
   }}
 >
+      <ScrollView>
   <Carousel
     {...baseOptions}
-  style={{
-    width: PAGE_WIDTH * 0.86,
-  }}
   loop
   pagingEnabled={pagingEnabled}
   snapEnabled={snapEnabled}
@@ -125,6 +144,13 @@ const HomeCarousel = () => {
 >
   {`snapEnabled:${snapEnabled}`}
   </SButton>
+        {
+          components[0].top
+        }
+        {
+          components[0].bottom
+        }
+      </ScrollView>
   </View>
 );
 }

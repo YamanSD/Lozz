@@ -3,7 +3,6 @@ import { SafeAreaView, ScrollView, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../hooks";
 import { useTheme as usePaperTheme } from 'react-native-paper';
-import Carousel from 'react-native-reanimated-carousel';
 import HomeCarousel from "../../components/HomeCarousel/HomeCarousel";
 
 /**
@@ -35,7 +34,12 @@ const Home = () => {
           Layout.justifyContentCenter,
           Layout.alignItemsCenter,
         ]}>
-          <HomeCarousel />
+          <HomeCarousel components={[
+            {
+              top: <Text style={{color: "#FF0000"}}>WORLD</Text>,
+              bottom: <Text>HELLO</Text>
+            }
+          ]} />
         </View>
       </ScrollView>
     </SafeAreaView>

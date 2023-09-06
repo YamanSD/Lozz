@@ -36,9 +36,13 @@ const Home = () => {
         ]}>
           <HomeCarousel components={[
             {
-              top: <Text style={{color: "#FF0000"}}>WORLD</Text>,
-              bottom: <Text>HELLO</Text>
-            }
+              top: (<View style={{backgroundColor: "white", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+              bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+            },
+            {
+              top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+              bottom: (<View style={{backgroundColor: "green", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+            },
           ]} />
         </View>
       </ScrollView>

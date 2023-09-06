@@ -9,7 +9,7 @@ import { useTheme as usePaperTheme } from 'react-native-paper';
 
 
 /**
- * Prop-type for the Pagination Dot component.
+ * Prop-type for the PaginationDot component.
  *
  * - index: index of the component in the pagination bar.
  *
@@ -24,31 +24,33 @@ import { useTheme as usePaperTheme } from 'react-native-paper';
  *
  * - animationValue: animation speed of the transition.
  *
- * - isRotate?: if true, the animation is done from top to bottom.
- *   Otherwise, animation is done from left to right.
+ * - isRotate?: if true, the animation is done vertically.
+ *   Otherwise, animation is done from horizontally.
  *
- * - width: width of the dot in pixels.
+ * - radius: radius of the dot in pixels.
  */
 type Properties = {
   index: number,
   length: number,
   animationValue: Animated.SharedValue<number>,
-  width: number,
+  radius: number,
   isRotate?: boolean,
   activeColor?: string,
   inactiveColor?: string
 };
 
 /**
- * @param props
+ * Pagination dot used in a pagination bar.
+ *
+ * @param props for the dot.
  * @constructor
  */
 const PaginationDot = ({ animationValue, index, length,
                          activeColor, inactiveColor,
-                         width, isRotate }: Properties) => {
+                         radius, isRotate }: Properties) => {
   /* application theme */
   const theme = usePaperTheme();
-  const borderRadius = width / 2;
+  const borderRadius = radius / 2;
 
   if (activeColor === undefined) {
     activeColor = theme.colors.secondary;
@@ -60,11 +62,11 @@ const PaginationDot = ({ animationValue, index, length,
 
   const animationStyle = useAnimatedStyle(() => {
     let inputRange = [index - 1, index, index + 1];
-    let outputRange = [-width, 0, width];
+    let outputRange = [-radius, 0, radius];
 
     if (index === 0 && length - 1 < animationValue?.value) {
       inputRange = [length - 1, length, length + 1];
-      outputRange = [-width, 0, width];
+      outputRange = [-radius, 0, radius];
     }
 
     return {
@@ -79,13 +81,12 @@ const PaginationDot = ({ animationValue, index, length,
     };
   }, [animationValue, index, length]);
 
-  // noinspection JSSuspiciousNameCombination
   return (
     <View
       style={{
         backgroundColor: inactiveColor,
-        width: width,
-        height: width,
+        width: radius,
+        height: radius,
         borderRadius: borderRadius,
         overflow: "hidden",
         transform: [{

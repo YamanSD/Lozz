@@ -48,7 +48,7 @@ const PaginationDot = ({ animationValue, index, length,
                          width, isRotate }: Properties) => {
   /* application theme */
   const theme = usePaperTheme();
-  const borderRadius = 50;
+  const borderRadius = width / 2;
 
   if (activeColor === undefined) {
     activeColor = theme.colors.secondary;

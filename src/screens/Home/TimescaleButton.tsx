@@ -4,12 +4,12 @@ import React from "react";
 /**
  * Prop-type for the time interval button.
  *
- * - timeInterval: time interval value
+ * - timescale: timescale value
  *
  * - onPress: function triggered on press
  */
 type Properties = {
-  timeInterval: string,
+  timescale: string,
   onPress: () => any
 };
 
@@ -17,7 +17,7 @@ type Properties = {
  * Time interval changing button
  * @constructor
  */
-const TimeIntervalButton = ({ timeInterval, onPress }: Properties) => {
+const TimescaleButton = ({ timescale, onPress }: Properties) => {
   return (
     <SpringButton rippleColor={"#FFFFFF"}
                   mode={'contained-tonal'}
@@ -39,9 +39,9 @@ const TimeIntervalButton = ({ timeInterval, onPress }: Properties) => {
                   expandBy={0.05}
                   onPress={() => {onPress()}}
     >
-      {timeInterval}
+      {timescale}
     </SpringButton>
   );
 }
 
-export default TimeIntervalButton;
+export default TimescaleButton;

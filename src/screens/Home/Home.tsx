@@ -14,10 +14,10 @@ import { CacheImage } from "../../components";
 import CollectionInfo from "../../CollectionInfo";
 import { addAlpha } from "../../services";
 import HomeCarousel from "./HomeCarousel";
-import TimeIntervalButton from "./TimeIntervalButton";
+import TimescaleButton from "./TimescaleButton";
 
 /**
- * Enum for statistics time intervals
+ * Enum for statistics timescales
  *
  * - H: hours.
  *
@@ -29,7 +29,7 @@ import TimeIntervalButton from "./TimeIntervalButton";
  *
  * - Y: years.
  */
-enum TimeInterval {
+enum Timescale {
   H = "Hourly",
   D = "Daily",
   W = "Weekly",
@@ -57,8 +57,8 @@ const Home = () => {
   const theme = usePaperTheme();
 
   /* Current selected time interval */
-  const [timeInterval, setTimeInterval] =
-    useState<TimeInterval>(TimeInterval.Y);
+  const [timescale, setTimescale] =
+    useState<Timescale>(Timescale.Y);
 
   /* True displays the time interval menu */
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -166,33 +166,33 @@ const Home = () => {
           <Menu
             visible={isMenuVisible}
             onDismiss={() => setIsMenuVisible(false)}
-            anchor={<TimeIntervalButton
-              timeInterval={timeInterval}
+            anchor={<TimescaleButton
+              timescale={timescale}
               onPress={() => setIsMenuVisible(!isMenuVisible)} />}
             style={{
               paddingTop: 9
             }}
           >
             <Menu.Item onPress={() => {
-              setTimeInterval(TimeInterval.H);
+              setTimescale(Timescale.H);
               setIsMenuVisible(false);
-            }} title={TimeInterval.H} />
+            }} title={Timescale.H} />
             <Menu.Item onPress={() => {
-              setTimeInterval(TimeInterval.D);
+              setTimescale(Timescale.D);
               setIsMenuVisible(false);
-            }} title={TimeInterval.D} />
+            }} title={Timescale.D} />
             <Menu.Item onPress={() => {
-              setTimeInterval(TimeInterval.W);
+              setTimescale(Timescale.W);
               setIsMenuVisible(false);
-            }} title={TimeInterval.W} />
+            }} title={Timescale.W} />
             <Menu.Item onPress={() => {
-              setTimeInterval(TimeInterval.M);
+              setTimescale(Timescale.M);
               setIsMenuVisible(false);
-            }} title={TimeInterval.M} />
+            }} title={Timescale.M} />
             <Menu.Item onPress={() => {
-              setTimeInterval(TimeInterval.Y);
+              setTimescale(Timescale.Y);
               setIsMenuVisible(false);
-            }} title={TimeInterval.Y} />
+            }} title={Timescale.Y} />
           </Menu>
         </View>
 

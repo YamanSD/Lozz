@@ -1,11 +1,12 @@
-import React, { JSXElementConstructor, ReactElement, useRef } from "react";
-import { ScrollView } from "react-native";
+import React, {
+  JSXElementConstructor,
+  ReactElement,
+  useRef } from "react";
 import { useSharedValue, } from "react-native-reanimated";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import { ScreenDimensions } from "../../theme/Variables";
 import { PaginationBar } from "../index";
 import { modifyProgress } from "../PaginationBar/PaginationBar";
-import { useTheme as useBoilerTheme } from "../../hooks";
 
 /**
  * Type of top & bottom elements.
@@ -17,7 +18,7 @@ type ElementType = ReactElement<any, string | JSXElementConstructor<any>>;
  *
  * - top: Component to be displayed above the pagination dots.
  */
-type CarouselProps = {
+export type CarouselProps = {
   top: ElementType,
   bottom: ElementType,
 };
@@ -29,6 +30,7 @@ type CarouselProps = {
  */
 type Properties = {
   topHeight: number,
+  setBottom: (index: number) => any,
   components: CarouselProps[],
 };
 
@@ -36,30 +38,18 @@ type Properties = {
  * Carousel used in the home screen to display components.
  * @constructor
  */
-const HomeCarousel = ({ components, topHeight }: Properties) => {
-  const { Layout } = useBoilerTheme();
-
+const HomeCarousel = ({ components, topHeight, setBottom }: Properties) => {
   // Create refs for both carousels
   const carouselTop = useRef<ICarouselInstance>(null);
-  const carouselBottom = useRef<ICarouselInstance>(null);
 
+  // Used by the bar
   const progressValue = useSharedValue<number>(0);
 
   const barPadding = 10;
   const width = ScreenDimensions.width;
-  const height = ScreenDimensions.height;
 
   return (
-    <ScrollView
-      style={{...Layout.fullWidth}}
-      contentContainerStyle={{
-        ...Layout.center,
-        ...Layout.scrollSpaceBetween,
-        ...Layout.selfStretch
-      }}
-      bounces={true}
-      showsVerticalScrollIndicator={false}
-    >
+    <>
       {/* Top component */}
       <Carousel
         ref={carouselTop}
@@ -67,16 +57,10 @@ const HomeCarousel = ({ components, topHeight }: Properties) => {
           const current = carouselTop.current;
 
           if (current !== null) {
-            const index = (current as ICarouselInstance).getCurrentIndex();
-
-            const otherCurrent = carouselBottom.current;
-
-            if (otherCurrent !== null) {
-              (otherCurrent as ICarouselInstance).scrollTo({
-                index: index,
-                animated: true
-              });
-            }
+            setBottom(
+              (current as ICarouselInstance).getCurrentIndex()
+              % components.length
+            );
           }
         }}
         panGestureHandlerProps={{
@@ -106,24 +90,7 @@ const HomeCarousel = ({ components, topHeight }: Properties) => {
                      style={{ paddingVertical: barPadding }}
                      radius={10}
                      gap={5} />
-
-      {/* Bottom component */}
-      <Carousel
-        enabled={false}
-
-        ref={carouselBottom}
-        width={width}
-        height={height - topHeight - 2 * barPadding}
-        pagingEnabled={true}
-        snapEnabled={true}
-        mode="horizontal-stack"
-        modeConfig={{}}
-        data={components}
-        renderItem={({item}) => {
-          return item.bottom;
-        }}
-      />
-    </ScrollView>
+    </>
   );
 };
 

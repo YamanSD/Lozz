@@ -9,15 +9,24 @@ import Animated, {
 import { ButtonProps, Button } from "react-native-paper";
 
 /**
+ * Prop-type for the spring button.
+ *
+ * - expandBy?: percentage of expansion of the button, default is 0.1 (10%);
+ */
+type Properties = ButtonProps & {
+  expandBy?: number
+};
+
+/**
  * RN-Paper Button that springs on click
  *
  * @param props RN-Paper Button properties
  * @constructor
  */
-const SpringButton = (props: ButtonProps) => {
+const SpringButton = (props: Properties) => {
   const scaleValue = useSharedValue(1);
-  const springConfig: WithSpringConfig = {
-  };
+  const springConfig: WithSpringConfig = {};
+  const expandBy = props.expandBy ?? 0.1;
 
   // Animated style for the button
   const animationStyle = useAnimatedStyle(() => {
@@ -28,13 +37,23 @@ const SpringButton = (props: ButtonProps) => {
 
   // Handler for expanding and collapsing
   const handlePress = () => {
-    scaleValue.value = withSequence(withSpring(1.1, springConfig),
-      withDelay(30, withSpring(1, springConfig)));
+    scaleValue.value = withSequence(
+      withSpring(1 + expandBy, springConfig),
+      withDelay(30, withSpring(1, springConfig))
+    );
   };
 
   return (
       <Animated.View style={[animationStyle]}>
-        <Button {...props} onPress={handlePress} />
+        <Button {...props} onPress={(e) => {
+          handlePress();
+
+          const temp = props.onPress;
+
+          if (temp !== undefined) {
+            return temp(e);
+          }
+        }} />
       </Animated.View>
   );
 };

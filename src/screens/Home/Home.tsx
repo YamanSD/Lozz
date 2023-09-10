@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { Menu, Text } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../hooks";
 import { useTheme as usePaperTheme } from 'react-native-paper';
-import { HomeCarousel, CarouselProps } from "../../components";
+import { CarouselProps } from "./HomeCarousel";
 import LinearGradient from "react-native-linear-gradient";
 import Animated, {
   useSharedValue,
@@ -13,25 +13,55 @@ import { ScreenDimensions } from "../../theme/Variables";
 import { CacheImage } from "../../components";
 import CollectionInfo from "../../CollectionInfo";
 import { addAlpha } from "../../services";
+import HomeCarousel from "./HomeCarousel";
+import TimeIntervalButton from "./TimeIntervalButton";
+
+/**
+ * Enum for statistics time intervals
+ *
+ * - H: hours.
+ *
+ * - D: days.
+ *
+ * - W: weeks.
+ *
+ * - M: months.
+ *
+ * - Y: years.
+ */
+enum TimeInterval {
+  H = "Hourly",
+  D = "Daily",
+  W = "Weekly",
+  M = "Monthly",
+  Y = "Annually"
+}
 
 /**
  * Home screen component.
  * @constructor
  */
 const Home = () => {
-  const { Layout } = useBoilerTheme();
-  const theme = usePaperTheme();
-
   const components: CarouselProps[] = [
     {
       top: (<View style={{backgroundColor: "black", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      bottom: (<View style={{backgroundColor: "white", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
     },
     {
       top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
       bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
     },
   ];
+
+  const { Layout } = useBoilerTheme();
+  const theme = usePaperTheme();
+
+  /* Current selected time interval */
+  const [timeInterval, setTimeInterval] =
+    useState<TimeInterval>(TimeInterval.Y);
+
+  /* True displays the time interval menu */
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
 
   /* screen width, used for spring animation */
   const maxWidth = ScreenDimensions.width;
@@ -52,8 +82,7 @@ const Home = () => {
 
     /*
      * Expand the new one.
-     * (Note that this approach is not the best, however it works).
-     * If better alternative found change.
+     * Cannot use withSequence and withDelay due to the setBottomIndex.
      */
     setTimeout(() => {
       setBottomIndex(index);
@@ -123,7 +152,7 @@ const Home = () => {
           Layout.rowHCenter,
           Layout.justifyContentBetween, {
             paddingVertical: 2 * horizontalPadding,
-            paddingHorizontal: horizontalPadding
+            paddingHorizontal: horizontalPadding,
           }
         ]}>
           <Text style={[{
@@ -132,7 +161,39 @@ const Home = () => {
           }]}>
             Dashboard
           </Text>
-          <Button textColor={"#FFF"}>HERE</Button>
+
+          {/* Selection button */}
+          <Menu
+            visible={isMenuVisible}
+            onDismiss={() => setIsMenuVisible(false)}
+            anchor={<TimeIntervalButton
+              timeInterval={timeInterval}
+              onPress={() => setIsMenuVisible(!isMenuVisible)} />}
+            style={{
+              paddingTop: 9
+            }}
+          >
+            <Menu.Item onPress={() => {
+              setTimeInterval(TimeInterval.H);
+              setIsMenuVisible(false);
+            }} title={TimeInterval.H} />
+            <Menu.Item onPress={() => {
+              setTimeInterval(TimeInterval.D);
+              setIsMenuVisible(false);
+            }} title={TimeInterval.D} />
+            <Menu.Item onPress={() => {
+              setTimeInterval(TimeInterval.W);
+              setIsMenuVisible(false);
+            }} title={TimeInterval.W} />
+            <Menu.Item onPress={() => {
+              setTimeInterval(TimeInterval.M);
+              setIsMenuVisible(false);
+            }} title={TimeInterval.M} />
+            <Menu.Item onPress={() => {
+              setTimeInterval(TimeInterval.Y);
+              setIsMenuVisible(false);
+            }} title={TimeInterval.Y} />
+          </Menu>
         </View>
 
         {/* Top component with pagination bar */}

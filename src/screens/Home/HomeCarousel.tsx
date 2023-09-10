@@ -5,8 +5,8 @@ import React, {
 import { useSharedValue } from "react-native-reanimated";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import { ScreenDimensions } from "../../theme/Variables";
-import { PaginationBar } from "../index";
-import { modifyProgress } from "../PaginationBar/PaginationBar";
+import { PaginationBar } from "../../components";
+import { modifyProgress } from "../../components/PaginationBar/PaginationBar";
 import { useTheme as usePaperTheme } from 'react-native-paper';
 import { View } from "react-native";
 

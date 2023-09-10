@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
-import { Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../hooks";
 import { useTheme as usePaperTheme } from 'react-native-paper';
-import HomeCarousel, { CarouselProps } from "../../components/HomeCarousel/HomeCarousel";
+import { HomeCarousel, CarouselProps } from "../../components";
+import LinearGradient from "react-native-linear-gradient";
 import Animated, {
   useSharedValue,
   withSpring
 } from "react-native-reanimated";
 import { ScreenDimensions } from "../../theme/Variables";
-import CacheImage from "../../components/CacheImage/CacheImage";
+import { CacheImage } from "../../components";
+import CollectionInfo from "../../CollectionInfo";
+import { addAlpha } from "../../services";
 
 /**
  * Home screen component.
@@ -21,7 +24,7 @@ const Home = () => {
 
   const components: CarouselProps[] = [
     {
-      top: (<View style={{backgroundColor: "white", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      top: (<View style={{backgroundColor: "black", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
       bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
     },
     {
@@ -35,6 +38,9 @@ const Home = () => {
 
   /* min screen width, used for spring animation */
   const minWidth = 50; // px
+
+  /* horizontal padding for all components */
+  const horizontalPadding = 10;
 
   const animationWidth = useSharedValue(maxWidth);
   const [bottomIndex, setBottomIndex] = useState(0);
@@ -61,7 +67,9 @@ const Home = () => {
   }
 
   return (
-    <SafeAreaView style={[Layout.fullWidth]}>
+    <SafeAreaView style={[
+      Layout.fullSize,
+    ]}>
       <ScrollView
         contentContainerStyle={{
           ...Layout.center,
@@ -73,32 +81,72 @@ const Home = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* app name bar */}
-        <View style={[Layout.fullWidth, Layout.rowHCenter, {
+        <View style={[
+          Layout.fullWidth,
+          Layout.rowHCenter, {
           padding: 20,
           height: 90,
-          // backgroundColor: theme.colors.primary
-          backgroundColor: "#000"
+          backgroundColor: theme.colors.primary
         }]}>
           <CacheImage
             source={{uri: "https://www.research-andme.com/wp-content/uploads/2018/03/3840x2160-dark-red-solid-color-background.jpg"}}
             style={{
-              height: 50,
-              width: 50,
+              height: 45,
+              width: 45,
               borderRadius: 8
             }}
           />
+          <Text style={{
+            fontWeight: "800",
+            fontSize: 22,
+            paddingLeft: 15
+          }}>
+            {CollectionInfo.app_name}
+          </Text>
+        </View>
+
+        {/* separator */}
+        <LinearGradient style={[
+          Layout.fullWidth,
+          { height: 5 }
+        ]}
+        colors={[
+          addAlpha(theme.colors.secondary, 0.7),
+          addAlpha(theme.colors.secondary, 0),
+        ]}
+        />
+
+        {/* dashboard header */}
+        <View style={[
+          Layout.row,
+          Layout.fullWidth,
+          Layout.rowHCenter,
+          Layout.justifyContentBetween, {
+            paddingVertical: 2 * horizontalPadding,
+            paddingHorizontal: horizontalPadding
+          }
+        ]}>
+          <Text style={[{
+            fontSize: 34,
+            fontWeight: "800"
+          }]}>
+            Dashboard
+          </Text>
+          <Button textColor={"#FFF"}>HERE</Button>
         </View>
 
         {/* Top component with pagination bar */}
         <HomeCarousel setBottom={setBottom}
                       topHeight={400}
-                      components={components} />
+                      components={components}
+                      padHTop={horizontalPadding} />
 
         {/* Bottom component */}
         <Animated.View
           style={{
             ...Layout.fullWidth,
-            width: animationWidth
+            width: animationWidth,
+            paddingHorizontal: horizontalPadding,
           }}
         >
           {components[bottomIndex].bottom}

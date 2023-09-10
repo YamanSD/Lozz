@@ -2,11 +2,13 @@ import React, {
   JSXElementConstructor,
   ReactElement,
   useRef } from "react";
-import { useSharedValue, } from "react-native-reanimated";
+import { useSharedValue } from "react-native-reanimated";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import { ScreenDimensions } from "../../theme/Variables";
 import { PaginationBar } from "../index";
 import { modifyProgress } from "../PaginationBar/PaginationBar";
+import { useTheme as usePaperTheme } from 'react-native-paper';
+import { View } from "react-native";
 
 /**
  * Type of top & bottom elements.
@@ -27,9 +29,16 @@ export type CarouselProps = {
  * Prop-type for the HomeCarousel component
  *
  * - topHeight: Height of the top component in pixels
+ *
+ * - setBottom: Setter for the bottom index, when the top changes
+ *
+ * - components: Components list to be rendered
+ *
+ * - padHTop?: Horizontal padding to be added to the top components
  */
 type Properties = {
   topHeight: number,
+  padHTop?: number
   setBottom: (index: number) => any,
   components: CarouselProps[],
 };
@@ -38,7 +47,10 @@ type Properties = {
  * Carousel used in the home screen to display components.
  * @constructor
  */
-const HomeCarousel = ({ components, topHeight, setBottom }: Properties) => {
+const HomeCarousel = ({ components, topHeight,
+                        setBottom, padHTop }: Properties) => {
+  const theme = usePaperTheme();
+
   // Create refs for both carousels
   const carouselTop = useRef<ICarouselInstance>(null);
 
@@ -75,18 +87,24 @@ const HomeCarousel = ({ components, topHeight, setBottom }: Properties) => {
           return modifyProgress(progressValue, absoluteProgress);
         }}
         mode="horizontal-stack"
-        modeConfig={{}}
+        modeConfig={{
+          stackInterval: (padHTop ?? 0) * 40,
+        }}
         data={components}
         renderItem={({item}) => {
-          return item.top;
+          return (
+            <View style={{paddingHorizontal: padHTop ?? 0}}>
+              {item.top}
+          </View>
+          );
         }}
       />
 
       {/* Pagination Bar */}
       <PaginationBar animationValue={progressValue}
                      count={components.length}
-                     defaultActiveColor={"white"}
-                     defaultInactiveColor={"black"}
+                     defaultActiveColor={theme.colors.secondary}
+                     defaultInactiveColor={theme.colors.tertiary}
                      style={{ paddingVertical: barPadding }}
                      radius={10}
                      gap={5} />

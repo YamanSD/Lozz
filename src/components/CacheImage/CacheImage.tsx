@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Image, ImageProps } from 'react-native';
 import { Generic } from "../../services/model/types";
-import ImagesManager from "../../services/image_processing/ImagesManager";
+import { ImagesManager } from "../../services";
 import { useTheme as useBoilerTheme } from "../../hooks";
 
 /**

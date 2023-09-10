@@ -126,11 +126,9 @@ export default class ImagesManager {
     const imagePath = this.getPath(imageUrl);
 
     if (!(await RNFS.exists(imagePath))) {
-      console.log("DOWNLOADED");
       await this.downloadImage(imageUrl);
     }
 
-    console.log("CACHE");
     return imagePath;
   }
 

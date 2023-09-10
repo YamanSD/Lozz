@@ -15,6 +15,7 @@ import CollectionInfo from "../../CollectionInfo";
 import { addAlpha } from "../../services";
 import HomeCarousel from "./HomeCarousel";
 import TimescaleButton from "./TimescaleButton";
+import SalesTop from "./Sales/SalesTop";
 
 /**
  * Enum for statistics timescales
@@ -42,17 +43,6 @@ enum Timescale {
  * @constructor
  */
 const Home = () => {
-  const components: CarouselProps[] = [
-    {
-      top: (<View style={{backgroundColor: "black", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "white", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-    },
-    {
-      top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-    },
-  ];
-
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
 
@@ -95,6 +85,17 @@ const Home = () => {
     }, 150);
   }
 
+  const components: CarouselProps[] = [
+    {
+      top: <SalesTop timescale={timescale}/>,
+      bottom: (<View style={{backgroundColor: "white", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+    },
+    {
+      top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+    },
+  ];
+
   return (
     <SafeAreaView style={[
       Layout.fullSize,
@@ -112,7 +113,8 @@ const Home = () => {
         {/* app name bar */}
         <View style={[
           Layout.fullWidth,
-          Layout.rowHCenter, {
+          Layout.rowHCenter,
+          {
           padding: 20,
           height: 90,
           backgroundColor: theme.colors.primary
@@ -150,7 +152,8 @@ const Home = () => {
           Layout.row,
           Layout.fullWidth,
           Layout.rowHCenter,
-          Layout.justifyContentBetween, {
+          Layout.justifyContentBetween,
+          {
             paddingVertical: 2 * horizontalPadding,
             paddingHorizontal: horizontalPadding,
           }
@@ -198,7 +201,7 @@ const Home = () => {
 
         {/* Top component with pagination bar */}
         <HomeCarousel setBottom={setBottom}
-                      topHeight={400}
+                      topHeight={150}
                       components={components}
                       padHTop={horizontalPadding} />
 

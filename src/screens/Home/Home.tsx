@@ -15,9 +15,8 @@ import { ScreenDimensions } from "../../theme/Variables";
  * @constructor
  */
 const Home = () => {
-  const {
-    Layout,
-  } = useBoilerTheme();
+  const { Layout } = useBoilerTheme();
+  const theme = usePaperTheme();
 
   const components: CarouselProps[] = [
     {
@@ -37,7 +36,7 @@ const Home = () => {
 
   /* toggles animation and changes the current index */
   const setBottom = (index: number) => {
-    // Reduce old screen
+    // Reduce old bottom component
     animationWidth.value = withSpring(0);
 
     // Expand the new one
@@ -51,8 +50,6 @@ const Home = () => {
       );
     }, 170);
   }
-
-  const theme = usePaperTheme();
 
   return (
     <SafeAreaView style={[Layout.fullWidth]}>
@@ -68,7 +65,7 @@ const Home = () => {
       >
         {/* Top component with pagination bar */}
         <HomeCarousel setBottom={setBottom}
-                      topHeight={200}
+                      topHeight={400}
                       components={components} />
 
         {/* Bottom component */}

@@ -1,6 +1,6 @@
 import RNFS from 'react-native-fs';
 import { Platform } from "react-native";
-import { CheckDirError, ImageDownloadError, NoConnectionError } from "../controller/Errors";
+import { CheckDirError, ImageDownloadError, ImageNameExistsError, NoConnectionError } from "../controller/Errors";
 import { firebase } from '@react-native-firebase/storage';
 import CollectionInfo from "../../CollectionInfo";
 import BaseController from "../controller/BaseController";
@@ -77,6 +77,10 @@ export default class ImagesManager {
    */
   private static async setCache(src: string, dest: string) {
     const imagePath = this.getPath(dest);
+
+    if (await RNFS.exists(imagePath)) {
+      throw new ImageNameExistsError();
+    }
 
     await RNFS.copyFile(src, imagePath);
   }

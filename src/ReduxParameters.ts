@@ -5,4 +5,5 @@ export default {
   connectionDetails: "ConnectionDetails",
   connectionType: "NetworkConnectionType",
   currentEmployee: "currentEmployeeData",
+  noImageFound: ""
 }

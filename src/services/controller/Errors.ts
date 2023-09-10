@@ -176,3 +176,9 @@ export class NoConnectionError extends Error {
     super("NoConnectionError");
   }
 }
+
+export class ImageNameExistsError extends Error {
+  public constructor() {
+    super("ImageNameExistsError");
+  }
+}

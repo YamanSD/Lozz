@@ -47,9 +47,9 @@ export default class ImagesManager {
    * @param imageUrl - The URL of the image to download.
    * @returns Promise that resolves to the local path of the downloaded image.
    */
-  private static async downloadImage(imageUrl: string): Promise<string> {
+  private static async downloadImage(imageUrl: string): Promise<string | null> {
     if (!BaseController.isConnected) {
-      throw new NoConnectionError();
+      throw new ImageDownloadError();
     }
 
     /* check the images directory */
@@ -65,7 +65,7 @@ export default class ImagesManager {
       return imagePath;
     }
 
-    throw new ImageDownloadError();
+    return null;
   }
 
   /**
@@ -116,7 +116,7 @@ export default class ImagesManager {
    * @param imageUrl - The URL of the image to retrieve.
    * @returns Promise that resolves to the local path of the cached image.
    */
-  public static async get(imageUrl: string): Promise<string> {
+  public static async get(imageUrl: string): Promise<string | null> {
     /* check the images directory */
     await this.checkDirectory();
 

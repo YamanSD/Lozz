@@ -16,10 +16,10 @@ import { View } from "react-native";
 type ElementType = ReactElement<any, string | JSXElementConstructor<any>>;
 
 /**
- * - bottom: Component to be displayed under the pagination dots.
- *
  * - top: Component to be displayed above the pagination dots.
- */
+ *
+ * - bottom: Component to be displayed under the pagination dots.
+ **/
 export type CarouselProps = {
   top: ElementType,
   bottom: ElementType,

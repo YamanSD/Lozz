@@ -27,19 +27,51 @@ const Home = () => {
       top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
       bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
     },
+    {
+      top: (<View style={{backgroundColor: "white", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+    },
+    {
+      top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+    },
+    {
+      top: (<View style={{backgroundColor: "white", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+    },
+    {
+      top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+    },
+    {
+      top: (<View style={{backgroundColor: "white", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+    },
+    {
+      top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+    },
   ];
 
-  /* screen width */
+  /* screen width, used for spring animation */
   const maxWidth = ScreenDimensions.width;
+
+  /* min screen width, used for spring animation */
+  const minWidth = 50; // px
+
   const animationWidth = useSharedValue(maxWidth);
   const [bottomIndex, setBottomIndex] = useState(0);
 
   /* toggles animation and changes the current index */
   const setBottom = (index: number) => {
     // Reduce old bottom component
-    animationWidth.value = withSpring(0);
+    animationWidth.value = withSpring(minWidth);
 
-    // Expand the new one
+    /*
+     * Expand the new one.
+     * (Note that this approach is not the best, however it works).
+     * If better alternative found change.
+     */
     setTimeout(() => {
       setBottomIndex(index);
       animationWidth.value = withSpring(
@@ -48,7 +80,7 @@ const Home = () => {
           damping: 17
         }
       );
-    }, 170);
+    }, 150);
   }
 
   return (

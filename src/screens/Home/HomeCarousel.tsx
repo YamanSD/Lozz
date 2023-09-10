@@ -89,6 +89,7 @@ const HomeCarousel = ({ components, topHeight,
         mode="horizontal-stack"
         modeConfig={{
           stackInterval: (padHTop ?? 0) * 40,
+          rotateZDeg: 0
         }}
         data={components}
         renderItem={({item}) => {

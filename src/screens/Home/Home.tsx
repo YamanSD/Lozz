@@ -9,6 +9,7 @@ import Animated, {
   withSpring
 } from "react-native-reanimated";
 import { ScreenDimensions } from "../../theme/Variables";
+import CacheImage from "../../components/CacheImage/CacheImage";
 
 /**
  * Home screen component.
@@ -19,30 +20,6 @@ const Home = () => {
   const theme = usePaperTheme();
 
   const components: CarouselProps[] = [
-    {
-      top: (<View style={{backgroundColor: "white", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-    },
-    {
-      top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-    },
-    {
-      top: (<View style={{backgroundColor: "white", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-    },
-    {
-      top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-    },
-    {
-      top: (<View style={{backgroundColor: "white", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-    },
-    {
-      top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-    },
     {
       top: (<View style={{backgroundColor: "white", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
       bottom: (<View style={{backgroundColor: "black", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
@@ -95,6 +72,23 @@ const Home = () => {
         bounces={true}
         showsVerticalScrollIndicator={false}
       >
+        {/* app name bar */}
+        <View style={[Layout.fullWidth, Layout.rowHCenter, {
+          padding: 20,
+          height: 90,
+          // backgroundColor: theme.colors.primary
+          backgroundColor: "#000"
+        }]}>
+          <CacheImage
+            source={{uri: "https://www.research-andme.com/wp-content/uploads/2018/03/3840x2160-dark-red-solid-color-background.jpg"}}
+            style={{
+              height: 50,
+              width: 50,
+              borderRadius: 8
+            }}
+          />
+        </View>
+
         {/* Top component with pagination bar */}
         <HomeCarousel setBottom={setBottom}
                       topHeight={400}

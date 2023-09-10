@@ -17,5 +17,6 @@ export default function ({}: ThemeVariables) {
       send: require('./assets/images/send.png'),
       translate: require('./assets/images/translate.png'),
     },
+    defaultImage: require('./assets/images/defaultImage.jpeg')
   };
 }

@@ -134,6 +134,19 @@ export default class ImagesManager {
   }
 
   /**
+   * @param url of the image to be deleted completely from database
+   */
+  public static async deleteImage(url: string) {
+    const reference = this.storage.refFromURL(url);
+    const path = this.getPath(url);
+
+    if (await RNFS.exists(path)) {
+      await reference.delete();
+      await RNFS.unlink(path);
+    }
+  }
+
+  /**
    * Clears the directory containing the images
    */
   public static async clear() {

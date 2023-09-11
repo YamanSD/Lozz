@@ -197,7 +197,7 @@ const Home = () => {
 
         {/* Top component with pagination bar */}
         <HomeCarousel setBottom={setBottom}
-                      topHeight={150}
+                      topHeight={170}
                       components={components}
                       padHTop={horizontalPadding} />
 

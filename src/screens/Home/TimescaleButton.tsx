@@ -37,8 +37,8 @@ const TimescaleButton = ({ timescale, onPress }: Properties) => {
                   }}
                   icon={"chevron-down"}
                   expandBy={0.05}
-                  onPress={() => {onPress()}}
-    >
+                  textColor={"white"}
+                  onPress={() => {onPress()}}>
       {timescale}
     </SpringButton>
   );

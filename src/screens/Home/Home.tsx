@@ -7,15 +7,16 @@ import { CarouselProps } from "./HomeCarousel";
 import LinearGradient from "react-native-linear-gradient";
 import Animated, {
   useSharedValue,
-  withSpring
+  withTiming,
+  Easing
 } from "react-native-reanimated";
-import { ScreenDimensions } from "../../theme/Variables";
 import { CacheImage } from "../../components";
 import CollectionInfo from "../../CollectionInfo";
 import { addAlpha } from "../../services";
 import HomeCarousel from "./HomeCarousel";
 import TimescaleButton from "./TimescaleButton";
 import SalesTop from "./Sales/SalesTop";
+import SalesBottom from "./Sales/SalesBottom";
 
 /**
  * Enum for statistics timescales
@@ -53,22 +54,22 @@ const Home = () => {
   /* True displays the time interval menu */
   const [isMenuVisible, setIsMenuVisible] = useState(false);
 
-  /* screen width, used for spring animation */
-  const maxWidth = ScreenDimensions.width;
-
-  /* min screen width, used for spring animation */
-  const minWidth = 50; // px
-
   /* horizontal padding for all components */
   const horizontalPadding = 10;
 
-  const animationWidth = useSharedValue(maxWidth);
+  /* animation opacity variable used for the bottom components */
+  const animationOpacity = useSharedValue(1);
+
+  /* index of the current selected bottom component */
   const [bottomIndex, setBottomIndex] = useState(0);
 
   /* toggles animation and changes the current index */
   const setBottom = (index: number) => {
     // Reduce old bottom component
-    animationWidth.value = withSpring(minWidth);
+    animationOpacity.value = withTiming(0,
+      {
+        easing: Easing.out(Easing.exp)
+      });
 
     /*
      * Expand the new one.
@@ -76,19 +77,14 @@ const Home = () => {
      */
     setTimeout(() => {
       setBottomIndex(index);
-      animationWidth.value = withSpring(
-        maxWidth,
-        {
-          damping: 17
-        }
-      );
+      animationOpacity.value = withTiming(1);
     }, 150);
   }
 
   const components: CarouselProps[] = [
     {
-      top: <SalesTop timescale={timescale}/>,
-      bottom: (<View style={{backgroundColor: "white", height: 400, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      top: <SalesTop timescale={timescale} />,
+      bottom: <SalesBottom timescale={timescale} />
     },
     {
       top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
@@ -209,7 +205,7 @@ const Home = () => {
         <Animated.View
           style={{
             ...Layout.fullWidth,
-            width: animationWidth,
+            opacity: animationOpacity,
             paddingHorizontal: horizontalPadding,
           }}
         >

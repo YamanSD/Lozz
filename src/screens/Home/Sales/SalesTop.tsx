@@ -1,9 +1,9 @@
 import React from "react";
 import { View } from "react-native";
 import { useTheme as useBoilerTheme } from "../../../hooks";
-import { Text, Surface } from "react-native-paper";
+import { Surface, Text } from "react-native-paper";
 import ChangeBadge from "./ChangeBadge";
-import { formatMonetary } from "../../../services";
+import { formatMonetary, LatestTimeUnit, Statistics } from "../../../services";
 
 /**
  * Prop-type for the Sales slide top component.
@@ -56,7 +56,7 @@ const SalesTop = ({ timescale }: Properties) => {
         <Text style={{
           fontWeight: "700",
           fontSize: 35
-        }}>${formatMonetary(123100101.123131)}</Text>
+        }}>${formatMonetary(Statistics.getTotal().sales.data)}</Text>
       </View>
     </Surface>
   );

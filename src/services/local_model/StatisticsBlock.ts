@@ -12,6 +12,7 @@ import Order from "../model/Order";
 import Expense from "../model/Expense";
 import { isEqual } from "lodash";
 import Product from "../model/Product";
+import { IllegalStateError } from "../controller/Errors";
 
 
 /**
@@ -22,6 +23,19 @@ enum TimeUnit {
   month,
   day,
   hour
+}
+
+/**
+ * Enum class for the latest time unit options.
+ * The value represent the number of units to consider
+ * into the past.
+ */
+export enum LatestTimeUnit {
+  hour = 24,
+  day = 7,
+  week = 8,
+  month = 12,
+  year = 10
 }
 
 /**
@@ -44,6 +58,17 @@ type MappingFunction = (block: StatisticsBlock) => any;
 export default class StatisticsBlock {
   /* raw statistics data */
   private dataValue: statisticsBlock;
+
+  /* end border indexes for timescales */
+  private static IndexBorders = {
+    [TimeUnit.year]: [0, 4],
+    [TimeUnit.month]: [4, 6],
+    [TimeUnit.day]: [6, 8],
+    [TimeUnit.hour]: [8, 10]
+  };
+
+  /* key of the Total StatisticsBlock */
+  private static totalKey: string = "total";
 
   /* persistence instance to store the statistics data */
   private static storage: MMKV = new MMKV({
@@ -356,7 +381,7 @@ export default class StatisticsBlock {
    * @protected
    */
   protected get isAtomic(): boolean {
-    return StatisticsBlock.isCompleteTimestamp(this.timestamp);
+    return !this.isTotal && StatisticsBlock.isCompleteTimestamp(this.timestamp);
   }
 
   /**
@@ -765,6 +790,7 @@ export default class StatisticsBlock {
     this.getInstance(year).addRestock(restock);
     this.getInstance(month).addRestock(restock);
     this.getInstance(day).addRestock(restock);
+    this.getTotal().addRestock(restock);
   }
 
   /**
@@ -781,6 +807,7 @@ export default class StatisticsBlock {
     this.getInstance(year).addOrder(order);
     this.getInstance(month).addOrder(order);
     this.getInstance(day).addOrder(order);
+    this.getTotal().addOrder(order);
   }
 
   /**
@@ -797,6 +824,7 @@ export default class StatisticsBlock {
     this.getInstance(year).addExpense(expense);
     this.getInstance(month).addExpense(expense);
     this.getInstance(day).addExpense(expense);
+    this.getTotal().addExpense(expense);
   }
 
   /**
@@ -813,6 +841,7 @@ export default class StatisticsBlock {
     this.getInstance(year).subtractRestock(restock);
     this.getInstance(month).subtractRestock(restock);
     this.getInstance(day).subtractRestock(restock);
+    this.getTotal().subtractRestock(restock);
   }
 
   /**
@@ -829,6 +858,7 @@ export default class StatisticsBlock {
     this.getInstance(year).subtractOrder(order);
     this.getInstance(month).subtractOrder(order);
     this.getInstance(day).subtractOrder(order);
+    this.getTotal().subtractOrder(order);
   }
 
   /**
@@ -845,6 +875,7 @@ export default class StatisticsBlock {
     this.getInstance(year).subtractExpense(expense);
     this.getInstance(month).subtractExpense(expense);
     this.getInstance(day).subtractExpense(expense);
+    this.getTotal().subtractExpense(expense);
   }
 
   /**
@@ -893,12 +924,25 @@ export default class StatisticsBlock {
    * Saves the block data into cache
    */
   public save(): void {
-    if (this.empty) {
+    if (!this.isTotal && this.empty) {
       this.delete();
       return;
     }
 
-    StatisticsBlock.setValue(this.timestamp, this.data);
+    StatisticsBlock.setValue(
+      this.isTotal
+        ? StatisticsBlock.totalKey
+        : this.timestamp,
+      this.data
+    );
+  }
+
+  /**
+   * @returns true if this block is the total block
+   * @protected
+   */
+  protected get isTotal(): boolean {
+    return this.data.isTotal === true;
   }
 
   /**
@@ -945,6 +989,26 @@ export default class StatisticsBlock {
 
     if (!this.checkCache(key)) {
       return this.noValue(key);
+    }
+
+    return new StatisticsBlock(this.getValue(key));
+  }
+
+  /**
+   * Returns the total statistics block.
+   * If not present, it is created.
+   *
+   * @protected
+   */
+  public static getTotal(): StatisticsBlock {
+    const key = this.totalKey;
+
+    if (!this.checkCache(key)) {
+      let data = this.noValue(this.currentTimestamp).data;
+
+      data.isTotal = true;
+
+      this.setValue(key, data);
     }
 
     return new StatisticsBlock(this.getValue(key));
@@ -1046,9 +1110,13 @@ export default class StatisticsBlock {
    * @returns combined statisticsBlocks from [t0, t1] under step 'unit'.
    * @private
    */
-  protected static combineFromTo(t0: string,
-                           t1: string,
-                           unit: TimeUnit): StatisticsBlock {
+  protected static combineFromTo(
+    t0: string,
+    t1: string,
+    unit: TimeUnit): StatisticsBlock {
+    t0 = this.formatTimestamp(t0, unit);
+    t1 = this.formatTimestamp(t1, unit);
+
     let result: StatisticsBlock = this.noValue(`${t0}->${t1}`) ;
 
     while (t0 < t1) {
@@ -1108,6 +1176,16 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @param timestamp to get the relevant information from
+   * @param unit to get the relevant information for
+   * @returns the relative information from the timestamp, based on the unit
+   * @protected
+   */
+  protected static formatTimestamp(timestamp: string, unit: TimeUnit): string {
+    return timestamp.slice(0, this.IndexBorders[unit][1]);
+  }
+
+  /**
    * @param t0 first timestamp
    * @param t1 second timestamp
    * @param unit time unit
@@ -1120,16 +1198,18 @@ export default class StatisticsBlock {
     t1: string,
     unit: TimeUnit,
     map?: MappingFunction): any[] {
+    t0 = this.formatTimestamp(t0, unit);
+    t1 = this.formatTimestamp(t1, unit);
+
     if (map === undefined) {
       map = defaultMapping;
     }
 
-    let result: StatisticsBlock[] = [];
-    let currentTimestamp = t0;
+    let result: any[] = [];
 
-    while (currentTimestamp < t1) {
-      result.push(map(this.getInstance(currentTimestamp)));
-      currentTimestamp = this.incrementTimestamp(currentTimestamp, unit);
+    while (t0 < t1) {
+      result.push(map(this.getInstance(t0)));
+      t0 = this.incrementTimestamp(t0, unit);
     }
 
     return result;
@@ -1146,7 +1226,7 @@ export default class StatisticsBlock {
    */
   public static getFromYearTo(y0: string,
                               y1: string,
-                              map?: MappingFunction): StatisticsBlock[] {
+                              map?: MappingFunction): any[] {
     return this.getFromTo(y0, y1, TimeUnit.year, map);
   }
 
@@ -1161,7 +1241,7 @@ export default class StatisticsBlock {
    */
   public static getFromMonthTo(m0: string,
                                m1: string,
-                               map?: MappingFunction): StatisticsBlock[] {
+                               map?: MappingFunction): any[] {
     return this.getFromTo(m0, m1, TimeUnit.month, map);
   }
 
@@ -1176,7 +1256,7 @@ export default class StatisticsBlock {
    */
   public static getFromDayTo(d0: string,
                              d1: string,
-                             map?: MappingFunction): StatisticsBlock[] {
+                             map?: MappingFunction): any[] {
     return this.getFromTo(d0, d1, TimeUnit.day, map);
   }
 
@@ -1191,40 +1271,106 @@ export default class StatisticsBlock {
    */
   public static getFromHourTo(h0: string,
                               h1: string,
-                              map?: MappingFunction): StatisticsBlock[] {
+                              map?: MappingFunction): any[] {
     return this.getFromTo(h0, h1, TimeUnit.hour, map);
   }
 
   /**
-   * @param date to be incremented by 1 year
+   * @param date to be incremented by 1 time unit
    * @param unit time unit to increment by
+   * @param value of incrementation
    */
-  public static incrementDate(date: Date, unit: TimeUnit): void {
+  public static incrementDate(date: Date,
+                              unit: TimeUnit,
+                              value: number = 1): void {
     switch (unit) {
       case TimeUnit.year:
-        date.setFullYear(date.getFullYear() + 1);
+        date.setFullYear(date.getFullYear() + value);
         break;
       case TimeUnit.month:
-        date.setMonth(date.getMonth() + 1);
+        date.setMonth(date.getMonth() + value);
         break;
       case TimeUnit.day:
-        date.setDate(date.getDate() + 1);
+        date.setDate(date.getDate() + value);
         break;
       case TimeUnit.hour:
-        date.setHours(date.getHours() + 1);
+        date.setHours(date.getHours() + value);
         break;
     }
   }
 
   /**
+   * @param unit to be converted
+   * @returns the equivalent TimeUnit
+   */
+  public static convertLatestUnit(unit: LatestTimeUnit): TimeUnit {
+    switch (unit) {
+      case LatestTimeUnit.hour:
+        return TimeUnit.hour;
+      case LatestTimeUnit.day:
+        return TimeUnit.day;
+      case LatestTimeUnit.week:
+        return TimeUnit.day;
+      case LatestTimeUnit.month:
+        return TimeUnit.month;
+      case LatestTimeUnit.year:
+        return TimeUnit.year;
+      default:
+        throw new IllegalStateError();
+    }
+  }
+
+  /**
+   * @param scale to get the latest data for
+   * @param map applied to each block in the timeframe
+   * @returns an object containing tags (dates) and data for the timeframe
+   */
+  public static getLatestStatistics(scale: LatestTimeUnit,
+                                    map: MappingFunction = defaultMapping): {
+    tags: Date[],
+    data: any[]
+  } {
+    const timeUnit = this.convertLatestUnit(scale);
+    const decrementValue = (scale as number)
+      * (scale === LatestTimeUnit.week ? 7 : 1);
+
+    let currentDate = new Date();
+    let pastDate = BaseModel.deepCopy(currentDate);
+
+    this.incrementDate(pastDate, timeUnit, -decrementValue);
+    this.incrementDate(currentDate, timeUnit);
+
+    let tags: Date[] = [];
+    let data: any[] = [];
+
+    this.getFromTo(
+      this.invertDate(pastDate),
+      this.invertDate(currentDate),
+      timeUnit,
+      (b) => {
+        tags.push(b.date);
+        data.push(map(b));
+      }
+    );
+
+    return {
+      tags: tags,
+      data: data,
+    };
+  }
+
+  /**
    * @param timestamp to be incremented
    * @param unit unit of incrementation
+   * @param value value of incrementation
    * @returns incremented timestamp by date
    */
-  public static incrementTimestamp(timestamp: string, unit: TimeUnit): string {
+  public static incrementTimestamp(timestamp: string,
+                                   unit: TimeUnit,
+                                   value: number = 1): string {
     let date = this.wrapTimestamp(timestamp);
-    this.incrementDate(date, unit);
-    return this.invertDate(date);
+    this.incrementDate(date, unit, value);
+    return this.formatTimestamp(this.invertDate(date), unit);
   }
 
   /**
@@ -1234,11 +1380,29 @@ export default class StatisticsBlock {
    */
   protected static dissectTimestamp(timestamp: string): dissectedTimestamp {
     return {
-      year: timestamp.slice(0, 4),
-      month: timestamp.slice(4, 6).padStart(2, '0'),
-      day: timestamp.slice(6, 8).padStart(2, '0'),
-      hour: timestamp.slice(8, 10).padStart(2, '0')
+      year: timestamp.slice(
+        ...this.IndexBorders[TimeUnit.year]
+      ),
+      month: timestamp.slice(
+        ...this.IndexBorders[TimeUnit.month]
+      ).padStart(2, '0'),
+      day: timestamp.slice(
+        ...this.IndexBorders[TimeUnit.day]
+      ).padStart(2, '0'),
+      hour: timestamp.slice(
+        ...this.IndexBorders[TimeUnit.hour]
+      ).padStart(2, '0')
     };
+  }
+
+  /**
+   * @param timestamp to check
+   * @returns true if the timestamp accuracy is at least
+   *          the same as the date.
+   * @protected
+   */
+  protected static hasDay(timestamp: string): boolean {
+    return this.IndexBorders[TimeUnit.day][1] <= timestamp.length;
   }
 
   /**
@@ -1252,7 +1416,7 @@ export default class StatisticsBlock {
     return new Date(
       Number.parseInt(temp.year),
       Number.parseInt(temp.month),
-      Number.parseInt(temp.day),
+      Math.max(Number.parseInt(temp.day), this.hasDay(timestamp) ? 0 : 1),
       Number.parseInt(temp.hour)
     );
   }

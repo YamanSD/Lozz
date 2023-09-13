@@ -12,32 +12,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { CacheImage } from "../../components";
 import CollectionInfo from "../../CollectionInfo";
-import { addAlpha } from "../../services";
+import { addAlpha, Timescale } from "../../services";
 import HomeCarousel from "./HomeCarousel";
 import TimescaleButton from "./TimescaleButton";
 import SalesTop from "./Sales/SalesTop";
 import SalesBottom from "./Sales/SalesBottom";
-
-/**
- * Enum for statistics timescales
- *
- * - H: hours.
- *
- * - D: days.
- *
- * - W: weeks.
- *
- * - M: months.
- *
- * - Y: years.
- */
-enum Timescale {
-  H = "Hourly",
-  D = "Daily",
-  W = "Weekly",
-  M = "Monthly",
-  Y = "Annually"
-}
 
 /**
  * Home screen component.

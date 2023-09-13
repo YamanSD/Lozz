@@ -6,7 +6,13 @@ import { View } from "react-native";
 import { Surface } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme, Text } from "react-native-paper";
-import { addAlpha, formatMonetary } from "../../../services";
+import {
+  addAlpha,
+  formatMonetary,
+  Statistics,
+  Timescale,
+  LatestTimeUnit
+} from "../../../services";
 
 /**
  * Prop-type for the Sales slide bottom component.
@@ -14,7 +20,7 @@ import { addAlpha, formatMonetary } from "../../../services";
  * - timescale: current timescale
  */
 type Properties = {
-  timescale: string,
+  timescale: Timescale,
 };
 
 /**
@@ -27,31 +33,24 @@ const SalesBottom = ({ timescale }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
 
-  const labels: string[] = [];
+  const timescaleToUnit = {
+    [Timescale.Y]: LatestTimeUnit.year,
+    [Timescale.M]: LatestTimeUnit.month,
+    [Timescale.W]: LatestTimeUnit.week,
+    [Timescale.D]: LatestTimeUnit.day,
+    [Timescale.H]: LatestTimeUnit.hour
+  };
 
-  let i = 0;
-  while (i++ < 12) {
-    labels.push(i.toString());
-  }
+  const { tags, data } = Statistics.getLatestStatistics(
+    timescaleToUnit[timescale]
+  );
 
-  const data = {
-    labels: labels,
+  /* given to the graph */
+  const dataObject = {
+    labels: tags,
     datasets: [
       {
-        data: [
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100,
-          Math.random() * 100
-        ]
+        data: data
       }
     ],
   };
@@ -116,7 +115,7 @@ const SalesBottom = ({ timescale }: Properties) => {
         </Text>
       </View>
       <LineChart
-        data={data}
+        data={dataObject}
         height={220}
         width={width}
         yAxisLabel="$"

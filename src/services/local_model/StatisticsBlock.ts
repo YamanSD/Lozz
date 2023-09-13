@@ -26,6 +26,27 @@ enum TimeUnit {
 }
 
 /**
+ * Enum for statistics timescales
+ *
+ * - H: hours.
+ *
+ * - D: days.
+ *
+ * - W: weeks.
+ *
+ * - M: months.
+ *
+ * - Y: years.
+ */
+export enum Timescale {
+  H = "Hourly",
+  D = "Daily",
+  W = "Weekly",
+  M = "Monthly",
+  Y = "Annually"
+}
+
+/**
  * Enum class for the latest time unit options.
  * The value represent the number of units to consider
  * into the past.

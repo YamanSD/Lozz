@@ -1,5 +1,5 @@
 export { default as DependencyTree } from './controller/DependencyTree';
-export { default as Statistics, LatestTimeUnit } from './local_model/StatisticsBlock';
+export { default as Statistics, LatestTimeUnit, Timescale } from './local_model/StatisticsBlock';
 export { default as Monetary } from './local_model/Monetary';
 export { default as CartProduct } from './local_model/CartProduct';
 export { default as Category } from './model/Category';

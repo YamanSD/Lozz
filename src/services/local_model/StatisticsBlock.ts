@@ -26,6 +26,19 @@ enum TimeUnit {
 }
 
 /**
+ * Enum class for the latest time unit options.
+ * The value represent the number of units to consider
+ * into the past.
+ */
+export enum LatestTimeUnit {
+  hour = 24,
+  day = 7,
+  week = 4,
+  month = 12,
+  year = 5
+}
+
+/**
  * Enum for statistics timescales
  *
  * - H: hours.
@@ -39,24 +52,11 @@ enum TimeUnit {
  * - Y: years.
  */
 export enum Timescale {
-  H = "Hourly",
-  D = "Daily",
-  W = "Weekly",
-  M = "Monthly",
-  Y = "Annually"
-}
-
-/**
- * Enum class for the latest time unit options.
- * The value represent the number of units to consider
- * into the past.
- */
-export enum LatestTimeUnit {
-  hour = 24,
-  day = 7,
-  week = 8,
-  month = 12,
-  year = 10
+  H = "Today",
+  D = "Past 7 days",
+  W = "Past 4 weeks",
+  M = "Past year",
+  Y = "Past 5 years"
 }
 
 /**
@@ -87,6 +87,9 @@ export default class StatisticsBlock {
     [TimeUnit.day]: [6, 8],
     [TimeUnit.hour]: [8, 10]
   };
+
+  /* timestamp used for the combined instance */
+  private static combinedTag = "combined";
 
   /* key of the Total StatisticsBlock */
   private static totalKey: string = "total";
@@ -1211,6 +1214,7 @@ export default class StatisticsBlock {
    * @param t1 second timestamp
    * @param unit time unit
    * @param map applied to each block in the timeframe
+   * @param combine if true, an additional combined block is added at the end
    * @returns List of statisticsBlocks information from [t0, t1] under step 'unit'.
    * @private
    */
@@ -1218,12 +1222,26 @@ export default class StatisticsBlock {
     t0: string,
     t1: string,
     unit: TimeUnit,
-    map?: MappingFunction): any[] {
+    map?: MappingFunction,
+    combine?: boolean): any[] {
     t0 = this.formatTimestamp(t0, unit);
     t1 = this.formatTimestamp(t1, unit);
 
+    let combined: StatisticsBlock;
+
     if (map === undefined) {
       map = defaultMapping;
+    }
+
+    if (combine) {
+      combined = this.noValue(this.combinedTag);
+
+      const mapping = map;
+
+      map = (b) => {
+        combined.combine(b);
+        return mapping(b);
+      }
     }
 
     let result: any[] = [];
@@ -1231,6 +1249,11 @@ export default class StatisticsBlock {
     while (t0 < t1) {
       result.push(map(this.getInstance(t0)));
       t0 = this.incrementTimestamp(t0, unit);
+    }
+
+    if (combine) {
+      // @ts-ignore
+      result.push(combined);
     }
 
     return result;
@@ -1344,34 +1367,59 @@ export default class StatisticsBlock {
   /**
    * @param scale to get the latest data for
    * @param map applied to each block in the timeframe
-   * @returns an object containing tags (dates) and data for the timeframe
+   * @param mapDate maps date to string,
+   *                takes the position of the block as well,
+   *                takes the total number of blocks as well.
+   *                If it returns undefined, the value is ignored.
+   * @returns an object containing tags (dates) and data for the timeframe.
+   *          The last block is the total block in the frame.
    */
   public static getLatestStatistics(scale: LatestTimeUnit,
-                                    map: MappingFunction = defaultMapping): {
-    tags: Date[],
+                                    map: MappingFunction = defaultMapping,
+                                    mapDate: (d: Date,
+                                              p: number,
+                                              n: number) => string | undefined): {
+    tags: string[],
     data: any[]
   } {
     const timeUnit = this.convertLatestUnit(scale);
-    const decrementValue = (scale as number)
-      * (scale === LatestTimeUnit.week ? 7 : 1);
+    const n = (scale as number); // Number of tags
+    const decrementValue = n * (scale === LatestTimeUnit.week ? 7 : 1);
+    let position = 0; // Used to count the position of the block
 
     let currentDate = new Date();
     let pastDate = BaseModel.deepCopy(currentDate);
 
-    this.incrementDate(pastDate, timeUnit, -decrementValue);
-    this.incrementDate(currentDate, timeUnit);
+    if (scale === LatestTimeUnit.hour) {
+      pastDate.setHours(0);
+      currentDate.setHours(25);
+    } else {
+      this.incrementDate(pastDate, timeUnit, -decrementValue);
+      this.incrementDate(currentDate, timeUnit);
+    }
 
-    let tags: Date[] = [];
-    let data: any[] = [];
+    let tags: string[] = [];
 
-    this.getFromTo(
+    const data = this.getFromTo(
       this.invertDate(pastDate),
       this.invertDate(currentDate),
       timeUnit,
       (b) => {
-        tags.push(b.date);
-        data.push(map(b));
-      }
+        if (b.timestamp === this.combinedTag) {
+          return b;
+        }
+
+        const temp = mapDate(b.date, position, n);
+
+        if (temp !== undefined) {
+          tags.push(temp);
+        }
+
+        position++;
+
+        return map(b);
+      },
+      true
     );
 
     return {

@@ -3,24 +3,28 @@ import { View } from "react-native";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { Surface, Text } from "react-native-paper";
 import ChangeBadge from "./ChangeBadge";
-import { formatMonetary, LatestTimeUnit, Statistics } from "../../../services";
+import { formatMonetary, Statistics } from "../../../services";
 
 /**
  * Prop-type for the Sales slide top component.
  *
- * - timescale: current timescale
+ * - statistics: total statistics block for the timescale
+ *
+ * - percentage: percentage of change
  */
 type Properties = {
-  timescale: string,
+  statistics: Statistics,
+  percentage: number
 };
 
 /**
  * Top component for the total sales
  *
- * @param timescale to get the data for
+ * @param statistics to get data from
+ * @param percentage percentage change, given by bottom component
  * @constructor
  */
-const SalesTop = ({ timescale }: Properties) => {
+const SalesTop = ({ statistics, percentage }: Properties) => {
   const { Layout } = useBoilerTheme();
 
   return (
@@ -45,7 +49,7 @@ const SalesTop = ({ timescale }: Properties) => {
           }}>
             Total Sales
           </Text>
-          <ChangeBadge percentage={+0.123} />
+          <ChangeBadge percentage={percentage} />
       </View>
 
       <View style={[
@@ -56,7 +60,7 @@ const SalesTop = ({ timescale }: Properties) => {
         <Text style={{
           fontWeight: "700",
           fontSize: 35
-        }}>${formatMonetary(Statistics.getTotal().sales.data)}</Text>
+        }}>${formatMonetary(statistics.sales.data)}</Text>
       </View>
     </Surface>
   );

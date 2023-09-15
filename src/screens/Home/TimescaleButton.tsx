@@ -27,13 +27,12 @@ const TimescaleButton = ({ timescale, onPress }: Properties) => {
                   }}
                   contentStyle={{
                     height: 30,
-                    width: 130,
+                    width: 140,
                     flexDirection: "row-reverse"
                   }}
                   labelStyle={{
                     fontWeight: "700",
                     height: "65%",
-                    width: "50%"
                   }}
                   icon={"chevron-down"}
                   expandBy={0.05}

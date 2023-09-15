@@ -33,7 +33,7 @@ enum TimeUnit {
 export enum LatestTimeUnit {
   hour = 24,
   day = 7,
-  week = 4,
+  week = 27, // 28 Days, 4 weeks.
   month = 12,
   year = 5
 }
@@ -54,8 +54,8 @@ export enum LatestTimeUnit {
 export enum Timescale {
   H = "Today",
   D = "Past 7 days",
-  W = "Past 4 weeks",
-  M = "Past year",
+  W = "This month",
+  M = "This year",
   Y = "Past 5 years"
 }
 
@@ -1215,6 +1215,7 @@ export default class StatisticsBlock {
    * @param unit time unit
    * @param map applied to each block in the timeframe
    * @param combine if true, an additional combined block is added at the end
+   * @param density number of blocks combined per array index, default is 1.
    * @returns List of statisticsBlocks information from [t0, t1] under step 'unit'.
    * @private
    */
@@ -1222,8 +1223,9 @@ export default class StatisticsBlock {
     t0: string,
     t1: string,
     unit: TimeUnit,
-    map?: MappingFunction,
-    combine?: boolean): any[] {
+    map?: MappingFunction, // Do not use `= defaultMapping` IDE can't handle
+    combine: boolean = false,
+    density: number = 1): any[] {
     t0 = this.formatTimestamp(t0, unit);
     t1 = this.formatTimestamp(t1, unit);
 
@@ -1245,10 +1247,31 @@ export default class StatisticsBlock {
     }
 
     let result: any[] = [];
+    let counter: number = density;
+    let n = -1; // Number of blocks
 
     while (t0 < t1) {
-      result.push(map(this.getInstance(t0)));
+      if (density <= 1) {
+        result.push(map(this.getInstance(t0)));
+      } else {
+        if (counter <= 0) {
+          result[n] = map(result[n]);
+          counter = density;
+        } else if (counter === density) {
+          n++;
+          result.push(this.getInstance(t0));
+          counter--;
+        } else {
+          result[n].combine(this.getInstance(t0));
+          counter--;
+        }
+      }
+
       t0 = this.incrementTimestamp(t0, unit);
+    }
+
+    while (result[n] instanceof StatisticsBlock) {
+      result[n] = map(result[n]);
     }
 
     if (combine) {
@@ -1384,7 +1407,6 @@ export default class StatisticsBlock {
   } {
     const timeUnit = this.convertLatestUnit(scale);
     const n = (scale as number); // Number of tags
-    const decrementValue = n * (scale === LatestTimeUnit.week ? 7 : 1);
     let position = 0; // Used to count the position of the block
 
     let currentDate = new Date();
@@ -1393,8 +1415,16 @@ export default class StatisticsBlock {
     if (scale === LatestTimeUnit.hour) {
       pastDate.setHours(0);
       currentDate.setHours(25);
+    } else if (scale === LatestTimeUnit.week) {
+      pastDate = new Date(currentDate.getFullYear(),
+        currentDate.getMonth());
+      currentDate = new Date(currentDate.getFullYear(),
+        currentDate.getMonth() + 1);
+    } else if (scale === LatestTimeUnit.month) {
+      pastDate.setMonth(0);
+      currentDate.setMonth(12);
     } else {
-      this.incrementDate(pastDate, timeUnit, -decrementValue);
+      this.incrementDate(pastDate, timeUnit, -n);
       this.incrementDate(currentDate, timeUnit);
     }
 
@@ -1419,7 +1449,8 @@ export default class StatisticsBlock {
 
         return map(b);
       },
-      true
+      true,
+      scale === LatestTimeUnit.week ? 6 : 1
     );
 
     return {

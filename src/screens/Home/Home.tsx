@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { CacheImage } from "../../components";
 import CollectionInfo from "../../CollectionInfo";
-import { addAlpha, Timescale } from "../../services";
+import { addAlpha, Statistics, Timescale } from "../../services";
 import HomeCarousel from "./HomeCarousel";
 import TimescaleButton from "./TimescaleButton";
 import SalesTop from "./Sales/SalesTop";
@@ -28,7 +28,7 @@ const Home = () => {
 
   /* Current selected time interval */
   const [timescale, setTimescale] =
-    useState<Timescale>(Timescale.Y);
+    useState<Timescale>(Timescale.H);
 
   /* True displays the time interval menu */
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -41,6 +41,13 @@ const Home = () => {
 
   /* index of the current selected bottom component */
   const [bottomIndex, setBottomIndex] = useState(0);
+
+  /* combined statistics to used for top component */
+  const [combinedStatistics, setCombinedStatistics] =
+    useState(Statistics.noValue(""));
+
+  /* percentage change to be displayed */
+  const [percentageChange, setPercentageChange] = useState(0);
 
   /* toggles animation and changes the current index */
   const setBottom = (index: number) => {
@@ -62,8 +69,11 @@ const Home = () => {
 
   const components: CarouselProps[] = [
     {
-      top: <SalesTop timescale={timescale} />,
-      bottom: <SalesBottom timescale={timescale} />
+      top: <SalesTop statistics={combinedStatistics}
+                     percentage={percentageChange} />,
+      bottom: <SalesBottom timescale={timescale}
+                           setStatistics={setCombinedStatistics}
+                           setPercentage={setPercentageChange} />
     },
     {
       top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
@@ -185,7 +195,7 @@ const Home = () => {
           style={{
             ...Layout.fullWidth,
             opacity: animationOpacity,
-            paddingHorizontal: horizontalPadding,
+            // paddingHorizontal: horizontalPadding,
           }}
         >
           {components[bottomIndex].bottom}

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { ProgressChartData } from "react-native-chart-kit/dist/ProgressChart";
 import { Generic, OrderStatus } from "../../../services/model/types";
 import GraphLabel from "./GraphLabel";
+import OrderCountIsland from "./OrderCountIsland";
 
 /* type used for the generateData function */
 type DataGenerator = (init?: boolean) => ProgressChartData;
@@ -52,7 +53,28 @@ const OrderStatusMapping: Generic = {
  * @param block to calculate based on
  * @returns the total count for the label
  */
-function calculateLabelCount(block: Statistics): number[] {
+function countLabelPercentage(block: Statistics): number[] {
+  let result: number[] = [];
+
+  for (let label of Object.keys(OrderStatusMapping)) {
+    const statusList: OrderStatus[] = OrderStatusMapping[label].represented;
+    let temp = 0;
+
+    for (let status of statusList) {
+      temp += block.getActualOrderCount(status);
+    }
+
+    result.push(temp);
+  }
+
+  return result;
+}
+
+/**
+ * @param block to calculate based on
+ * @returns the percentage for the label
+ */
+function calculateLabelPercentage(block: Statistics): number[] {
   let result: number[] = [];
   const count = block.order_counts;
 
@@ -108,10 +130,15 @@ const OrdersBottom = ({ timescale,
     Statistics.noValue("")
   );
 
+  /* used for status count presentation */
+  const [statusCounts, setStatusCounts] = useState<number[]>([]);
+
   /* update top component statistics */
   useEffect(() => {
     setStatistics(totalStats);
   }, [totalStats]);
+
+  const loadingLabel = "Loading...";
 
   /**
    * Generates the statistics data based on the current timescale
@@ -122,7 +149,7 @@ const OrdersBottom = ({ timescale,
   const generateData: DataGenerator = (init?: boolean) => {
     if (init) {
       return {
-        labels: ["Loading..."],
+        labels: [loadingLabel],
         data: new Array(Object.keys(OrderStatusMapping).length)
       };
     }
@@ -147,10 +174,11 @@ const OrdersBottom = ({ timescale,
     }
 
     const mappingList = Object.keys(OrderStatusMapping);
+    setStatusCounts(countLabelPercentage(totalStats));
 
     return {
       labels: mappingList,
-      data: calculateLabelCount(totalStats),
+      data: calculateLabelPercentage(totalStats),
     };
   };
 
@@ -260,11 +288,52 @@ const OrdersBottom = ({ timescale,
       <View style={[
         Layout.fullSize,
         {
-          padding: 20,
-          paddingTop: 0
+          paddingBottom: 20,
         }
       ]}>
-        <Text>HELlo</Text>
+        <View>
+          {
+            // @ts-ignore
+            data.labels.map((_, i) => {
+              // @ts-ignore
+              return i % 2 === 0 ? data.labels.slice(i, i + 2) : null;
+            }).filter((val: string) => val).map((labels: string[],
+                                                 majorIndex: number) => {
+              if (labels[0] === loadingLabel) {
+                return null;
+              }
+
+              return (
+                <View style={[
+                  Layout.row,
+                  Layout.justifyContentBetween,
+                  Layout.fullWidth,
+                  {
+                    marginBottom: 20
+                  }
+                  ]}>
+                  {
+                    // @ts-ignore
+                    labels.map((label, index) => {
+                      if (label === loadingLabel) {
+                        return null;
+                      }
+
+                      return <OrderCountIsland
+                        key={label}
+                        color={OrderStatusMapping[label].color}
+                        label={label + " Orders"}
+                        // @ts-ignore, this works but IDE does not detect
+                        count={statusCounts[labels.length * majorIndex + index]}
+                        noShrink={labels.length === 1}
+                      />;
+                    })
+                  }
+                </View>
+              );
+            })
+          }
+        </View>
       </View>
     </>
   );

@@ -69,8 +69,23 @@ function defaultMapping(block: StatisticsBlock): StatisticsBlock {
   return block;
 }
 
+/**
+ * This function is the default date mapping function.
+ *
+ * @param date
+ * @param p
+ * @param n
+ */
+function defaultDateMapping(date: Date, p: number, n: number): undefined {
+  return undefined;
+}
+
 /* type of mapping functions */
 type MappingFunction = (block: StatisticsBlock) => any;
+
+/* type of the date mapping functions */
+type DateMappingFunction = (d: Date, p: number, n: number)
+  => string | undefined;
 
 /**
  * Class encapsulating raw statistics block data.
@@ -154,6 +169,13 @@ export default class StatisticsBlock {
     return this.data.sold_products;
   }
 
+  /**
+   * @param status to get count for
+   * @returns the actual status count
+   */
+  public getActualOrderCount(status: OrderStatus): number {
+    return this.status_counts[status].actual;
+  }
   /**
    * @returns the actual number of sold products
    */
@@ -1213,7 +1235,9 @@ export default class StatisticsBlock {
    * @param t0 first timestamp
    * @param t1 second timestamp
    * @param unit time unit
-   * @param map applied to each block in the timeframe
+   * @param map applied to each block in the timeframe.
+   *        If it returns undefined, the element is not included.
+   *        The above logic works only when the density is 1 or less.
    * @param combine if true, an additional combined block is added at the end
    * @param density number of blocks combined per array index, default is 1.
    * @returns List of statisticsBlocks information from [t0, t1] under step 'unit'.
@@ -1252,7 +1276,10 @@ export default class StatisticsBlock {
 
     while (t0 < t1) {
       if (density <= 1) {
-        result.push(map(this.getInstance(t0)));
+        const temp = map(this.getInstance(t0));
+        if (temp !== undefined) {
+          result.push(temp);
+        }
       } else {
         if (counter <= 0) {
           result[n] = map(result[n]);
@@ -1394,14 +1421,17 @@ export default class StatisticsBlock {
    *                takes the position of the block as well,
    *                takes the total number of blocks as well.
    *                If it returns undefined, the value is ignored.
+   * @param till date up to which the data is gathered.
+   *
    * @returns an object containing tags (dates) and data for the timeframe.
    *          The last block is the total block in the frame.
    */
   public static getLatestStatistics(scale: LatestTimeUnit,
-                                    map: MappingFunction = defaultMapping,
-                                    mapDate: (d: Date,
-                                              p: number,
-                                              n: number) => string | undefined): {
+                                    map: MappingFunction
+                                      = defaultMapping,
+                                    mapDate: DateMappingFunction
+                                      = defaultDateMapping,
+                                    till: Date = new Date()): {
     tags: string[],
     data: any[]
   } {
@@ -1409,7 +1439,7 @@ export default class StatisticsBlock {
     const n = (scale as number); // Number of tags
     let position = 0; // Used to count the position of the block
 
-    let currentDate = new Date();
+    let currentDate = till;
     let pastDate = BaseModel.deepCopy(currentDate);
 
     if (scale === LatestTimeUnit.hour) {

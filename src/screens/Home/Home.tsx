@@ -17,6 +17,8 @@ import HomeCarousel from "./HomeCarousel";
 import TimescaleButton from "./TimescaleButton";
 import SalesTop from "./Sales/SalesTop";
 import SalesBottom from "./Sales/SalesBottom";
+import OrdersTop from "./Orders/OrdersTop";
+import OrdersBottom from "./Orders/OrdersBottom";
 
 /**
  * Home screen component.
@@ -76,8 +78,11 @@ const Home = () => {
                            setPercentage={setPercentageChange} />
     },
     {
-      top: (<View style={{backgroundColor: "blue", height: 400}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
-      bottom: (<View style={{backgroundColor: "green", height: 4000, justifyContent: "flex-end"}}><Text style={{color: "#FF0000"}}>WORLD</Text></View>),
+      top: <OrdersTop statistics={combinedStatistics}
+                      percentage={percentageChange} />,
+      bottom: <OrdersBottom timescale={timescale}
+                            setStatistics={setCombinedStatistics}
+                            setPercentage={setPercentageChange} />
     },
   ];
 

@@ -3,9 +3,12 @@ import { ScreenDimensions } from "../../../theme/Variables";
 import { View } from "react-native";
 import { Surface, Text, useTheme as usePaperTheme } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../../hooks";
-import { addAlpha, formatMonetary, LatestTimeUnit, Statistics, Timescale } from "../../../services";
+import { addAlpha, formattedNumber, LatestTimeUnit, Statistics, Timescale } from "../../../services";
 import { useEffect, useState } from "react";
 import { LineChartData } from "react-native-chart-kit/dist/line-chart/LineChart";
+
+/* type used for the generateData function */
+type DataGenerator = (init?: boolean) => LineChartData;
 
 /**
  * Prop-type for the Sales slide bottom component.
@@ -94,7 +97,7 @@ const SalesBottom = ({ timescale,
    * @param init if true, returns initial data values
    * @returns the data to be displayed in graph
    */
-  const generateData = (init?: boolean) => {
+  const generateData: DataGenerator = (init?: boolean) => {
     if (init) {
       return {
         labels: ["Loading..."],
@@ -176,7 +179,7 @@ const SalesBottom = ({ timescale,
         Layout.row,
         Layout.rowHCenter,
         Layout.justifyContentBetween,
-        { padding: 25, paddingBottom: 35}
+        { padding: 25, paddingTop: 35, paddingBottom: 45}
       ]}>
         <Text style={{
           fontWeight: "600",
@@ -189,7 +192,7 @@ const SalesBottom = ({ timescale,
           fontWeight: "800",
           fontSize: 30,
         }}>
-          ${formatMonetary(totalStats.profit.data, true)}
+          ${formattedNumber(totalStats.profit.data, true)}
         </Text>
       </View>
       <LineChart

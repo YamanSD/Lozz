@@ -18,13 +18,13 @@ type Properties = {
 };
 
 /**
- * Top component for the total sales
+ * Top component for the total orders
  *
  * @param statistics to get data from
  * @param percentage percentage change, given by bottom component
  * @constructor
  */
-const SalesTop = ({ statistics, percentage }: Properties) => {
+const OrdersTop = ({ statistics, percentage }: Properties) => {
   const { Layout } = useBoilerTheme();
 
   return (
@@ -47,7 +47,7 @@ const SalesTop = ({ statistics, percentage }: Properties) => {
             fontWeight: "600",
             fontSize: 30,
           }}>
-            Total Sales
+            Total Orders
           </Text>
           <ChangeBadge percentage={percentage} />
       </View>
@@ -60,10 +60,10 @@ const SalesTop = ({ statistics, percentage }: Properties) => {
         <Text style={{
           fontWeight: "700",
           fontSize: 35
-        }}>${formattedNumber(statistics.sales.data)}</Text>
+        }}>{formattedNumber(statistics.orders.length)}</Text>
       </View>
     </Surface>
   );
 };
 
-export default SalesTop;
+export default OrdersTop;

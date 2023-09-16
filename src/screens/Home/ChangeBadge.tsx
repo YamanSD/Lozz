@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { useTheme as useBoilerTheme } from "../../../hooks";
+import { useTheme as useBoilerTheme } from "../../hooks";
 import { Text } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialIcons";
 

@@ -108,7 +108,7 @@ const HomeCarousel = ({ components, topHeight,
                      defaultInactiveColor={theme.colors.tertiary}
                      style={{ paddingVertical: barPadding }}
                      radius={10}
-                     gap={5} />
+                     gap={10} />
     </>
   );
 };

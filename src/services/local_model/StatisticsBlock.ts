@@ -939,6 +939,19 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @returns the other monetary expenses
+   */
+  public get other_expenses(): Monetary {
+    return this.total_expenses.subtractCopy(
+      this.vendor_payments.addCopy(
+        this.shipping_fees.addCopy(
+          this.employee_payments
+        )
+      )
+    );
+  }
+
+  /**
    * @returns the year in the timestamp
    */
   public get year(): string {

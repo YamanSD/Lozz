@@ -304,7 +304,7 @@ const OrdersBottom = ({ timescale,
               }
 
               return (
-                <View style={[
+                <View key={majorIndex} style={[
                   Layout.row,
                   Layout.justifyContentBetween,
                   Layout.fullWidth,
@@ -322,7 +322,9 @@ const OrdersBottom = ({ timescale,
                       return <OrderCountIsland
                         key={label}
                         color={OrderStatusMapping[label].color}
-                        label={label + " Orders"}
+                        label={
+                          label + `${labels.length === 1 ? ' ' : '\n'}Orders`
+                        }
                         // @ts-ignore, this works but IDE does not detect
                         count={statusCounts[labels.length * majorIndex + index]}
                         noShrink={labels.length === 1}

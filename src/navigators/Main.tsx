@@ -1,14 +1,11 @@
 import React from 'react';
-import { Home } from "../screens";
 import { createMaterialBottomTabNavigator }
   from '@react-navigation/material-bottom-tabs';
 import MaterialCommunityIcons from
     'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme as usePaperTheme } from "react-native-paper";
-import Orders from "../screens/Orders/Orders";
-import Products from "../screens/Products/Products";
-import Details from "../screens/Details/Details";
+import { Home, Orders, Products, Details } from "../screens";
 
 const BottomNavigator = createMaterialBottomTabNavigator();
 

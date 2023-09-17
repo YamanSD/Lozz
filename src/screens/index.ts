@@ -1,2 +1,5 @@
 export { default as Startup } from './Startup/Startup';
-export { default as Home } from './Home/Home';
+export { Home } from './Home';
+export { Orders } from './Orders';
+export { Products } from './Products';
+export { Details } from './Details';

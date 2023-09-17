@@ -21,6 +21,8 @@ import OrdersTop from "./Orders/OrdersTop";
 import OrdersBottom from "./Orders/OrdersBottom";
 import ExpensesBottom from "./Expenses/ExpensesBottom";
 import ExpensesTop from "./Expenses/ExpensesTop";
+import ProductsTop from "./Products/ProductsTop";
+import ProductsBottom from "./Products/ProductsBottom";
 
 /**
  * Home screen component.
@@ -90,6 +92,13 @@ const Home = () => {
       top: <ExpensesTop statistics={combinedStatistics} />,
       bottom: <ExpensesBottom timescale={timescale}
                             setStatistics={setCombinedStatistics} />
+    },
+    {
+      top: <ProductsTop statistics={combinedStatistics}
+                     percentage={percentageChange} />,
+      bottom: <ProductsBottom timescale={timescale}
+                           setStatistics={setCombinedStatistics}
+                           setPercentage={setPercentageChange} />
     },
   ];
 

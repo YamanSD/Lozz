@@ -18,7 +18,7 @@ type DataGenerator = (init?: boolean) => ProgressChartData;
  *
  * - Confirmed: Confirmed and Packaged orders.
  *
- * - Sent: SentToCourier Orders.
+ * - Sent: SentToCourier Products.
  *
  * - Canceled: Canceled and ReceivedFromCourier orders.
  *

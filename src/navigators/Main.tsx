@@ -4,7 +4,11 @@ import { createMaterialBottomTabNavigator }
   from '@react-navigation/material-bottom-tabs';
 import MaterialCommunityIcons from
     'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme as usePaperTheme } from "react-native-paper";
+import Orders from "../screens/Orders/Orders";
+import Products from "../screens/Products/Products";
+import Details from "../screens/Details/Details";
 
 const BottomNavigator = createMaterialBottomTabNavigator();
 
@@ -13,9 +17,11 @@ const MainNavigator = () => {
   const theme = usePaperTheme();
 
   /* to ensure consistency */
-  const IconGenerator = (name: string) => {
+  const IconGenerator = (name: string, ionic?: boolean) => {
     return ({ color }: { color: string }) => (
-      <MaterialCommunityIcons name={name} color={color} size={21} />
+      ionic
+        ? <Ionicons name={name} color={color} size={19} />
+        : <MaterialCommunityIcons name={name} color={color} size={21} />
     );
   }
 
@@ -28,6 +34,21 @@ const MainNavigator = () => {
       <BottomNavigator.Screen name="Home" component={Home} options={{
         tabBarLabel: 'Home',
         tabBarIcon: IconGenerator("home"),
+      }} />
+
+      <BottomNavigator.Screen name="Orders" component={Orders} options={{
+        tabBarLabel: 'Orders',
+        tabBarIcon: IconGenerator("inbox-arrow-down"),
+      }} />
+
+      <BottomNavigator.Screen name="Products" component={Products} options={{
+        tabBarLabel: 'Products',
+        tabBarIcon: IconGenerator("pricetag", true),
+      }} />
+
+      <BottomNavigator.Screen name="Settings" component={Details} options={{
+        tabBarLabel: 'Details',
+        tabBarIcon: IconGenerator("dots-horizontal"),
       }} />
     </BottomNavigator.Navigator>
   );

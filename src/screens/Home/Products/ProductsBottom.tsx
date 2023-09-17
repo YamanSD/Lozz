@@ -21,6 +21,9 @@ type Properties = {
   setPercentage: React.Dispatch<React.SetStateAction<number>>
 };
 
+/* Number of top products to be shown in the bar graph */
+const topProductCount = 5;
+
 /**
  * Top component for the total sales
  *
@@ -143,7 +146,7 @@ const ProductsBottom = ({ timescale,
     if (keys.length === 0) {
       setTopSellingProducts({
         labels: [],
-        datasets: [{ data: [0, 0, 0, 0, 0] }]
+        datasets: [{ data: new Array<number>(topProductCount).fill(0) }]
       });
       return;
     }
@@ -152,7 +155,7 @@ const ProductsBottom = ({ timescale,
       return quantities[q0].actual - quantities[q1].actual;
     });
 
-    const tags: string[] = keys.slice(0, 5);
+    const tags: string[] = keys.slice(0, topProductCount);
 
     setTopSellingProducts({
       labels: tags,

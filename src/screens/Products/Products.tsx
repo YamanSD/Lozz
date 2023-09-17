@@ -1,12 +1,29 @@
 import React from "react";
-import { View } from "react-native";
-import { Text } from "react-native-paper";
+import { SafeAreaView, ScrollView } from "react-native";
+import { useTheme as useBoilerTheme } from "../../hooks";
+import { useTheme as usePaperTheme } from "react-native-paper";
 
 const Products = () => {
+  const { Layout } = useBoilerTheme();
+  const theme = usePaperTheme();
+
   return (
-    <View>
-      <Text>Products</Text>
-    </View>
+    <SafeAreaView style={[
+      Layout.fullSize,
+    ]}>
+      <ScrollView
+        contentContainerStyle={{
+          ...Layout.center,
+          ...Layout.scrollSpaceBetween,
+          ...Layout.selfStretch,
+          backgroundColor: theme.colors.primary
+        }}
+        bounces={true}
+        showsVerticalScrollIndicator={false}
+      >
+
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

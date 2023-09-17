@@ -8,10 +8,7 @@ import { useEffect, useState } from "react";
 import { LineChartData } from "react-native-chart-kit/dist/line-chart/LineChart";
 
 /* type used for the generateData function */
-type DataGenerator = (init?: boolean) => {
-  linearData: LineChartData,
-  pieData: any[]
-};
+type DataGenerator = (init?: boolean) => LineChartData;
 
 /**
  * Prop-type for the expenses slide bottom component.
@@ -100,11 +97,8 @@ const ExpensesBottom = ({ timescale,
   const generateData: DataGenerator = (init?: boolean) => {
     if (init) {
       return {
-        pieData: [{ name: "Loading...", value: 0 }],
-        linearData: {
-          labels: ["Loading..."],
-          datasets: [{ data: [0] }]
-        }
+        labels: ["Loading..."],
+        datasets: [{ data: [0] }]
       };
     }
 
@@ -118,51 +112,49 @@ const ExpensesBottom = ({ timescale,
 
     setTotalStats(temp.data.pop());
 
-    const legendFontColor = labelColorFunction(1);
-
     return {
-      pieData: [
-        {
-          name: "Employees",
-          value: totalStats.employee_payments.data,
-          color: "rgb(255, 51, 51)",
-          legendFontColor: legendFontColor
-        },
-        {
-          name: "Shipping",
-          value: totalStats.shipping_fees.data,
-          color: "rgb(241, 235, 156)",
-          legendFontColor: legendFontColor,
-        },
-        {
-          name: "Vendors",
-          value: totalStats.vendor_payments.data,
-          color: "rgb(144, 238, 144)",
-          legendFontColor: legendFontColor
-        },
-        {
-          name: "Other",
-          value: totalStats.other_expenses.data,
-          color: "rgb(182, 139, 192)",
-          legendFontColor: legendFontColor
-        }
-      ],
-      linearData: {
-        labels: temp.tags,
-          datasets: [{ data: temp.data }],
-      }
+      labels: temp.tags,
+      datasets: [{ data: temp.data }],
     };
   };
 
   /* data to be displayed in the chart */
-  const [data, setData] = useState<{
-    linearData: LineChartData,
-    pieData: any[]
-  }>(generateData(true));
+  const [data, setData] = useState<LineChartData>(generateData(true));
+  const [pieData, setPieData] = useState<any[]>([{
+    labels: ["Loading..."],
+    value: 0
+  }]);
 
   useEffect(() => {
     setData(generateData());
   }, [timescale]);
+
+  useEffect(() => {
+    setPieData([{
+        name: "Employees",
+        value: totalStats.employee_payments.data,
+        color: "rgb(255, 51, 51)",
+        legendFontColor: legendFontColor
+      },
+      {
+        name: "Shipping",
+        value: totalStats.shipping_fees.data,
+        color: "rgb(241, 235, 156)",
+        legendFontColor: legendFontColor,
+      },
+      {
+        name: "Vendors",
+        value: totalStats.vendor_payments.data,
+        color: "rgb(144, 238, 144)",
+        legendFontColor: legendFontColor
+      },
+      {
+        name: "Other",
+        value: totalStats.other_expenses.data,
+        color: "rgb(182, 139, 192)",
+        legendFontColor: legendFontColor
+      }]);
+  }, [totalStats]);
 
   /* elevation value of the surface */
   const elevation = 4;
@@ -188,6 +180,9 @@ const ExpensesBottom = ({ timescale,
   const labelColorFunction = (opacity: number) => {
     return addAlpha(labelColor, opacity);
   };
+
+  /* used by pie chart labels */
+  const legendFontColor = labelColorFunction(1);
 
   return (
     <>
@@ -227,7 +222,7 @@ const ExpensesBottom = ({ timescale,
           </Text>
         </View>
         <LineChart
-          data={data.linearData}
+          data={data}
           height={220}
           width={width}
           yAxisLabel="$"
@@ -294,7 +289,7 @@ const ExpensesBottom = ({ timescale,
             </Text>
           </View>
           <PieChart
-            data={data.pieData}
+            data={pieData}
             height={220}
             width={width}
             accessor={"value"}

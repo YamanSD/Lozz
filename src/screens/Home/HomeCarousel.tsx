@@ -57,7 +57,7 @@ const HomeCarousel = ({ components, topHeight,
   // Used by the bar
   const progressValue = useSharedValue<number>(0);
 
-  const barPadding = 10;
+  const barPadding = 15;
   const width = ScreenDimensions.width;
 
   return (
@@ -94,7 +94,10 @@ const HomeCarousel = ({ components, topHeight,
         data={components}
         renderItem={({item}) => {
           return (
-            <View style={{paddingHorizontal: padHTop ?? 0}}>
+            <View style={{
+              paddingHorizontal: padHTop ?? 0,
+              marginTop: 5
+            }}>
               {item.top}
           </View>
           );

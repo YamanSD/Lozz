@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView, ScrollView, StyleProp, TextStyle } from "react-native";
 import { Appbar, Text, Button } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import GeneralInfoSelector from "./GeneralInfoSelector";
@@ -10,6 +10,11 @@ const CreationScreen = () => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
   const navigation = useNavigation();
+  const route = useRoute();
+
+  const routeParams: {
+    description?: string
+  } = route.params ?? {};
 
   /* images of the product */
   const [images, setImages] = useState<string[]>([]);
@@ -18,7 +23,13 @@ const CreationScreen = () => {
   const [name, setName] = useState<string>("");
 
   /* product description name */
-  const [description, setDescription] = useState<string>("");
+  const [description, setDescription] = useState<string>(
+    ""
+  );
+
+  useEffect(() => {
+    setDescription(routeParams.description ?? "");
+  }, [routeParams]);
 
   /* product ID */
   const [productId, setProductId] = useState<string>("");
@@ -64,7 +75,6 @@ const CreationScreen = () => {
         <GeneralInfoSelector setImages={setImages}
                              setName={setName}
                              name={name}
-                             setDescription={setDescription}
                              description={description}
                              setId={setProductId}
                              id={productId}

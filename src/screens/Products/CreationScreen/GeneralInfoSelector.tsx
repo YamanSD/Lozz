@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Surface, Text, Button, TextInput, HelperText } from "react-native-paper";
+import React from "react";
+import { Surface, Text, Button } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import { Alert, View } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import NavigationNames from "../NavigationNames";
+import { InputField } from "../../../components";
 
 /**
  * Prop-type for the Media selector component.
@@ -16,8 +17,7 @@ type Properties = {
   id: string,
   setName: React.Dispatch<React.SetStateAction<string>>,
   name: string,
-  setDescription: React.Dispatch<React.SetStateAction<string>>,
-  description: string
+  description: string // Modified by the navigation routes
 }
 
 /* maximum name length */
@@ -32,7 +32,6 @@ const maxIdLength = 6;
  * @param setImages modifies the selected images.
  * @param setName modifies the name of the product.
  * @param name name of the product.
- * @param setDescription modifies the description of the product.
  * @param description of the product.
  * @param setId modifies the ID of the product.
  * @param id id of the product.
@@ -41,7 +40,6 @@ const maxIdLength = 6;
 const GeneralInfoSelector = ({ setImages,
                                setName,
                                name,
-                               setDescription,
                                description,
                                setId,
                                id}: Properties) => {
@@ -112,61 +110,52 @@ const GeneralInfoSelector = ({ setImages,
           </View>
       </Button>
 
-      {/* ID field */}
-      <View style={{ marginTop: 20 }}>
-        <TextInput
-          selectionColor={theme.colors.secondary}
-          activeUnderlineColor={theme.colors.secondary}
-          activeOutlineColor={theme.colors.secondary}
-          textColor={theme.colors.secondary}
-          onChangeText={(value: string) => {
-            setName(value);
-          }}
-          label={"Product Name"}
-          value={name}
-          error={checkName(name) !== 0}
-        />
-        <HelperText
-          type="error"
-          visible={checkName(name) !== 0}
-        >
-          {checkName(name) === 1
-            ? `Maximum length is ${maxNameLength} characters`
-            : "Only letters, numbers, & spaces are allowed"}
-        </HelperText>
-      </View>
+      {/* Name field */}
+      <InputField onChangeText={setName}
+                  label={"Product Name"}
+                  value={name}
+                  errorChecker={(value) => {
+                    return checkName(value) !== 0;
+                  }}
+                  errorMessage={(value) => {
+                    return checkName(value) === 1
+                      ? `Maximum length is ${maxNameLength} characters`
+                      : "Only letters, numbers, & spaces are allowed"
+                  }}
+                  viewStyle={{ marginTop: 20 }}
+      />
 
-      {/* name field */}
-      <View>
-        <TextInput
-          selectionColor={theme.colors.secondary}
-          activeUnderlineColor={theme.colors.secondary}
-          activeOutlineColor={theme.colors.secondary}
-          textColor={theme.colors.secondary}
-          autoCapitalize={"none"}
-          onChangeText={(value: string) => {
-            setId(value);
-          }}
-          label={"Product ID"}
-          value={id}
-          error={checkId(id) !== 0}
-        />
-        <HelperText
-          type="error"
-          visible={checkId(id) !== 0}
-        >
-          {checkId(id) === 1
-            ? `Maximum length is ${maxIdLength} characters`
-            : "Only lower case letters & numbers"}
-        </HelperText>
-      </View>
+      {/* ID field */}
+      <InputField onChangeText={setId}
+                  label={"Product ID"}
+                  value={id}
+                  errorChecker={(value) => {
+                    return checkId(value) !== 0;
+                  }}
+                  errorMessage={(value) => {
+                    return checkId(value) === 1
+                      ? `Maximum length is ${maxIdLength} characters`
+                      : "Only lower case letters & numbers"
+                  }}
+      />
 
       {/* description field */}
-      <View>
-        <Button mode={"contained-tonal"} onPress={() => {
-          navigation.navigate(NavigationNames.DescriptionEditorModal as never);
-        }}>
-          <Text>{description}</Text>
+      <View style={[Layout.fullWidth, Layout.alignItemsStart, {
+        borderBottomColor: theme.colors.secondary,
+        borderBottomWidth: 1,
+      }]}>
+        <Button icon={description.length === 0 ? "plus" : undefined}
+                textColor={theme.colors.secondary}
+                mode={"text"}
+                onPress={() => {
+                  navigation.navigate(
+                    NavigationNames.DescriptionEditorModal as never,
+                    {
+                      description: description
+                    } as never
+                  );
+                }}>
+            {description.length === 0 ? "Add description" : description}
         </Button>
       </View>
     </Surface>

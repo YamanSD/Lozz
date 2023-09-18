@@ -1,4 +1,4 @@
-import 'react-native-gesture-handler';
+ import 'react-native-gesture-handler';
 import React, { useEffect, useState } from "react";
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/lib/integration/react';
@@ -11,6 +11,10 @@ import ReduxParameters from "./ReduxParameters";
 import { NotAuthorizedError } from "./services/controller/Errors";
 import CollectionNames from "./CollectionInfo";
 import DependencyTree from "./services/controller/DependencyTree";
+
+/* better performance, uses native views */
+import { enableScreens } from 'react-native-screens';
+enableScreens();
 
 
 const App = () => {

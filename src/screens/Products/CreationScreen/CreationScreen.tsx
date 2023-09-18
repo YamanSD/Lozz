@@ -1,17 +1,27 @@
 import React, { useState } from "react";
-import { SafeAreaView, ScrollView, StyleProp, TextStyle, View } from "react-native";
-import { Appbar, Text, Button, } from "react-native-paper";
+import { SafeAreaView, ScrollView, StyleProp, TextStyle } from "react-native";
+import { Appbar, Text, Button } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
-import MediaSelector from "./MediaSelector";
+import GeneralInfoSelector from "./GeneralInfoSelector";
 
 const CreationScreen = () => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
   const navigation = useNavigation();
 
+  /* images of the product */
   const [images, setImages] = useState<string[]>([]);
+
+  /* product name */
+  const [name, setName] = useState<string>("");
+
+  /* product description name */
+  const [description, setDescription] = useState<string>("");
+
+  /* product ID */
+  const [productId, setProductId] = useState<string>("");
 
   const textStyle: StyleProp<TextStyle> = {
     color: theme.colors.secondary,
@@ -46,14 +56,19 @@ const CreationScreen = () => {
       <ScrollView
         contentContainerStyle={{
           ...Layout.center,
-          ...Layout.scrollSpaceBetween,
           ...Layout.selfStretch,
           backgroundColor: theme.colors.primary
         }}
         bounces={true}
         showsVerticalScrollIndicator={false}>
-        <MediaSelector setImages={setImages} />
-
+        <GeneralInfoSelector setImages={setImages}
+                             setName={setName}
+                             name={name}
+                             setDescription={setDescription}
+                             description={description}
+                             setId={setProductId}
+                             id={productId}
+        />
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,14 +1,17 @@
 import Products from "./Products";
 import CreationScreen from "./CreationScreen/CreationScreen";
 import NavigationNames from "./NavigationNames";
+import DescriptionEditor from "./CreationScreen/DescriptionEditor";
 
 export default {
-  MainScreen: {
-    name: NavigationNames.MainScreen,
+  [NavigationNames.MainScreen]: {
     component: Products
   },
-  CreationScreen: {
-    name: NavigationNames.CreationScreen,
+  [NavigationNames.CreationScreen]: {
     component: CreationScreen
+  },
+  [NavigationNames.DescriptionEditorModal]: {
+    component: DescriptionEditor,
+    options: { presentation: 'modal' }
   }
 };

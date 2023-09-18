@@ -1,11 +1,12 @@
 import React from "react";
-import { createStackNavigator, StackNavigationOptions } from "@react-navigation/stack";
+import { StackNavigationOptions } from "@react-navigation/stack";
 import { ParamListBase, RouteProp } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 /**
  * Stack navigator for the screens
  */
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 /* type for ScreenOptions props */
 type ScreenOptionsType =
@@ -18,14 +19,11 @@ type ScreenOptionsType =
 /**
  * Screen type used to input screen names and their component.
  *
- * - name: Name of the component used for navigation
- *
  * - component: to be rendered.
  *
  * - options?: stack screen options.
  */
 type Screen = {
-  name: string,
   component?: any,
   options?: ScreenOptionsType
 }
@@ -59,11 +57,13 @@ const StackNavigator = ({ screens, screenOptions,
                      screenOptions={screenOptions}
                      initialRouteName={initialRouteName}>
       {
-        Object.values(screens).map(options => {
+        Object.keys(screens).map(name => {
+          const options = screens[name];
+
           return (
             <Stack.Screen
-              key={options.name}
-              name={options.name}
+              key={name}
+              name={name}
               component={options.component}
               options={options.options}
             />

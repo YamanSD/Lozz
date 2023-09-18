@@ -1,4 +1,5 @@
 export default {
   MainScreen: "ProductsMainScreen",
-  CreationScreen: "ProductsCreationScreen"
+  CreationScreen: "ProductsCreationScreen",
+  DescriptionEditorModal: "DescriptionEditorModal"
 };

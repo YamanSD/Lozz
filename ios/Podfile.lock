@@ -1190,7 +1190,7 @@ PODS:
   - React-jsinspector (0.72.1)
   - React-logger (0.72.1):
     - glog
-  - react-native-mmkv (2.10.0):
+  - react-native-mmkv (2.10.2):
     - MMKV (>= 1.2.13)
     - React-Core
   - react-native-netinfo (9.4.1):
@@ -1310,14 +1310,14 @@ PODS:
   - RecaptchaInterop (100.0.0)
   - RNCMaskedView (0.1.11):
     - React
-  - RNFBAnalytics (18.3.0):
+  - RNFBAnalytics (18.4.0):
     - Firebase/Analytics (= 10.14.0)
     - React-Core
     - RNFBApp
   - RNFBApp (18.4.0):
     - Firebase/CoreOnly (= 10.14.0)
     - React-Core
-  - RNFBAuth (18.3.0):
+  - RNFBAuth (18.4.0):
     - Firebase/Auth (= 10.14.0)
     - React-Core
     - RNFBApp
@@ -1326,28 +1326,28 @@ PODS:
     - FirebaseCoreExtension (= 10.14.0)
     - React-Core
     - RNFBApp
-  - RNFBDatabase (18.3.0):
+  - RNFBDatabase (18.4.0):
     - Firebase/Database (= 10.14.0)
     - React-Core
     - RNFBApp
-  - RNFBFirestore (18.3.0):
+  - RNFBFirestore (18.4.0):
     - Firebase/Firestore (= 10.14.0)
     - nanopb (< 2.30910.0, >= 2.30908.0)
     - React-Core
     - RNFBApp
-  - RNFBPerf (18.3.0):
+  - RNFBPerf (18.4.0):
     - Firebase/Performance (= 10.14.0)
     - React-Core
     - RNFBApp
-  - RNFBStorage (18.3.0):
+  - RNFBStorage (18.4.0):
     - Firebase/Storage (= 10.14.0)
     - React-Core
     - RNFBApp
   - RNFS (2.20.0):
     - React-Core
-  - RNGestureHandler (2.12.0):
+  - RNGestureHandler (2.12.1):
     - React-Core
-  - RNReanimated (3.3.0):
+  - RNReanimated (3.5.2):
     - DoubleConversion
     - FBLazyVector
     - glog
@@ -1656,7 +1656,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 184eae1ecdedc7a083194bd9ff809c93f08fd34c
   React-jsinspector: d0b5bfd1085599265f4212034321e829bdf83cc0
   React-logger: b8103c9b04e707b50cdd2b1aeb382483900cbb37
-  react-native-mmkv: 725623a679fec884bf18a37400e753afb8a1b924
+  react-native-mmkv: 9ae7ca3977e8ef48dbf7f066974eb844c20b5fd7
   react-native-netinfo: fefd4e98d75cbdd6e85fc530f7111a8afdf2b0c5
   react-native-safe-area-context: 7aa8e6d9d0f3100a820efb1a98af68aa747f9284
   React-NativeModulesApple: bdfd86e972ea8103941faab9c7f64ea9be7e2be6
@@ -1678,17 +1678,17 @@ SPEC CHECKSUMS:
   ReactCommon: e33f60179aae29423fcf4ea19fdedc038813ea3f
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
   RNCMaskedView: 0e1bc4bfa8365eba5fbbb71e07fbdc0555249489
-  RNFBAnalytics: 989f6c2263a9e74253127ac3ce1f7fb815e8e61d
+  RNFBAnalytics: 603cfb43a7dd52053f1682cd9454927f526111da
   RNFBApp: af276a038f2e1488d59920697bba97b43f83164c
-  RNFBAuth: 23ebca62c737eea1c93cc4226f18ec56f3476ef1
+  RNFBAuth: 1131e53d88468b275af7e7253198d6b94d4c9c89
   RNFBCrashlytics: 788609aee13670263aa185500f69714c538af4ba
-  RNFBDatabase: f9fa0f2c5b65dfd2c943fc748e488c8d09fcfb18
-  RNFBFirestore: 8494fcbfc7b0ba99fc1578d23eb85588828bf44d
-  RNFBPerf: 86472bae6abc51f386b2f37223a19ff989f5a2b5
-  RNFBStorage: 55acfac85ad60b163ca87357349a06dcc990ccdd
+  RNFBDatabase: c381b5f523cf87da3f2b6f95c05d04848acddd84
+  RNFBFirestore: 5462679c91d0057b8b32ac6ab89c417db9eb4d3c
+  RNFBPerf: f1b0520c6dbbe93828fb4e5f2f07941d1aa18d6c
+  RNFBStorage: e4639710736b2ac4c5ef6e3d6777d6e8789f3e69
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
-  RNGestureHandler: dec4645026e7401a0899f2846d864403478ff6a5
-  RNReanimated: 9f7068e43b9358a46a688d94a5a3adb258139457
+  RNGestureHandler: c0d04458598fcb26052494ae23dda8f8f5162b13
+  RNReanimated: 2491645f0883526f4470d8b5c761308709ba31f8
   RNScreens: 85d3880b52d34db7b8eeebe2f1a0e807c05e69fa
   RNSVG: ed492aaf3af9ca01bc945f7a149d76d62e73ec82
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17

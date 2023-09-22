@@ -60,7 +60,7 @@ const OrdersTop = ({ statistics, percentage }: Properties) => {
         <Text style={{
           fontWeight: "700",
           fontSize: 35
-        }}>{formattedNumber(statistics.orders.length)}</Text>
+        }}>{formattedNumber(statistics.orders.length, true)}</Text>
       </View>
     </Surface>
   );

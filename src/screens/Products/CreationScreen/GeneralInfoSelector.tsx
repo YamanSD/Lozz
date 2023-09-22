@@ -7,62 +7,86 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { useNavigation } from "@react-navigation/native";
 import NavigationNames from "../NavigationNames";
 import { InputField } from "../../../components";
+import {
+  checkId,
+  checkName, checkPrice, formattedNumber,
+  maxIdLength,
+  maxNameLength, maxPrice,
+  MonetaryType
+} from "../../../services";
 
 /**
  * Prop-type for the Media selector component.
  */
 type Properties = {
   setImages: React.Dispatch<React.SetStateAction<string[]>>,
+  images: string[],
   setId: React.Dispatch<React.SetStateAction<string>>,
   id: string,
   setName: React.Dispatch<React.SetStateAction<string>>,
   name: string,
   description: string // Modified by the navigation routes
+  setPrice: React.Dispatch<React.SetStateAction<MonetaryType>>,
+  price: MonetaryType,
+  setCost: React.Dispatch<React.SetStateAction<MonetaryType>>,
+  cost: MonetaryType
 }
-
-/* maximum name length */
-const maxNameLength = 26;
-
-/* maximum ID length */
-const maxIdLength = 6;
 
 /**
  * Media selector component.
  *
  * @param setImages modifies the selected images.
+ * @param images of the product
  * @param setName modifies the name of the product.
  * @param name name of the product.
  * @param description of the product.
  * @param setId modifies the ID of the product.
  * @param id id of the product.
+ * @param setPrice modifies the product price
+ * @param price of the product
+ * @param setCost modifies the product cost
+ * @param cost of the product
  * @constructor
  */
-const GeneralInfoSelector = ({ setImages,
-                               setName,
-                               name,
-                               description,
-                               setId,
-                               id}: Properties) => {
+const GeneralInfoSelector = ({
+    setImages,
+    images,
+    setName,
+    name,
+    description,
+    setId,
+    id,
+    setPrice,
+    price,
+    setCost,
+    cost,
+  }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
   const navigation = useNavigation();
 
-  /**
-   * @param name to check
-   * @returns 0 if the name is valid
-   */
-  const checkName = (name: string) => {
-    return (name.length > maxNameLength ? 1 : 0)
-      + (name.match(/^([0-9 ]|[a-z ])*?([0-9a-z ]*)$/i) ? 0 : 2);
+  const formatPrice = (value: MonetaryType): string => {
+    return `$${formattedNumber(value)}`;
   };
 
-  /**
-   * @param id to check
-   * @returns 0 if the name is valid
-   */
-  const checkId = (id: string) => {
-    return (id.length > maxIdLength ? 1 : 0)
-      + (id.match(/^([0-9]|[a-z])*?([0-9a-z]*)$/) ? 0 : 2);
+  const unpackPrice = (value: string) => {
+    /* remove the $ sign */
+    let pureValue = value.substring(1);
+
+    if (pureValue.length === 0) {
+      return 0;
+    }
+
+    /* remove commas from formatting */
+    pureValue = pureValue.replaceAll(',', '');
+    const actualValue = Number(pureValue);
+
+    /* check if parsing was not successful */
+    if (isNaN(actualValue)) {
+      return undefined;
+    }
+
+    return Number(actualValue.toFixed(2));
   };
 
   return (
@@ -143,6 +167,7 @@ const GeneralInfoSelector = ({ setImages,
       <View style={[Layout.fullWidth, Layout.alignItemsStart, {
         borderBottomColor: theme.colors.secondary,
         borderBottomWidth: 1,
+        marginBottom: 20,
       }]}>
         <Button icon={description.length === 0 ? "plus" : undefined}
                 textColor={theme.colors.secondary}
@@ -158,6 +183,44 @@ const GeneralInfoSelector = ({ setImages,
             {description.length === 0 ? "Add description" : description}
         </Button>
       </View>
+
+      {/* price field */}
+      <InputField
+        onChangeText={(value) => {
+          setPrice(Math.abs(value));
+        }}
+        label={"Product price"}
+        value={price}
+        errorChecker={(value: MonetaryType) => {
+          return checkPrice(value) !== 0;
+        }}
+        errorMessage={(value: MonetaryType) => {
+          return checkPrice(value) === 1
+            ? `Maximum value is ${maxPrice}`
+            : "Only positive values allowed"
+        }}
+        unpackValue={unpackPrice}
+        formatValue={formatPrice}
+      />
+
+      {/* cost field */}
+      <InputField
+        onChangeText={(value) => {
+          setCost(Math.abs(Number.parseFloat(value)));
+        }}
+        label={"Product cost"}
+        value={cost}
+        errorChecker={(value: MonetaryType) => {
+          return checkPrice(value) !== 0;
+        }}
+        errorMessage={(value: MonetaryType) => {
+          return checkPrice(value) === 1
+            ? `Maximum value is $${maxPrice.toFixed(2)}`
+            : "Only positive values allowed"
+        }}
+        unpackValue={unpackPrice}
+        formatValue={formatPrice}
+      />
     </Surface>
   );
 };

@@ -12,5 +12,7 @@ export { default as Product } from './model/Product';
 export { default as Restock } from './model/Restock';
 export { default as Vendor } from './model/Vendor';
 export { default as ImagesManager } from './image_processing/ImagesManager';
+export * from './model/types';
 export * from './helpers/colors';
 export * from './helpers/numeric';
+export * from './helpers/inputCheckers';

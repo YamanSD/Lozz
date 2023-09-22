@@ -5,6 +5,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import GeneralInfoSelector from "./GeneralInfoSelector";
+import { MonetaryType } from "../../../services";
 
 const CreationScreen = () => {
   const { Layout } = useBoilerTheme();
@@ -22,10 +23,16 @@ const CreationScreen = () => {
   /* product name */
   const [name, setName] = useState<string>("");
 
-  /* product description name */
-  const [description, setDescription] = useState<string>(
-    ""
-  );
+  /* product description name
+   * Note that the modification is sent back here using navigation route props.
+   */
+  const [description, setDescription] = useState<string>("");
+
+  /* product price */
+  const [price, setPrice] = useState<MonetaryType>(0.00);
+
+  /* product cost */
+  const [cost, setCost] = useState<MonetaryType>(0.00);
 
   useEffect(() => {
     setDescription(routeParams.description ?? "");
@@ -73,11 +80,16 @@ const CreationScreen = () => {
         bounces={true}
         showsVerticalScrollIndicator={false}>
         <GeneralInfoSelector setImages={setImages}
+                             images={images}
                              setName={setName}
                              name={name}
                              description={description}
                              setId={setProductId}
                              id={productId}
+                             setPrice={setPrice}
+                             price={price}
+                             setCost={setCost}
+                             cost={cost}
         />
       </ScrollView>
     </SafeAreaView>

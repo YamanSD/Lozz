@@ -2,7 +2,7 @@ import React from "react";
 import { Surface, Text, Button } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
-import { Alert, View } from "react-native";
+import { Alert, TouchableOpacity, View } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import NavigationNames from "../NavigationNames";
@@ -14,6 +14,7 @@ import {
   maxNameLength, maxPrice,
   MonetaryType
 } from "../../../services";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 /**
  * Prop-type for the Media selector component.
@@ -65,10 +66,30 @@ const GeneralInfoSelector = ({
   const theme = usePaperTheme();
   const navigation = useNavigation();
 
+  /**
+   * @param value to be formatted.
+   * @returns a formatted value string
+   */
   const formatPrice = (value: MonetaryType): string => {
     return `$${formattedNumber(value)}`;
   };
 
+  /**
+   * Used by description bar.
+   */
+  const onDescriptionClick = () => {
+    navigation.navigate(
+      NavigationNames.DescriptionEditorModal as never,
+      {
+        description: description
+      } as never
+    );
+  };
+
+  /**
+   * @param value formatted by formatPrice.
+   * @returns the actual value.
+   */
   const unpackPrice = (value: string) => {
     /* remove the $ sign */
     let pureValue = value.substring(1);
@@ -164,25 +185,27 @@ const GeneralInfoSelector = ({
       />
 
       {/* description field */}
-      <View style={[Layout.fullWidth, Layout.alignItemsStart, {
-        borderBottomColor: theme.colors.secondary,
-        borderBottomWidth: 1,
-        marginBottom: 20,
-      }]}>
+      <TouchableOpacity style={[
+          Layout.fullWidth,
+          Layout.justifyContentBetween,
+          Layout.rowHCenter,
+          Layout.row,
+          {
+            borderBottomColor: theme.colors.secondary,
+            borderBottomWidth: 1,
+            paddingRight: 10,
+            marginBottom: 20,
+          }
+        ]}
+        onPress={onDescriptionClick}>
         <Button icon={description.length === 0 ? "plus" : undefined}
                 textColor={theme.colors.secondary}
-                mode={"text"}
-                onPress={() => {
-                  navigation.navigate(
-                    NavigationNames.DescriptionEditorModal as never,
-                    {
-                      description: description
-                    } as never
-                  );
-                }}>
-            {description.length === 0 ? "Add description" : description}
+                style={[Layout.alignItemsStart, { width: "96%" }]}
+                mode={"text"}>
+          {description.length === 0 ? "Add description" : description}
         </Button>
-      </View>
+        <Icon name={"chevron-right"} size={22} />
+      </TouchableOpacity>
 
       {/* price field */}
       <InputField
@@ -221,6 +244,8 @@ const GeneralInfoSelector = ({
         unpackValue={unpackPrice}
         formatValue={formatPrice}
       />
+
+
     </Surface>
   );
 };

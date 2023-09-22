@@ -244,8 +244,6 @@ const GeneralInfoSelector = ({
         unpackValue={unpackPrice}
         formatValue={formatPrice}
       />
-
-
     </Surface>
   );
 };

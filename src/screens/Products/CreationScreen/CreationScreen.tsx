@@ -5,7 +5,8 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import GeneralInfoSelector from "./GeneralInfoSelector";
-import { MonetaryType } from "../../../services";
+import { Generic, MonetaryType } from "../../../services";
+import InstructionSelector from "./InstructionSelector";
 
 const CreationScreen = () => {
   const { Layout } = useBoilerTheme();
@@ -33,6 +34,9 @@ const CreationScreen = () => {
 
   /* product cost */
   const [cost, setCost] = useState<MonetaryType>(0.00);
+
+  /* instructions of the product */
+  const [instructions, setInstructions] = useState<Generic<string>>({});
 
   useEffect(() => {
     setDescription(routeParams.description ?? "");
@@ -91,6 +95,9 @@ const CreationScreen = () => {
                              setCost={setCost}
                              cost={cost}
         />
+
+        <InstructionSelector instructions={instructions}
+                             setInstructions={setInstructions} />
       </ScrollView>
     </SafeAreaView>
   );

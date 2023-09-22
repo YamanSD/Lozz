@@ -640,8 +640,8 @@ export type Generic<T = any> = {
  * - [SpecialFields.trail]: Auto-generated and auto-modified on actions.
  */
 export type product = {
-  id: string, // Common
-  name: string, // Common
+  id: string, // Common, Done
+  name: string, // Common, Done
   vendor_id: string, // Common
   category_id: string, // Common
   images?: {
@@ -650,7 +650,7 @@ export type product = {
   quantities: QuantityType,
   increment?: number, // Common
   minimum_quantity?: QuantityType,
-  price: MonetaryType, // Common
+  price: MonetaryType, // Common, Done
   added_price?: {
     [usp: string]: MonetaryType
   },
@@ -658,14 +658,14 @@ export type product = {
   instructions?: {
     [title: string]: string
   }, // Common
-  cost: MonetaryType, // Common
+  cost: MonetaryType, // Common, Done
   added_costs?: {
     [usp: string]: MonetaryType
   },
   discount?: {
     [usp: string]: MonetaryType
   },
-  description?: string, // Common
+  description?: string, // Common, Done
   [SpecialFields.trail]: TrailType
 };
 

@@ -2,6 +2,7 @@ import { Surface, Text } from "react-native-paper";
 import React from "react";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { Generic } from "../../../services";
+import DynamicInputForm from "./DynamicInputForm";
 
 /**
  * Prop-type for the Instruction selector component.
@@ -40,6 +41,7 @@ const InstructionSelector = ({ instructions,
       }}>
         Instructions
       </Text>
+      <DynamicInputForm />
     </Surface>
   );
 };

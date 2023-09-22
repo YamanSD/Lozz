@@ -22,14 +22,19 @@ const DynamicInputForm = () => {
     console.log('Submitted Values:', values.dynamicFields);
   };
 
+  const handleDeleteField = (index, setFieldValue, values) => {
+    const updatedFields = [...values.dynamicFields];
+    updatedFields.splice(index, 1);
+    setFieldValue('dynamicFields', updatedFields);
+  };
+
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      {({ values, setFieldValue, handleSubmit, errors }) => {
-        return (
+      {({ values, setFieldValue, handleSubmit, errors }) => (
         <View>
           {values.dynamicFields.map((item, index) => (
             <View key={index}>
@@ -51,6 +56,10 @@ const DynamicInputForm = () => {
                 value={item.description}
                 placeholder={`Description ${index + 1}`}
               />
+              <Button
+                title="Delete"
+                onPress={() => handleDeleteField(index, setFieldValue, values)}
+              />
               <Text style={{ color: 'red' }}>
                 {errors.dynamicFields && errors.dynamicFields[index]?.title}
               </Text>
@@ -68,19 +77,9 @@ const DynamicInputForm = () => {
               }
             }} // Limit to a reasonable number of items
           />
-          <Button
-            title="Remove Item"
-            onPress={() => {
-              if (values.dynamicFields.length > 1) {
-                const updatedFields = [...values.dynamicFields];
-                updatedFields.pop(); // Remove the last item
-                setFieldValue('dynamicFields', updatedFields);
-              }
-            }}
-          />
           <Button title="Submit" onPress={handleSubmit} />
         </View>
-      )}}
+      )}
     </Formik>
   );
 };

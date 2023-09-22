@@ -1,11 +1,11 @@
 import React from 'react';
 import { View } from 'react-native';
-import { useTheme as useBoilerTheme } from "../../hooks";
+import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 /**
- * Prop-type for the ItemWrapper component
+ * Prop-type for the InstructionsWrapper component
  */
 type Properties = {
   children: any,
@@ -19,7 +19,7 @@ type Properties = {
  * @param onPress toggled when the icon is pressed.
  * @constructor
  */
-const ItemWrapper = ({ children, onPress }: Properties) => {
+const InstructionsWrapper = ({ children, onPress }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
 
@@ -54,4 +54,4 @@ const ItemWrapper = ({ children, onPress }: Properties) => {
   );
 };
 
-export default ItemWrapper;
+export default InstructionsWrapper;

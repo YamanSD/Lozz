@@ -6,10 +6,23 @@
 export function formattedNumber(value: number,
                                 removeDecimal?: boolean): string {
   if (removeDecimal) {
-    value = Math.round(value);
+    return new Intl.NumberFormat().format(Math.round(value));
   } else {
-    value = Number(value.toFixed(2));
-  }
+    const result = new Intl.NumberFormat().format(value);
+    const dotIndex = result.indexOf('.');
+    const n = result.length;
+    const diff = n - dotIndex;
 
-  return new Intl.NumberFormat().format(value);
+    return dotIndex === -1
+      ? `${result}.00` // No Dot
+      : (
+        diff === 3 // Dot in right position
+          ? result
+          : (
+            diff < 3
+              ? `${result}${'0'.repeat(3 - diff)}` // missing right zero(s)
+              : result.substring(0, dotIndex + 3) // has overflow of decimals
+          )
+      );
+  }
 }

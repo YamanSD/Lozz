@@ -7,6 +7,7 @@ import { StyleProp, TextStyle } from "react-native";
 import { DependencyTree } from "../../../services";
 import VendorListItem from "./VendorCategory/VendorListItem";
 import CategoryListItem from "./VendorCategory/CategoryListItem";
+import CategoryOptions from "./VendorCategory/CategoryOptions";
 
 /**
  * Prop-type for the Instruction selector component.
@@ -62,7 +63,7 @@ const MetaDataSelector = ({vendorId, setVendorId,
       {/* vendor selection */}
       <Text style={{
         fontWeight: "600",
-        fontSize: 17,
+        fontSize: 21,
         marginBottom: 7,
       }}>
         Vendor
@@ -106,7 +107,7 @@ const MetaDataSelector = ({vendorId, setVendorId,
       {/* category selection */}
       <Text style={{
         fontWeight: "600",
-        fontSize: 17,
+        fontSize: 21,
         marginBottom: 7,
         marginTop: 15,
       }}>
@@ -147,6 +148,17 @@ const MetaDataSelector = ({vendorId, setVendorId,
           setCategoryId(categoryId);
         }}
       />
+
+      {/* display category options */}
+      <Text style={{
+        fontWeight: "600",
+        fontSize: 21,
+        marginBottom: 7,
+        marginTop: 15,
+      }}>
+        Category options
+      </Text>
+      <CategoryOptions categoryId={categoryId} />
     </Surface>
   );
 };

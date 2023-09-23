@@ -16,3 +16,4 @@ export * from './model/types';
 export * from './helpers/colors';
 export * from './helpers/numeric';
 export * from './helpers/inputCheckers';
+export * from './helpers/text';

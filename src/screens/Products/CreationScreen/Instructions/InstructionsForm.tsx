@@ -250,7 +250,7 @@ const InstructionsForm = ({ setData }: Properties) => {
               mode={"contained-tonal"}
               expandBy={0}
             >
-              Add instruction
+              Add instructions
             </SpringButton>
           </View>
         );

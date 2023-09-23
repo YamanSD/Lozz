@@ -7,6 +7,7 @@ import { useTheme as usePaperTheme } from "react-native-paper";
 import GeneralInfoSelector from "./GeneralInfoSelector";
 import { Generic, MonetaryType } from "../../../services";
 import InstructionSelector from "./InstructionSelector";
+import MetaDataSelector from "./MetaDataSelector";
 
 const CreationScreen = () => {
   const { Layout } = useBoilerTheme();
@@ -98,6 +99,8 @@ const CreationScreen = () => {
 
         <InstructionSelector instructions={instructions}
                              setInstructions={setInstructions} />
+
+        <MetaDataSelector />
       </ScrollView>
     </SafeAreaView>
   );

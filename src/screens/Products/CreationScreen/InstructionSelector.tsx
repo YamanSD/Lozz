@@ -52,7 +52,6 @@ const InstructionSelector = ({ instructions,
         marginTop: 20,
         borderRadius: 10,
         padding: 25,
-        marginBottom: 20,
       }
     ]} elevation={4}>
       <Text style={{

@@ -1,4 +1,4 @@
-import { SpringButton } from "../../components";
+import { SpringButton } from "../src/components";
 import React from "react";
 
 /**

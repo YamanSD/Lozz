@@ -651,14 +651,14 @@ export type product = {
   increment?: number, // Common
   minimum_quantity?: QuantityType,
   price: MonetaryType, // Common, Done
-  added_price?: {
-    [usp: string]: MonetaryType
-  },
   inventory_quantities: QuantityType,
   instructions?: {
     [title: string]: string
-  }, // Common
+  }, // Common, Done
   cost: MonetaryType, // Common, Done
+  added_price?: {
+    [usp: string]: MonetaryType
+  },
   added_costs?: {
     [usp: string]: MonetaryType
   },

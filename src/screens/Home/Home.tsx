@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
-import { Menu, Text } from "react-native-paper";
+import { Text } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../hooks";
 import { useTheme as usePaperTheme } from 'react-native-paper';
 import { CarouselProps } from "./HomeCarousel";
@@ -14,7 +14,6 @@ import { CacheImage } from "../../components";
 import CollectionInfo from "../../CollectionInfo";
 import { addAlpha, Statistics, Timescale } from "../../services";
 import HomeCarousel from "./HomeCarousel";
-import TimescaleButton from "./TimescaleButton";
 import SalesTop from "./Sales/SalesTop";
 import SalesBottom from "./Sales/SalesBottom";
 import OrdersTop from "./Orders/OrdersTop";
@@ -23,6 +22,7 @@ import ExpensesBottom from "./Expenses/ExpensesBottom";
 import ExpensesTop from "./Expenses/ExpensesTop";
 import ProductsTop from "./Products/ProductsTop";
 import ProductsBottom from "./Products/ProductsBottom";
+import { Dropdown } from 'react-native-element-dropdown';
 
 /**
  * Home screen component.
@@ -35,9 +35,6 @@ const Home = () => {
   /* Current selected time interval */
   const [timescale, setTimescale] =
     useState<Timescale>(Timescale.H);
-
-  /* True displays the time interval menu */
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
 
   /* horizontal padding for all components */
   const horizontalPadding = 10;
@@ -171,38 +168,44 @@ const Home = () => {
             Dashboard
           </Text>
 
-          {/* Selection button */}
-          <Menu
-            visible={isMenuVisible}
-            onDismiss={() => setIsMenuVisible(false)}
-            anchor={<TimescaleButton
-              timescale={timescale}
-              onPress={() => setIsMenuVisible(!isMenuVisible)} />}
+          <Dropdown
+            data={[
+              { value: Timescale.H },
+              { value: Timescale.D },
+              { value: Timescale.W },
+              { value: Timescale.M },
+              { value: Timescale.Y },
+            ]}
+            placeholder={Timescale.H}
             style={{
-              paddingTop: 9
+              height: 30,
+              width: 140,
+              paddingLeft: 10,
+              paddingRight: 5,
+              borderRadius: 5,
+              backgroundColor: "#000080"
             }}
-          >
-            <Menu.Item onPress={() => {
-              setTimescale(Timescale.H);
-              setIsMenuVisible(false);
-            }} title={Timescale.H} />
-            <Menu.Item onPress={() => {
-              setTimescale(Timescale.D);
-              setIsMenuVisible(false);
-            }} title={Timescale.D} />
-            <Menu.Item onPress={() => {
-              setTimescale(Timescale.W);
-              setIsMenuVisible(false);
-            }} title={Timescale.W} />
-            <Menu.Item onPress={() => {
-              setTimescale(Timescale.M);
-              setIsMenuVisible(false);
-            }} title={Timescale.M} />
-            <Menu.Item onPress={() => {
-              setTimescale(Timescale.Y);
-              setIsMenuVisible(false);
-            }} title={Timescale.Y} />
-          </Menu>
+            labelField={"value"}
+            valueField={"value"}
+            value={timescale}
+            iconColor={"white"}
+            selectedTextStyle={{
+              fontSize: 14,
+              fontWeight: "700",
+              color: "white"
+            }}
+            itemContainerStyle={{
+              backgroundColor: theme.colors.primary
+            }}
+            itemTextStyle={{
+              fontSize: 14,
+              fontWeight: "600",
+              color: theme.colors.secondary
+            }}
+            onChange={({ value }) => {
+              setTimescale(value);
+            }}
+          />
         </View>
 
         {/* Top component with pagination bar */}

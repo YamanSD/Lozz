@@ -8,9 +8,7 @@ import InstructionsForm from "./Instructions/InstructionsForm";
  * Prop-type for the Instruction selector component.
  */
 type Properties = {
-  instructions: {
-    [title: string]: string
-  },
+  instructions: Generic<string>,
   setInstructions:  React.Dispatch<React.SetStateAction<Generic<string>>>
 };
 
@@ -32,11 +30,18 @@ const InstructionSelector = ({ instructions,
                                setInstructions }: Properties) => {
   const { Layout } = useBoilerTheme();
 
+  /* instructions array data */
   const [data, setData] = useState<InstructionsList>([]);
 
+  /* when the data changes, modify the instructions object */
   useEffect(() => {
-    console.log("DATA");
-    console.log(data);
+    let result: Generic<string> = {};
+
+    data.forEach((item) => {
+      result[item.title] = item.description
+    });
+
+    setInstructions(result);
   }, [data]);
 
   return (

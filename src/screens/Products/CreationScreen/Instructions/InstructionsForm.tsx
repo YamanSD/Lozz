@@ -1,10 +1,13 @@
 import React from "react";
-import { View, Text, TextInput, Button } from 'react-native';
-import { Formik } from "formik";
+import { View } from 'react-native';
+import { Formik, FormikErrors } from "formik";
 import * as Yup from 'yup';
 import BaseModel from "../../../../services/model/BaseModel";
 import InstructionsWrapper from "./InstructionsWrapper";
 import { useTheme as useBoilerTheme } from "../../../../hooks";
+import { isString } from "lodash";
+import { InputField, SpringButton } from "../../../../components";
+import { useTheme as usePaperTheme } from "react-native-paper";
 
 /**
  * - title: Title of the instruction.
@@ -43,6 +46,7 @@ type Properties = {
  */
 const InstructionsForm = ({ setData }: Properties) => {
   const { Layout } = useBoilerTheme();
+  const theme = usePaperTheme();
 
   /* Maximum number of instructions */
   const MaxInstructions = 10;
@@ -56,9 +60,9 @@ const InstructionsForm = ({ setData }: Properties) => {
   };
 
   /* initial values of fields */
-  const initialValues = {
-    // Initialize with an empty item
-    dynamicFields: [initInstructions()],
+  const initialValues: FormResponse = {
+    // Initialize with an empty array
+    dynamicFields: [],
   };
 
   /* validates the input */
@@ -70,6 +74,53 @@ const InstructionsForm = ({ setData }: Properties) => {
       })
     ),
   });
+
+  /**
+   * Checks if the input fields are valid.
+   * Used by the InputField components.
+   *
+   * @param errors Formik errors object
+   * @param index of the component to check
+   * @param field name of the field to check
+   * @returns true if the data is invalid, otherwise false.
+   */
+  const checkField = (errors: FormikErrors<FormResponse>,
+                      index: number,
+                      field: "title" | "description") => {
+    const fields = errors.dynamicFields;
+
+    if (fields === undefined) {
+      return false;
+    }
+
+    const indexFields = fields[index];
+
+    if (isString(indexFields)) {
+      return false;
+    }
+
+    return (
+      indexFields !== undefined
+      && indexFields[field] !== undefined
+    );
+  };
+
+  /**
+   * @param values to check
+   * @param index current index
+   * @param value to check
+   * @returns true if the title exists on another object value.
+   */
+  const existsOnOther = (values: FormResponse,
+                         index: number,
+                         value: string) => {
+    return (values.dynamicFields.find(
+        (obj: any, curIndex: number) => {
+          return obj.title === value
+            && index !== curIndex;
+        })
+    ) !== undefined;
+  }
 
   /**
    * @param values form response object
@@ -95,6 +146,23 @@ const InstructionsForm = ({ setData }: Properties) => {
     setData(updatedFields);
   };
 
+  /**
+   * @param setFieldValue modifies the dynamicFields
+   * @param values original values
+   */
+  const handleAddField = (setFieldValue: FieldSetter,
+                          values: FormResponse) => {
+    if (values.dynamicFields.length < MaxInstructions) {
+      const updatedFields = [
+        ...values.dynamicFields,
+        initInstructions()
+      ];
+
+      setFieldValue(dynamicFieldsKeys, updatedFields);
+      setData(updatedFields);
+    }
+  }
+
   return (
     <Formik
       initialValues={initialValues}
@@ -103,65 +171,88 @@ const InstructionsForm = ({ setData }: Properties) => {
         setData(handleSubmit(values));
       }}
     >
-      {({ values,
-          setFieldValue,
-          handleSubmit,
-          errors }) => {
+      {({ values, setFieldValue, errors }) => {
         return (
-          <>
+          <View>
             {
-              values.dynamicFields.map((item, index) => (
-                <InstructionsWrapper onPress={() => {
-                  handleDeleteField(index, setFieldValue, values);
-                }} key={index}>
-                  <View style={[
-                    Layout.justifyContentBetween,
-                  ]}>
-                    <TextInput
-                      onChangeText={(text) => {
-                        const updatedFields = [...values.dynamicFields];
-                        updatedFields[index].title = text;
-                        setFieldValue(dynamicFieldsKeys, updatedFields);
-                        setData(updatedFields);
-                      }}
-                      value={item.title}
-                      placeholder={`Title ${index + 1}`}
-                    />
-                    <TextInput
-                      onChangeText={(text) => {
-                        const updatedFields = [...values.dynamicFields];
-                        updatedFields[index].description = text;
-                        setFieldValue(dynamicFieldsKeys, updatedFields);
-                        setData(updatedFields);
-                      }}
-                      value={item.description}
-                      placeholder={`Description ${index + 1}`}
-                    />
-                    <Text style={{ color: 'red' }}>
-                      {errors.dynamicFields && errors.dynamicFields[index]?.title}
-                    </Text>
-                    <Text style={{ color: 'red' }}>
-                      {errors.dynamicFields && errors.dynamicFields[index]?.description}
-                    </Text>
-                  </View>
-                </InstructionsWrapper>
-              ))
-            }
-            <Button
-              title="Add Instruction"
-              onPress={() => {
-                if (values.dynamicFields.length < MaxInstructions) {
-                  const updatedFields = [
-                    ...values.dynamicFields,
-                    initInstructions()
-                  ];
+              values.dynamicFields.map((item, index) => {
+                return (
+                  <InstructionsWrapper onPress={() => {
+                    handleDeleteField(index, setFieldValue, values);
+                  }} key={index}>
+                    <View style={[
+                      Layout.justifyContentBetween,
+                    ]}>
+                      {/* title field */}
+                      <InputField
+                        onChangeText={(text) => {
+                          const updatedFields = [...values.dynamicFields];
+                          updatedFields[index].title = text;
+                          setFieldValue(dynamicFieldsKeys, updatedFields);
+                          setData(updatedFields);
+                        }}
+                        label={"Title"}
+                        value={item.title}
+                        errorChecker={(value) => {
+                          return checkField(errors, index, "title")
+                            || existsOnOther(values, index, value);
+                        }}
+                        errorMessage={(value) => {
+                          if (checkField(errors, index, "title")) {
+                            return "Field is required";
+                          } else {
+                            return existsOnOther(values, index, value)
+                              ? "Title already exists!"
+                              : "";
+                          }
+                        }}
+                        outline={true}
+                        viewStyle={{ paddingRight: 20 }}
+                      />
 
-                  setFieldValue(dynamicFieldsKeys, updatedFields);
-                  setData(updatedFields);
-                }
+                      {/* description or body field */}
+                      <InputField
+                        onChangeText={(text) => {
+                          const updatedFields = [...values.dynamicFields];
+                          updatedFields[index].description = text;
+                          setFieldValue(dynamicFieldsKeys, updatedFields);
+                          setData(updatedFields);
+                        }}
+                        label={"Description"}
+                        value={item.description}
+                        errorChecker={(ignored) => {
+                          return checkField(errors, index, "description");
+                        }}
+                        errorMessage={(ignored) => {
+                          return checkField(errors, index, "description")
+                            ? "Field is required"
+                            : '';
+                        }}
+                        outline={true}
+                        multiline={true}
+                        viewStyle={{ paddingRight: 20 }}
+                      />
+                    </View>
+                  </InstructionsWrapper>
+                );
+              })
+            }
+            <SpringButton
+              onPress={() => handleAddField(setFieldValue, values)}
+              style={{
+                marginTop: 20,
               }}
-            />
-          </>
+              labelStyle={{
+                fontWeight: "700"
+              }}
+              textColor={theme.colors.primary}
+              buttonColor={theme.colors.secondary}
+              mode={"contained-tonal"}
+              expandBy={0}
+            >
+              Add instruction
+            </SpringButton>
+          </View>
         );
       }}
     </Formik>

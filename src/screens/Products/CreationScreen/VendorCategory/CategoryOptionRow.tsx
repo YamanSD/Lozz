@@ -39,6 +39,9 @@ const CategoryOptionRow = ({ optionKey, optionValues }: Properties) => {
   return (
     <View key={optionKey} style={{
       marginTop: 15,
+      borderTopColor: theme.colors.secondary,
+      borderTopWidth: 1,
+      paddingTop: 10,
     }}>
       <Text style={{
         fontWeight: "400",

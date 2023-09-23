@@ -30,20 +30,25 @@ const CategoryOptions = ({ categoryId }: Properties) => {
     });
   }, [categoryId]);
 
+  const keys = category?.option_keys
+
   return (
     <View>
-      {
-        (category?.option_keys ?? []).map((key) => {
-          const optionValues = category?.option_sets;
+      {keys !== undefined ?
+        (
+            keys.map((key) => {
+            const optionValues = category?.option_sets;
 
-          if (optionValues === undefined) {
-            return null;
-          }
+            if (optionValues === undefined) {
+              return null;
+            }
 
-          return <CategoryOptionRow optionKey={key}
-                                    optionValues={optionValues[key]}
-          />
-        })
+            return <CategoryOptionRow key={key}
+                                      optionKey={key}
+                                      optionValues={optionValues[key]}
+            />
+          })
+        ) : null
       }
     </View>
   );

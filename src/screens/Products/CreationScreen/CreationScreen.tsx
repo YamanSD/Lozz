@@ -5,7 +5,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import GeneralInfoSelector from "./GeneralInfoSelector";
-import { Generic, MonetaryType } from "../../../services";
+import { Generic, MonetaryType, QuantityType } from "../../../services";
 import InstructionSelector from "./InstructionSelector";
 import MetaDataSelector from "./MetaDataSelector";
 import QuantitiesSelector from "./QuantitiesSelector";
@@ -35,6 +35,9 @@ const CreationScreen = () => {
    * Note that the modification is sent back here using navigation route props.
    */
   const [description, setDescription] = useState<string>("");
+
+  /* quantities (display & inventory) of the product */
+  const [quantities, setQuantities] = useState<QuantityType>({});
 
   /* product price */
   const [price, setPrice] = useState<MonetaryType>(0.00);
@@ -119,7 +122,9 @@ const CreationScreen = () => {
                           setCategoryId={setCategoryId}
         />
 
-        <QuantitiesSelector categoryId={categoryId} />
+        <QuantitiesSelector categoryId={categoryId}
+                            quantities={quantities}
+        />
       </ScrollView>
     </SafeAreaView>
   );

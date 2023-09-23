@@ -2,6 +2,7 @@ import Products from "./Products";
 import CreationScreen from "./CreationScreen/CreationScreen";
 import NavigationNames from "./NavigationNames";
 import DescriptionEditor from "./CreationScreen/DescriptionEditor";
+import QuantitiesModal from "./CreationScreen/Quantities/QuantitiesModal";
 
 export default {
   [NavigationNames.MainScreen]: {
@@ -12,6 +13,10 @@ export default {
   },
   [NavigationNames.DescriptionEditorModal]: {
     component: DescriptionEditor,
+    options: { presentation: 'modal' }
+  },
+  [NavigationNames.QuantityEditorModal]: {
+    component: QuantitiesModal,
     options: { presentation: 'modal' }
   }
 };

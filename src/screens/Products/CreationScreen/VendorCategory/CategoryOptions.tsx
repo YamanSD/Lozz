@@ -21,10 +21,14 @@ const CategoryOptions = ({ categoryId }: Properties) => {
 
   /* load the category */
   useEffect(() => {
+    if (!DependencyTree.Categories.idSet.has(categoryId)) {
+      return;
+    }
+
     DependencyTree.Categories.get(categoryId).then(c => {
       setCategory(c);
     });
-  }, []);
+  }, [categoryId]);
 
   return (
     <View>

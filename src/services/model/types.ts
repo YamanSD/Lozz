@@ -642,8 +642,8 @@ export type Generic<T = any> = {
 export type product = {
   id: string, // Common, Done
   name: string, // Common, Done
-  vendor_id: string, // Common
-  category_id: string, // Common
+  vendor_id: string, // Common, Done
+  category_id: string, // Common, Done
   images?: {
     [usp: string]: [...string[]]
   },

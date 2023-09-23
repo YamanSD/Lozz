@@ -39,6 +39,12 @@ const CreationScreen = () => {
   /* instructions of the product */
   const [instructions, setInstructions] = useState<Generic<string>>({});
 
+  /* vendor ID of the product (which is actually the vendor name) */
+  const [vendorId, setVendorId] = useState<string>("");
+
+  /* category ID of the product (which is actually the category name) */
+  const [categoryId, setCategoryId] = useState<string>("");
+
   useEffect(() => {
     setDescription(routeParams.description ?? "");
   }, [routeParams]);
@@ -98,9 +104,14 @@ const CreationScreen = () => {
         />
 
         <InstructionSelector instructions={instructions}
-                             setInstructions={setInstructions} />
+                             setInstructions={setInstructions}
+        />
 
-        <MetaDataSelector />
+        <MetaDataSelector vendorId={vendorId}
+                          setVendorId={setVendorId}
+                          categoryId={categoryId}
+                          setCategoryId={setCategoryId}
+        />
       </ScrollView>
     </SafeAreaView>
   );

@@ -177,6 +177,7 @@ const Home = () => {
               { value: Timescale.Y },
             ]}
             placeholder={Timescale.H}
+            showsVerticalScrollIndicator={false}
             style={{
               height: 30,
               width: 140,

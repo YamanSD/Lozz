@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { useTheme as useBoilerTheme } from "../../../hooks";
+import { useTheme as useBoilerTheme } from "../../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
@@ -38,7 +38,11 @@ const InstructionsWrapper = ({ children, onPress }: Properties) => {
         paddingHorizontal: 5,
       }
     ]}>
-      {children}
+      <View style={{
+        width: "90%"
+      }}>
+        {children}
+      </View>
 
       {/* delete icon */}
       <Icon name={"delete-forever"}

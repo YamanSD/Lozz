@@ -1,3 +1,5 @@
+import { MonetaryType } from "../model/types";
+
 /**
  * @param value to be formatted
  * @param removeDecimal if true, remove the decimal points
@@ -26,3 +28,36 @@ export function formattedNumber(value: number,
       );
   }
 }
+
+
+/**
+ * @param value to be formatted.
+ * @returns a formatted value string
+ */
+export const formatPrice = (value: MonetaryType): string => {
+  return `$${formattedNumber(value)}`;
+};
+
+/**
+ * @param value formatted by formatPrice.
+ * @returns the actual value.
+ */
+export const unpackPrice = (value: string) => {
+  /* remove the $ sign */
+  let pureValue = value.substring(1);
+
+  if (pureValue.length === 0) {
+    return 0;
+  }
+
+  /* remove commas from formatting */
+  pureValue = pureValue.replaceAll(',', '');
+  const actualValue = Number(pureValue);
+
+  /* check if parsing was not successful */
+  if (isNaN(actualValue)) {
+    return undefined;
+  }
+
+  return Number(actualValue.toFixed(2));
+};

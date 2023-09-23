@@ -9,10 +9,12 @@ import NavigationNames from "../NavigationNames";
 import { InputField } from "../../../components";
 import {
   checkId,
-  checkName, checkPrice, formattedNumber,
+  checkName,
+  checkPrice,
+  formatPrice,
   maxIdLength,
   maxNameLength, maxPrice,
-  MonetaryType
+  MonetaryType, unpackPrice
 } from "../../../services";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
@@ -67,14 +69,6 @@ const GeneralInfoSelector = ({
   const navigation = useNavigation();
 
   /**
-   * @param value to be formatted.
-   * @returns a formatted value string
-   */
-  const formatPrice = (value: MonetaryType): string => {
-    return `$${formattedNumber(value)}`;
-  };
-
-  /**
    * Used by description bar.
    */
   const onDescriptionClick = () => {
@@ -84,30 +78,6 @@ const GeneralInfoSelector = ({
         description: description
       } as never
     );
-  };
-
-  /**
-   * @param value formatted by formatPrice.
-   * @returns the actual value.
-   */
-  const unpackPrice = (value: string) => {
-    /* remove the $ sign */
-    let pureValue = value.substring(1);
-
-    if (pureValue.length === 0) {
-      return 0;
-    }
-
-    /* remove commas from formatting */
-    pureValue = pureValue.replaceAll(',', '');
-    const actualValue = Number(pureValue);
-
-    /* check if parsing was not successful */
-    if (isNaN(actualValue)) {
-      return undefined;
-    }
-
-    return Number(actualValue.toFixed(2));
   };
 
   return (

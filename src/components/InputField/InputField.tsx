@@ -96,14 +96,15 @@ const InputField = ({ autoCapitalize, onChangeText,
         style={style}
         inputMode={inputMode}
       />
-      {errorMessage !== undefined ?
-        <HelperText
-          type="error"
-          visible={errorChecker(value)}
-        >
-          {errorMessage(value)}
-        </HelperText> :
-        null
+      {errorMessage !== undefined
+        ? (
+          <HelperText
+            type="error"
+            visible={errorChecker(value)}>
+            {errorMessage(value)}
+          </HelperText>
+        )
+        : null
       }
     </View>
   );

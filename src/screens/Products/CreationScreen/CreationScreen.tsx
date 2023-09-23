@@ -10,6 +10,11 @@ import InstructionSelector from "./InstructionSelector";
 import MetaDataSelector from "./MetaDataSelector";
 import QuantitiesSelector from "./QuantitiesSelector";
 
+/**
+ * Responsible for the product creation process.
+ * This will be used to modify products in the future.
+ * @constructor
+ */
 const CreationScreen = () => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();

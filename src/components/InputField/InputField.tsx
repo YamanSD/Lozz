@@ -11,13 +11,15 @@ type Properties = {
   onChangeText: (value: any) => any,
   label: string,
   value: any,
-  errorChecker: (value: any) => boolean,
-  errorMessage: (value: any) => string,
+  errorChecker?: (value: any) => boolean,
+  errorMessage?: (value: any) => string,
   style?: StyleProp<TextStyle>,
   viewStyle?: StyleProp<ViewStyle>,
   inputMode?: InputModeOptions,
   formatValue?: (value: any) => any,
-  unpackValue?: (value: string) => any
+  unpackValue?: (value: string) => any,
+  outline?: boolean
+  multiline?: boolean
 };
 
 /**
@@ -38,12 +40,15 @@ type Properties = {
  * @param unpackValue takes the formatted value, returns the actual value.
  *        Must be provided if format value is provided.
  *        If it returns undefined, the value does not change.
+ * @param outline if true, the inputField is outlined.
+ * @param multiline if true, the inputField is multiline.
  * @constructor
  */
 const InputField = ({ autoCapitalize, onChangeText,
                       label, value, errorChecker,
                       errorMessage, style, viewStyle,
-                      inputMode, formatValue, unpackValue}: Properties) => {
+                      inputMode, formatValue, unpackValue,
+                      outline, multiline}: Properties) => {
   const theme = usePaperTheme();
 
   if (formatValue === undefined) {
@@ -60,9 +65,17 @@ const InputField = ({ autoCapitalize, onChangeText,
     };
   }
 
+  if (errorChecker === undefined) {
+    errorChecker = (ignored) => {
+      return false;
+    };
+  }
+
   return (
     <View style={viewStyle}>
       <TextInput
+        mode={outline ? "outlined" : "flat"}
+        multiline={multiline}
         selectionColor={theme.colors.secondary}
         activeUnderlineColor={theme.colors.secondary}
         activeOutlineColor={theme.colors.secondary}
@@ -83,12 +96,15 @@ const InputField = ({ autoCapitalize, onChangeText,
         style={style}
         inputMode={inputMode}
       />
-      <HelperText
-        type="error"
-        visible={errorChecker(value)}
-      >
-        {errorMessage(value)}
-      </HelperText>
+      {errorMessage !== undefined ?
+        <HelperText
+          type="error"
+          visible={errorChecker(value)}
+        >
+          {errorMessage(value)}
+        </HelperText> :
+        null
+      }
     </View>
   );
 };

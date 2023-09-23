@@ -10,13 +10,15 @@ import { useTheme as usePaperTheme } from "react-native-paper";
  */
 type Properties = {
   categoryId: string,
+  setIsValid: React.Dispatch<React.SetStateAction<boolean>>
 };
 
 /**
  * @param categoryId to display its data
+ * @param setIsValid modifies the validity of the category
  * @constructor
  */
-const CategoryListItem = ({ categoryId }: Properties) => {
+const CategoryListItem = ({ categoryId, setIsValid }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
 
@@ -30,9 +32,14 @@ const CategoryListItem = ({ categoryId }: Properties) => {
   /* load the category */
   useEffect(() => {
     DependencyTree.Categories.get(categoryId).then(c => {
-      setCategory(c);
+      if (c.isDeactivated) {
+        setIsValid(false);
+      } else {
+        setIsValid(true);
+        setCategory(c);
+      }
     });
-  }, []);
+  }, [categoryId]);
 
   /* used by text fields */
   const textStyle: StyleProp<TextStyle> = [

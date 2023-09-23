@@ -34,7 +34,7 @@ const VendorListItem = ({ vendorId }: Properties) => {
     DependencyTree.Vendors.get(vendorId).then(v => {
       setVendor(v);
     });
-  }, []);
+  }, [vendorId]);
 
   /* used by text fields */
   const textStyle: StyleProp<TextStyle> = [

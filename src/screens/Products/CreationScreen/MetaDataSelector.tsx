@@ -37,6 +37,9 @@ const MetaDataSelector = ({vendorId, setVendorId,
   /* set of category IDs */
   const [categoryIdSet, setCategoryIdSet] = useState<Set<string>>(new Set());
 
+  /* true indicates that the category is valid */
+  const [isValid, setIsValid] = useState<boolean>(true);
+
   /* placeholder string for the vendors selector */
   const vendorPlaceholder = "Select a vendor";
 
@@ -121,7 +124,8 @@ const MetaDataSelector = ({vendorId, setVendorId,
           };
         })}
         renderItem={({ categoryId }) => {
-          return <CategoryListItem categoryId={categoryId} />
+          return <CategoryListItem categoryId={categoryId}
+                                   setIsValid={setIsValid} />
         }}
         placeholder={categoryPlaceholder}
         placeholderStyle={textStyle}
@@ -145,7 +149,9 @@ const MetaDataSelector = ({vendorId, setVendorId,
         }}
         itemTextStyle={textStyle}
         onChange={({ categoryId }) => {
-          setCategoryId(categoryId);
+          if (isValid) {
+            setCategoryId(categoryId);
+          }
         }}
       />
 

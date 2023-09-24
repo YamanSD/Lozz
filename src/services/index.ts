@@ -17,3 +17,4 @@ export * from './helpers/colors';
 export * from './helpers/numeric';
 export * from './helpers/inputCheckers';
 export * from './helpers/text';
+export * from './helpers/jointModel';

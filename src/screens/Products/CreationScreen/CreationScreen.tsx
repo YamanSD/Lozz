@@ -62,6 +62,9 @@ const CreationScreen = () => {
   /* category ID of the product (which is actually the category name) */
   const [categoryId, setCategoryId] = useState<string>("");
 
+  /* final images object to create the product */
+  const [imagesMap, setImagesMap] = useState<Generic<string[]>>({});
+
   useEffect(() => { // Get results from models
     if (routeParams.description !== undefined) {
       setDescription(routeParams.description);
@@ -136,7 +139,11 @@ const CreationScreen = () => {
                              cost={cost}
         />
 
-        <ImageSpecifier />
+        <ImageSpecifier uspList={Object.keys(quantities)}
+                        images={images}
+                        imagesMap={imagesMap}
+                        setImagesMap={setImagesMap}
+        />
 
         <InstructionSelector instructions={instructions}
                              setInstructions={setInstructions}

@@ -7,9 +7,21 @@ import { Generic } from "../../../services";
  * Prop-type for the image specifier component.
  */
 type Properties = {
+  uspList: string[],
+  images: string[],
+  imagesMap: Generic<string[]>,
+  setImagesMap: React.Dispatch<React.SetStateAction<Generic<string[]>>>
 };
 
-const ImageSpecifier = ({  }: Properties) => {
+/**
+ * @param uspList list of USPs in the category.
+ * @param images list of available image URLs.
+ * @param imagesMap maps a USP to its images.
+ * @param setImagesMap modifies the imagesMap.
+ * @constructor
+ */
+const ImageSpecifier = ({ uspList, images,
+                          imagesMap, setImagesMap }: Properties) => {
   const { Layout } = useBoilerTheme();
 
   return (

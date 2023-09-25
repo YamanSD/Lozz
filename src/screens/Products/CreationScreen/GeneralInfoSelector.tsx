@@ -94,8 +94,8 @@ const GeneralInfoSelector = ({
     elevation={4}>
       <Text style={{
         fontWeight: "600",
-        fontSize: 17,
-        marginBottom: 10,
+        fontSize: 22,
+        marginBottom: 13,
       }}>
         Media
       </Text>

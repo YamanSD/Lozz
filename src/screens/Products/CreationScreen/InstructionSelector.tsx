@@ -56,7 +56,7 @@ const InstructionSelector = ({ instructions,
     ]} elevation={4}>
       <Text style={{
         fontWeight: "600",
-        fontSize: 17,
+        fontSize: 22,
         marginBottom: 10,
       }}>
         Instructions

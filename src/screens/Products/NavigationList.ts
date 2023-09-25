@@ -3,6 +3,7 @@ import CreationScreen from "./CreationScreen/CreationScreen";
 import NavigationNames from "./NavigationNames";
 import DescriptionEditor from "./CreationScreen/DescriptionEditor";
 import QuantitiesModal from "./CreationScreen/Quantities/QuantitiesModal";
+import ImagesModal from "./CreationScreen/ImageSpecifier/ImagesModal";
 
 export default {
   [NavigationNames.MainScreen]: {
@@ -17,6 +18,10 @@ export default {
   },
   [NavigationNames.QuantityEditorModal]: {
     component: QuantitiesModal,
+    options: { presentation: 'modal' }
+  },
+  [NavigationNames.ImagesSpecifierModal]: {
+    component: ImagesModal,
     options: { presentation: 'modal' }
   }
 };

@@ -2,5 +2,6 @@ export default {
   MainScreen: "ProductsMainScreen",
   CreationScreen: "ProductsCreationScreen",
   DescriptionEditorModal: "DescriptionEditorModal",
-  QuantityEditorModal: "QuantityEditorModal"
+  QuantityEditorModal: "QuantityEditorModal",
+  ImagesSpecifierModal: "ImagesSpecifierModal"
 };

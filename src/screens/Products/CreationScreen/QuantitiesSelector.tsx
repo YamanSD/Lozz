@@ -50,7 +50,6 @@ const QuantitiesSelector = ({ quantities }: Properties) => {
         marginTop: 20,
         borderRadius: 10,
         padding: 25,
-        marginBottom: 20
       }
     ]} elevation={4}>
       <Text style={{
@@ -60,7 +59,7 @@ const QuantitiesSelector = ({ quantities }: Properties) => {
       }}>
         Inventory
       </Text>
-      {/* description field */}
+      {/* quantities editor */}
       <TouchableOpacity style={[
         Layout.fullWidth,
         Layout.justifyContentBetween,

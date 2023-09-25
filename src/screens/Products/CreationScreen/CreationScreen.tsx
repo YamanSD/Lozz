@@ -30,7 +30,8 @@ const CreationScreen = () => {
 
   const routeParams: {
     description?: string,
-    quantities?: QuantityType
+    quantities?: QuantityType,
+    imagesMap?: Generic<string[]>
   } = route.params ?? {};
 
   /* images of the product */
@@ -72,6 +73,10 @@ const CreationScreen = () => {
 
     if (routeParams.quantities !== undefined) {
       setQuantities(routeParams.quantities);
+    }
+
+    if (routeParams.imagesMap !== undefined) {
+      setImagesMap(routeParams.imagesMap);
     }
   }, [routeParams]);
 
@@ -139,12 +144,6 @@ const CreationScreen = () => {
                              cost={cost}
         />
 
-        <ImageSpecifier uspList={Object.keys(quantities)}
-                        images={images}
-                        imagesMap={imagesMap}
-                        setImagesMap={setImagesMap}
-        />
-
         <InstructionSelector instructions={instructions}
                              setInstructions={setInstructions}
         />
@@ -156,6 +155,12 @@ const CreationScreen = () => {
         />
 
         <QuantitiesSelector quantities={quantities} />
+
+        <ImageSpecifier uspList={Object.keys(quantities)}
+                        images={images}
+                        imagesMap={imagesMap}
+                        setImagesMap={setImagesMap}
+        />
       </ScrollView>
     </SafeAreaView>
   );

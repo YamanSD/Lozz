@@ -1,4 +1,4 @@
-import { Category, Product, toTitle } from "../index";
+import { Category, Product } from "../index";
 
 /**
  * @param category to get the empty quantities for
@@ -8,6 +8,19 @@ export function emptyQuantities(category: Category) {
   return Product.emptyQuantities(category);
 }
 
+/**
+ * Formats the USP from p_q to toTitle(p) / toTitle(q).
+ * @param usp to be formatted
+ * @returns the formatted USP
+ */
 export function formatUsp(usp: string) {
-  return Product.invertUsp(usp).map(v => toTitle(v)).join(" / ");
+  return Product.invertUsp(usp).join(" / ");
+}
+
+/**
+ * @param usp to count the options for
+ * @returns the options constituting the usp
+ */
+export function countOptions(usp: string) {
+  return Product.invertUsp(usp).length;
 }

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FlatList, View } from "react-native";
+import { FlatList, ScrollView, View } from "react-native";
 import { Appbar, Button, Text } from "react-native-paper";
 import { Generic } from "../../../../services";
 import { useTheme as useBoilerTheme } from "../../../../hooks";
@@ -97,7 +97,17 @@ const ImagesModal = () => {
                   borderBottomColor: theme.colors.tertiary
                 }
               ]}>
-                <Text>{item}</Text>
+                <ScrollView horizontal={true}
+                            showsHorizontalScrollIndicator={false}>
+                  <Text style={{
+                    fontWeight: "600",
+                    fontSize: 18
+                  }}>
+                    {
+                      item
+                    }
+                  </Text>
+                </ScrollView>
               </View>
             );
           }}

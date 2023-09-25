@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import Animated from "react-native-reanimated";
 import { Appbar, Button, Text } from "react-native-paper";
 import { useTheme as usePaperTheme } from "react-native-paper";
-import { FlatList, View } from "react-native";
+import { FlatList, ScrollView, View } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import NavigationNames from "../../NavigationNames";
 import { formatUsp, QuantityType } from "../../../../services";
 import { useTheme as useBoilerTheme } from "../../../../hooks";
-import QuantityRow from "./QuantityRow";
+import QuantityInputCol from "./QuantityInputCol";
 
 
 /**
@@ -98,17 +98,20 @@ const QuantitiesModal = () => {
                     borderBottomColor: theme.colors.tertiary
                   }
                 ]}>
-                  <Text style={{
-                    fontWeight: "600",
-                    fontSize: 18
-                  }}>
-                    {
-                      formatUsp(usp)
-                    }
-                  </Text>
-                  <QuantityRow usp={usp}
-                               quantities={quantities}
-                               setQuantities={setQuantities} />
+                  <ScrollView horizontal={true}
+                              showsHorizontalScrollIndicator={false}>
+                    <Text style={{
+                      fontWeight: "600",
+                      fontSize: 18
+                    }}>
+                      {
+                        formatUsp(usp)
+                      }
+                    </Text>
+                  </ScrollView>
+                  <QuantityInputCol usp={usp}
+                                    quantities={quantities}
+                                    setQuantities={setQuantities} />
                 </View>
               );
             }}

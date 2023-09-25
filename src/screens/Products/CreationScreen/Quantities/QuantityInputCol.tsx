@@ -8,7 +8,7 @@ import { InputField } from "../../../../components";
 import { isNaN } from "lodash";
 
 /**
- * Prop-type for the QuantityRow component
+ * Prop-type for the QuantityInputCol component
  */
 type Properties = {
   usp: string,
@@ -22,7 +22,7 @@ type Properties = {
  * @param setQuantities modifies the quantities
  * @constructor
  */
-const QuantityRow = ({ usp, quantities,
+const QuantityInputCol = ({ usp, quantities,
                        setQuantities }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
@@ -45,7 +45,7 @@ const QuantityRow = ({ usp, quantities,
       Layout.rowHCenter,
       Layout.justifyContentBetween,
       {
-        width: 170
+        width: 180
       }
     ]}>
       <TouchableOpacity style={[Layout.center]}
@@ -102,8 +102,8 @@ const QuantityRow = ({ usp, quantities,
                     Layout.center,
                     {
                       marginBottom: 6,
-                      width: 110,
-                      height: 45,
+                      width: 120,
+                      height: 40,
                     }
                   ]}
       />
@@ -121,4 +121,4 @@ const QuantityRow = ({ usp, quantities,
   );
 }
 
-export default QuantityRow;
+export default QuantityInputCol;

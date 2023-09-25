@@ -1,37 +1,46 @@
-import { Button, Surface, Text } from "react-native-paper";
+import { Surface, Text } from "react-native-paper";
 import React, { useEffect, useState } from "react";
 import { useTheme as useBoilerTheme } from "../../../hooks";
-import { Category, DependencyTree, QuantityType } from "../../../services";
+import { QuantityType } from "../../../services";
 import { useNavigation } from "@react-navigation/native";
 import NavigationNames from "../NavigationNames";
+import { sum } from "lodash";
+import { TouchableOpacity } from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 /**
  * Prop-type for the Instruction selector component.
  */
 type Properties = {
-  categoryId: string,
   quantities: QuantityType
 };
 
-
-const QuantitiesSelector = ({ categoryId, quantities }: Properties) => {
+/**
+ * @param quantities of the product (display & inventory)
+ * @constructor
+ */
+const QuantitiesSelector = ({ quantities }: Properties) => {
   const { Layout } = useBoilerTheme();
   const navigation = useNavigation();
 
-  /* category of the component */
-  const [category, setCategory] =
-    useState<Category | undefined>(undefined);
+  /* total selected quantities */
+  const [total, setTotal] = useState(0);
 
-  /* load the category */
   useEffect(() => {
-    if (!DependencyTree.Categories.idSet.has(categoryId)) {
-      return;
-    }
+    setTotal(sum(Object.values(quantities)));
+  }, [quantities]);
 
-    DependencyTree.Categories.get(categoryId).then(c => {
-        setCategory(c);
-    });
-  }, [categoryId]);
+  /**
+   * Used by description bar.
+   */
+  const onClick = () => {
+    navigation.navigate(
+      NavigationNames.QuantityEditorModal as never,
+      {
+        quantities: quantities
+      } as never
+    );
+  };
 
   return (
     <Surface style={[
@@ -44,22 +53,31 @@ const QuantitiesSelector = ({ categoryId, quantities }: Properties) => {
         marginBottom: 20
       }
     ]} elevation={4}>
-      <Button mode={"outlined"} onPress={() => {
-        navigation.navigate(
-          NavigationNames.QuantityEditorModal as never
-        );
-      }}>
-        p
-      </Button>
       <Text style={{
         fontWeight: "600",
-        fontSize: 17,
-        marginBottom: 10,
+        fontSize: 22,
+        marginBottom: 15,
       }}>
-        Quantities, {category?.optionValues.map(ar => {
-          return `${ar}\n`
-      })}
+        Inventory
       </Text>
+      {/* description field */}
+      <TouchableOpacity style={[
+        Layout.fullWidth,
+        Layout.justifyContentBetween,
+        Layout.rowHCenter,
+        Layout.row,
+        {
+          paddingLeft: 5,
+        }
+      ]} onPress={onClick}>
+        <Text style={{
+          fontWeight: "500",
+          fontSize: 17
+        }}>
+          {total} available
+        </Text>
+        <Icon name={"chevron-right"} size={22} />
+      </TouchableOpacity>
     </Surface>
   );
 };

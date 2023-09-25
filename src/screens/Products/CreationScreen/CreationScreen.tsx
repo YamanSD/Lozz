@@ -5,7 +5,13 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import GeneralInfoSelector from "./GeneralInfoSelector";
-import { Generic, MonetaryType, QuantityType } from "../../../services";
+import {
+  DependencyTree,
+  emptyQuantities,
+  Generic,
+  MonetaryType,
+  QuantityType
+} from "../../../services";
 import InstructionSelector from "./InstructionSelector";
 import MetaDataSelector from "./MetaDataSelector";
 import QuantitiesSelector from "./QuantitiesSelector";
@@ -22,7 +28,8 @@ const CreationScreen = () => {
   const route = useRoute();
 
   const routeParams: {
-    description?: string
+    description?: string,
+    quantities?: QuantityType
   } = route.params ?? {};
 
   /* images of the product */
@@ -54,9 +61,25 @@ const CreationScreen = () => {
   /* category ID of the product (which is actually the category name) */
   const [categoryId, setCategoryId] = useState<string>("");
 
-  useEffect(() => {
-    setDescription(routeParams.description ?? "");
+  useEffect(() => { // Get results from models
+    if (routeParams.description !== undefined) {
+      setDescription(routeParams.description);
+    }
+
+    if (routeParams.quantities !== undefined) {
+      setQuantities(routeParams.quantities);
+    }
   }, [routeParams]);
+
+  useEffect(() => { // Reset quantities on category change
+    if (categoryId === "") { // Initial category
+      return;
+    }
+
+    DependencyTree.Categories.get(categoryId).then(c => {
+      setQuantities(emptyQuantities(c));
+    });
+  }, [categoryId]);
 
   /* product ID */
   const [productId, setProductId] = useState<string>("");
@@ -122,9 +145,7 @@ const CreationScreen = () => {
                           setCategoryId={setCategoryId}
         />
 
-        <QuantitiesSelector categoryId={categoryId}
-                            quantities={quantities}
-        />
+        <QuantitiesSelector quantities={quantities} />
       </ScrollView>
     </SafeAreaView>
   );

@@ -9,13 +9,15 @@ import { useTheme as usePaperTheme } from "react-native-paper";
 type Properties = {
   autoCapitalize?: boolean,
   onChangeText: (value: any) => any,
-  label: string,
+  label?: string,
   value: any,
   errorChecker?: (value: any) => boolean,
   errorMessage?: (value: any) => string,
   style?: StyleProp<TextStyle>,
   viewStyle?: StyleProp<ViewStyle>,
   inputMode?: InputModeOptions,
+  outlineStyle?: StyleProp<ViewStyle>,
+  contentStyle?: StyleProp<TextStyle>,
   formatValue?: (value: any) => any,
   unpackValue?: (value: string) => any,
   outline?: boolean
@@ -42,13 +44,15 @@ type Properties = {
  *        If it returns undefined, the value does not change.
  * @param outline if true, the inputField is outlined.
  * @param multiline if true, the inputField is multiline.
+ * @param outlineStyle for the InputField
+ * @param contentStyle for the InputField
  * @constructor
  */
-const InputField = ({ autoCapitalize, onChangeText,
+const InputField = ({ autoCapitalize, onChangeText, contentStyle,
                       label, value, errorChecker,
                       errorMessage, style, viewStyle,
                       inputMode, formatValue, unpackValue,
-                      outline, multiline}: Properties) => {
+                      outline, multiline, outlineStyle}: Properties) => {
   const theme = usePaperTheme();
 
   if (formatValue === undefined) {
@@ -74,6 +78,8 @@ const InputField = ({ autoCapitalize, onChangeText,
   return (
     <View style={viewStyle}>
       <TextInput
+        outlineStyle={outlineStyle}
+        contentStyle={contentStyle}
         mode={outline ? "outlined" : "flat"}
         multiline={multiline}
         selectionColor={theme.colors.secondary}

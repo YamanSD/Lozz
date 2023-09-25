@@ -1,4 +1,4 @@
-import { Category, Product } from "../index";
+import { Category, Product, toTitle } from "../index";
 
 /**
  * @param category to get the empty quantities for
@@ -6,4 +6,8 @@ import { Category, Product } from "../index";
  */
 export function emptyQuantities(category: Category) {
   return Product.emptyQuantities(category);
+}
+
+export function formatUsp(usp: string) {
+  return Product.invertUsp(usp).map(v => toTitle(v)).join(" / ");
 }

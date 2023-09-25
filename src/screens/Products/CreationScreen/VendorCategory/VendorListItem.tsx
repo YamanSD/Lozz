@@ -52,8 +52,6 @@ const VendorListItem = ({ vendorId }: Properties) => {
     Layout.rowHCenter,
     Layout.justifyContentBetween,
     {
-      borderBottomColor: theme.colors.primary,
-      borderBottomWidth: 1,
       paddingVertical: 4,
     }
   ];

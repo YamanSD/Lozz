@@ -15,6 +15,7 @@ import {
 import InstructionSelector from "./InstructionSelector";
 import MetaDataSelector from "./MetaDataSelector";
 import QuantitiesSelector from "./QuantitiesSelector";
+import ImageSpecifier from "./ImageSpecifier";
 
 /**
  * Responsible for the product creation process.
@@ -134,6 +135,8 @@ const CreationScreen = () => {
                              setCost={setCost}
                              cost={cost}
         />
+
+        <ImageSpecifier />
 
         <InstructionSelector instructions={instructions}
                              setInstructions={setInstructions}

@@ -57,9 +57,6 @@ const CategoryListItem = ({ categoryId, setIsValid }: Properties) => {
     Layout.rowHCenter,
     Layout.justifyContentBetween,
     {
-      borderBottomWidth: 2,
-      borderBottomColor: theme.colors.primary,
-      marginBottom: 8,
       paddingVertical: 4,
     }
   ];

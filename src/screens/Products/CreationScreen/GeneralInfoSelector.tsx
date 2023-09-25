@@ -192,6 +192,7 @@ const GeneralInfoSelector = ({
             ? `Maximum value is ${maxPrice}`
             : "Only positive values allowed"
         }}
+        inputMode={"numeric"}
         unpackValue={unpackPrice}
         formatValue={formatPrice}
       />
@@ -211,6 +212,7 @@ const GeneralInfoSelector = ({
             ? `Maximum value is $${maxPrice.toFixed(2)}`
             : "Only positive values allowed"
         }}
+        inputMode={"numeric"}
         unpackValue={unpackPrice}
         formatValue={formatPrice}
       />

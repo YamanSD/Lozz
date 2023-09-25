@@ -61,7 +61,7 @@ const QuantityRow = ({ usp, quantities,
       </TouchableOpacity>
       <InputField outline={true}
                   value={counter.toString()}
-                  inputMode={"tel"}
+                  inputMode={"numeric"}
                   onChangeText={(value: string) => {
                     if (MaxLength < value.length) {
                       return;

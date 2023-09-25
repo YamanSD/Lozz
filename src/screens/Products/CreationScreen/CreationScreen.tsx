@@ -159,7 +159,6 @@ const CreationScreen = () => {
         <ImageSpecifier uspList={Object.keys(quantities)}
                         images={images}
                         imagesMap={imagesMap}
-                        setImagesMap={setImagesMap}
         />
       </ScrollView>
     </SafeAreaView>

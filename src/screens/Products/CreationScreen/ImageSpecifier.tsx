@@ -6,7 +6,6 @@ import { TouchableOpacity, View } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import NavigationNames from "../NavigationNames";
 import { useNavigation } from "@react-navigation/native";
-import { useTheme as usePaperTheme } from "react-native-paper";
 
 /**
  * Prop-type for the image specifier component.
@@ -15,21 +14,17 @@ type Properties = {
   uspList: string[],
   images: string[],
   imagesMap: Generic<string[]>,
-  setImagesMap: React.Dispatch<React.SetStateAction<Generic<string[]>>>
 };
 
 /**
  * @param uspList list of USPs in the category.
  * @param images list of available image URLs.
  * @param imagesMap maps a USP to its images.
- * @param setImagesMap modifies the imagesMap.
  * @constructor
  */
-const ImageSpecifier = ({ uspList, images,
-                          imagesMap, setImagesMap }: Properties) => {
+const ImageSpecifier = ({ uspList, images, imagesMap }: Properties) => {
   const { Layout } = useBoilerTheme();
   const navigation = useNavigation();
-  const theme = usePaperTheme();
 
   /**
    * Used by description bar.
@@ -38,7 +33,9 @@ const ImageSpecifier = ({ uspList, images,
     navigation.navigate(
       NavigationNames.ImagesSpecifierModal as never,
       {
-        imagesMap: imagesMap
+        imagesMap: imagesMap,
+        uspList: uspList,
+        images: images
       } as never
     );
   };

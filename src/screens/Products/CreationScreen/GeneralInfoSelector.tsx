@@ -2,8 +2,7 @@ import React from "react";
 import { Surface, Text, Button } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
-import { Alert, TouchableOpacity, View } from "react-native";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import NavigationNames from "../NavigationNames";
 import { InputField } from "../../../components";
@@ -17,6 +16,7 @@ import {
   MonetaryType, unpackPrice
 } from "../../../services";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import GeneralImagePicker from "./GeneralImagePicker/GeneralImagePicker";
 
 /**
  * Prop-type for the Media selector component.
@@ -99,31 +99,8 @@ const GeneralInfoSelector = ({
       }}>
         Media
       </Text>
-      <Button mode={"outlined"} style={{
-          borderRadius: 10,
-          margin: 0,
-          borderStyle: "dashed",
-          borderColor: "rgb(190, 190, 190)"
-        }} contentStyle={[Layout.center]} onPress={() => Alert.alert("TODO")}>
-          <View style={[
-            Layout.center,
-            {
-              height: 150,
-              paddingVertical: 10,
-            }
-          ]}>
-            <MaterialCommunityIcons name={'file-image-plus'}
-                                    size={25}
-                                    color={theme.colors.secondary}
-                                    style={{ margin: 0, marginBottom: 10 }}
-            />
-            <Text style={{
-              fontSize: 16
-            }}>
-              Add media
-            </Text>
-          </View>
-      </Button>
+      {/* image picker */}
+      <GeneralImagePicker images={images} setImages={setImages} />
 
       {/* Name field */}
       <InputField onChangeText={setName}

@@ -78,6 +78,7 @@ android {
     namespace "com.lozz"
     defaultConfig {
         applicationId "com.lozz"
+        vectorDrawables.useSupportLibrary = true
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -46,7 +46,8 @@ export default {
   product: {
     name: "products",
     id: "id",
-    properties: "productProperties"
+    properties: "productProperties",
+    maxImageCount: 15,
   },
   order: {
     name: "orders",

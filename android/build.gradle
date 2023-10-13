@@ -13,6 +13,12 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+
+        // rn-crop-image-picker
+        maven { url 'https://maven.google.com' }
+
+        // rn-crop-image-picker
+        maven { url "https://www.jitpack.io" }
     }
     dependencies {
         classpath("com.android.tools.build:gradle")

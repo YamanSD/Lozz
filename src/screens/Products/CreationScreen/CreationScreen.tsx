@@ -35,8 +35,7 @@ const CreationScreen = () => {
   } = route.params ?? {};
 
   /* images of the product */
-  // TODO, SET TO EMPTY THIS IS FOR TESTING PURPOSES ONLY.
-  const [images, setImages] = useState<string[]>(["https://www.research-andme.com/wp-content/uploads/2018/03/3840x2160-dark-red-solid-color-background.jpg"]);
+  const [images, setImages] = useState<string[]>([]);
 
   /* product name */
   const [name, setName] = useState<string>("");

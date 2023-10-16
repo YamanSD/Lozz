@@ -4,6 +4,10 @@ import firestore from "@react-native-firebase/firestore";
 import CollectionNames from "../../CollectionInfo";
 import Courier from "../model/Courier";
 import { NotStatisticalError } from "./Errors";
+import CollectionInfo from "../../CollectionInfo";
+import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
+import validator from "validator";
+import isAlphanumeric = validator.isAlphanumeric;
 
 
 /**
@@ -98,5 +102,49 @@ export default class CourierController extends BaseController<courier> {
    */
   protected removeStatistic(id: string): Promise<void> {
     throw new NotStatisticalError();
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on create.
+   */
+  protected validateCreation(data: courier): Promise<void> | void {
+    /* validates the name */
+    let errorObj = {
+      name: true,
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      /* Check the name */
+      if (errorObj.name && isAlphanumeric(data.name, locale as AlphanumericLocale)) {
+        errorObj.name = false;
+      }
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected validateUpdate(data: Generic): Promise<void> | void {
+    /* validates the name is not sent */
+    let errorObj = {
+      name: data.name !== undefined,
+    };
+
+    this.checkErrorObject(errorObj);
   }
 }

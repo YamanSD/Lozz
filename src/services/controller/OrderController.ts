@@ -38,6 +38,11 @@ import Product from "../model/Product";
 import ProductController from "./ProductController";
 import CategoryController from "./CategoryController";
 import StatisticsBlock from "../local_model/StatisticsBlock";
+import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
+import validator from "validator";
+import isAlphanumeric = validator.isAlphanumeric;
+import isMobilePhone = validator.isMobilePhone;
+import isEmail from "validator/lib/isEmail";
 
 
 /**
@@ -927,5 +932,181 @@ export default class OrderController extends BaseController<order> {
     }
 
     StatisticsBlock.subtractOrder(await this.get(id));
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected async validateCreation(data: order): Promise<void> {
+    /*
+     * validates the id, address, zone, link_id, phone_number,
+     * commission, customer_id, courier_id, discount, email, & note.
+     */
+    let errorObj = {
+      id: true,
+      address: data.address !== undefined,
+      zone: true,
+      link_id: data.link_id !== undefined,
+      phone_number: data.phone_number !== undefined,
+      customer_id: true,
+      courier_id: data.courier_id !== undefined,
+      discount: data.discount !== undefined,
+      email: data.email !== undefined,
+      note: data.note !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.note && isAlphanumeric(data.note as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.note = false;
+      }
+
+      if (errorObj.zone && isAlphanumeric(data.zone,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.zone = false;
+      }
+
+      if (errorObj.address && isAlphanumeric(data.address as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.address = false;
+      }
+    }
+
+    /* check id, locale-independent */
+    if (errorObj.id && isAlphanumeric(data.id)) {
+      errorObj.id = false;
+    }
+
+    /* check phone-number, locale-independent */
+    if (errorObj.phone_number && isMobilePhone(data.phone_number as string)) {
+      errorObj.phone_number = false;
+    }
+
+    /* check email, locale-independent */
+    if (errorObj.email && isEmail(data.email as string)) {
+      errorObj.email = false;
+    }
+
+    /* check discount, locale-independent */
+    if (errorObj.discount
+      && 0 <= (data.discount as number)
+      && 1 >= (data.discount as number)) {
+      errorObj.discount = false;
+    }
+
+    /* check if link exists, locale-independent */
+    if (errorObj.link_id && !(await this.isIdAvailable(data.link_id as string))) {
+      errorObj.link_id = false;
+    }
+
+    /* check if customer exists, locale-independent */
+    if (errorObj.customer_id
+      && !(await this.customerController.isIdAvailable(data.customer_id)
+      && !(await this.customerController.isBanned(data.customer_id)))) {
+      errorObj.customer_id = false;
+    }
+
+    /* check if courier exists, locale-independent */
+    if (errorObj.courier_id
+      && !(await this.courierController.isIdAvailable(data.customer_id))) {
+      errorObj.courier_id = false;
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected async validateUpdate(data: Generic): Promise<void> {
+    /*
+     * validates the id, address, zone, link_id, phone_number,
+     * commission, customer_id, courier_id, discount, email, & note.
+     */
+    let errorObj = {
+      id: data.id !== undefined,
+      address: data.address !== undefined,
+      zone: true,
+      link_id: data.link_id !== undefined,
+      phone_number: data.phone_number !== undefined,
+      customer_id: data.customer_id !== undefined,
+      courier_id: data.courier_id !== undefined,
+      discount: data.discount !== undefined,
+      email: data.email !== undefined,
+      note: data.note !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.note && isAlphanumeric(data.note as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.note = false;
+      }
+
+      if (errorObj.zone && isAlphanumeric(data.zone,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.zone = false;
+      }
+
+      if (errorObj.address && isAlphanumeric(data.address as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.address = false;
+      }
+    }
+
+    /* check phone-number, locale-independent */
+    if (errorObj.phone_number && isMobilePhone(data.phone_number as string)) {
+      errorObj.phone_number = false;
+    }
+
+    /* check email, locale-independent */
+    if (errorObj.email && isEmail(data.email as string)) {
+      errorObj.email = false;
+    }
+
+    /* check discount, locale-independent */
+    if (errorObj.discount
+      && 0 <= (data.discount as number)
+      && 1 >= (data.discount as number)) {
+      errorObj.discount = false;
+    }
+
+    /* check if link exists, locale-independent */
+    if (errorObj.link_id && !(await this.isIdAvailable(data.link_id as string))) {
+      errorObj.link_id = false;
+    }
+
+    /* check if courier exists, locale-independent */
+    if (errorObj.courier_id
+      && !(await this.courierController.isIdAvailable(data.customer_id))) {
+      errorObj.courier_id = false;
+    }
+
+    this.checkErrorObject(errorObj);
   }
 }

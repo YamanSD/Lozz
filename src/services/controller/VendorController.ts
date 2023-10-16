@@ -4,6 +4,10 @@ import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../CollectionInfo";
 import Vendor from "../model/Vendor";
 import { NotStatisticalError } from "./Errors";
+import validator from "validator";
+import isAlphanumeric = validator.isAlphanumeric;
+import isMobilePhone = validator.isMobilePhone;
+import isEmail from "validator/lib/isEmail";
 
 
 /**
@@ -100,5 +104,88 @@ export default class VendorController extends BaseController<vendor> {
    */
   protected removeStatistic(id: string): Promise<void> {
     throw new NotStatisticalError();
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected validateCreation(data: vendor): Promise<void> | void {
+    /*
+     * validates the emails, phone numbers, & name.
+     */
+    let errorObj = {
+      emails: false, // assume correct
+      name: true,
+      phone_numbers: false // assume correct
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.name && isAlphanumeric(data.name)) {
+        errorObj.name = false;
+      }
+    }
+
+    /* check phone numbers */
+    for (let phone_number of data.phone_numbers ?? []) {
+      if (!isMobilePhone(phone_number)) {
+        errorObj.phone_numbers = true;
+        break;
+      }
+    }
+
+    /* check emails */
+    for (let email of data.emails ?? []) {
+      if (!isEmail(email)) {
+        errorObj.emails = true;
+        break;
+      }
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected validateUpdate(data: Generic): Promise<void> | void {
+    /*
+     * validates the emails, phone numbers, & name.
+     */
+    let errorObj = {
+      emails: false, // assume correct
+      name: data.name !== undefined,
+      phone_numbers: false // assume correct
+    };
+
+    /* check phone numbers */
+    for (let phone_number of data.phone_numbers ?? []) {
+      if (!isMobilePhone(phone_number)) {
+        errorObj.phone_numbers = true;
+        break;
+      }
+    }
+
+    /* check emails */
+    for (let email of data.emails ?? []) {
+      if (!isEmail(email)) {
+        errorObj.emails = true;
+        break;
+      }
+    }
+
+    this.checkErrorObject(errorObj);
   }
 }

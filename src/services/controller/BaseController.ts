@@ -8,7 +8,7 @@ import {
 } from "@orama/orama";
 import {
   IdAlreadyExistsError,
-  IdDoesNotExistError, NoConnectionError,
+  IdDoesNotExistError, InvalidInputError, NoConnectionError,
   NoDataError,
   NoDeactivateError,
   NoDeleteError,
@@ -94,6 +94,9 @@ export default abstract class BaseController<RawData extends Generic> {
     delete: 0,
     transactions: 0
   };
+
+  /* characters that are considered alphanumeric in addition to the usual set */
+  protected static alphanumericIgnoreSeq: string = " _,.[]()-+=$#@%&><:;'\"?!";
 
   /* collection name */
   private readonly collection_name: string;
@@ -325,6 +328,7 @@ export default abstract class BaseController<RawData extends Generic> {
    */
   protected async createServer(id: string, data: RawData) {
     this.cleanData(data);
+    await this.validateCreation(data);
     await this.collection.doc(id).set(data);
     this.addId(id);
     BaseController.serverCounter.write++;
@@ -351,6 +355,8 @@ export default abstract class BaseController<RawData extends Generic> {
     }
 
     this.cleanData(data);
+    await this.validateUpdate(data);
+
     if (Object.keys(data).length === 0) {
       return;
     }
@@ -1111,6 +1117,40 @@ export default abstract class BaseController<RawData extends Generic> {
    * @param model new model of the document
    */
   public abstract update(model: BaseModel): Promise<any>;
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected abstract validateCreation(data: RawData): Promise<void> | void;
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected abstract validateUpdate(data: Generic): Promise<void> | void;
+
+  /**
+   *
+   * @param errObj error object to be checked
+   * @throws InvalidInputError if the errObj has an invalid field.
+   * @protected
+   */
+  protected checkErrorObject(errObj: Generic<boolean>): void {
+    if (Object.values(errObj).every(value => !value)) {
+      throw new InvalidInputError(JSON.stringify(errObj));
+    }
+  }
 
   /**
    * @param data basic data of the document

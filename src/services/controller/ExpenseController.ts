@@ -21,6 +21,11 @@ import Restock from "../model/Restock";
 import Product from "../model/Product";
 import Monetary from "../local_model/Monetary";
 import StatisticsBlock from "../local_model/StatisticsBlock";
+import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
+import { isDate } from "lodash";
+import validator from "validator";
+import isAlphanumeric = validator.isAlphanumeric;
+import isBefore = validator.isBefore;
 
 
 /**
@@ -270,5 +275,113 @@ export default class ExpenseController extends BaseController<expense> {
    */
   protected async removeStatistic(id: string): Promise<void> {
     StatisticsBlock.subtractExpense(await this.get(id));
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected async validateCreation(data: expense): Promise<void> {
+    /*
+     * validates the id, date, description, and the associated ID if present.
+     */
+    let errorObj = {
+      id: true,
+      date: true,
+      description: true,
+      vendor_id: data.vendor_id !== undefined,
+      restock_id: data.restock_id !== undefined,
+      courier_id: data.courier_id !== undefined,
+      employee_id: data.employee_id !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.description && isAlphanumeric(data.description,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+      })) {
+        errorObj.description = false;
+      }
+    }
+
+    /* check id, locale-independent */
+    if (errorObj.id && isAlphanumeric(data.id)) {
+      errorObj.id = false;
+    }
+
+    /* check date, locale-independent */
+    if (errorObj.date && isDate(data.date)
+      && isBefore(data.date.toString(), new Date().toString())) {
+      errorObj.date = false;
+    }
+
+    /* check for the associate ID, locale-independent */
+    if (data.vendor_id) {
+      if (!(await this.vendorController.isIdAvailable(data.vendor_id))) {
+        errorObj.vendor_id = false;
+      }
+    } else if (data.restock_id) {
+      if (!(await this.restockController.isIdAvailable(data.restock_id))) {
+        errorObj.restock_id = false;
+      }
+    } else if (data.courier_id) {
+      if (!(await this.courierController.isIdAvailable(data.courier_id))) {
+        errorObj.courier_id = false;
+      }
+    } else if (data.employee_id) {
+      if (!(await this.employeeController.isIdAvailable(data.employee_id))) {
+        errorObj.employee_id = false;
+      }
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected async validateUpdate(data: Generic): Promise<void> {
+    /*
+     * validates the id, date, description, and the associated ID if present.
+     */
+    let errorObj = {
+      id: data.id !== undefined,
+      date: data.date !== undefined,
+      description: true,
+      vendor_id: data.vendor_id !== undefined,
+      restock_id: data.restock_id !== undefined,
+      courier_id: data.courier_id !== undefined,
+      employee_id: data.employee_id !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.description && isAlphanumeric(data.description,
+        locale as AlphanumericLocale, {
+          ignore: " _,.[]()-+=$#@%&><:;'\"?!"
+        })) {
+        errorObj.description = false;
+      }
+    }
+
+    /* check date, locale-independent */
+    if (errorObj.date && isDate(data.date)
+      && isBefore(data.date.toString(), new Date().toString())) {
+      errorObj.date = false;
+    }
+
+    this.checkErrorObject(errorObj);
   }
 }

@@ -5,6 +5,12 @@ import CollectionInfo from "../../CollectionInfo";
 import Customer from "../model/Customer";
 import BaseModel from "../model/BaseModel";
 import { NotStatisticalError } from "./Errors";
+import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
+import validator from "validator";
+import isEmail from "validator/lib/isEmail";
+import isMobilePhone = validator.isMobilePhone;
+import isAlpha = validator.isAlpha;
+import { isDate } from "lodash";
 
 
 /**
@@ -112,5 +118,131 @@ export default class CustomerController extends BaseController<customer> {
    */
   protected removeStatistic(id: string): Promise<void> {
     throw new NotStatisticalError();
+  }
+
+  /**
+   * @param customer_id to check for if is banned
+   * @returns true if the customer is banned.
+   *          If the customer does not exist, an error is thrown.
+   */
+  public async isBanned(customer_id: string): Promise<boolean> {
+    return (await this.get(customer_id)).is_banned;
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected validateCreation(data: customer): void {
+    /* validates the name, phone number, email, & birthday */
+    let errorObj = {
+      phone_number: true,
+      first_name: true,
+      last_name: true,
+      middle_name: data.middle_name !== undefined,
+      email: data.email !== undefined,
+      birthday: data.birthday !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      /* Check the first name */
+      if (errorObj.first_name && isAlpha(data.first_name,
+        locale as AlphanumericLocale, {
+          ignore: " "
+        })) {
+        errorObj.first_name = false;
+      }
+
+      /* Check the last name */
+      if (errorObj.last_name && isAlpha(data.last_name,
+        locale as AlphanumericLocale, {
+          ignore: " "
+        })) {
+        errorObj.last_name = false;
+      }
+
+      /* Check the middle name */
+      if (errorObj.middle_name && isAlpha(data.middle_name as string,
+        locale as AlphanumericLocale)) {
+        errorObj.middle_name = false;
+      }
+    }
+
+    /* Check birthday, locale-independent */
+    if (errorObj.birthday && isDate(data.birthday as Date)) {
+      errorObj.birthday = false;
+    }
+
+    /* check email, locale-independent */
+    if (errorObj.email && isEmail(data.email as string)) {
+      errorObj.email = false;
+    }
+
+    /* check phone number, locale-independent */
+    if (errorObj.phone_number && isMobilePhone(data.phone_number as string)) {
+      errorObj.phone_number = false;
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected validateUpdate(data: Generic): void {
+    /* validates the name, phone number, email, & birthday */
+    let errorObj = {
+      phone_number: data.phone_number !== undefined,
+      first_name: data.first_name !== undefined,
+      last_name: data.last_name !== undefined,
+      middle_name: data.middle_name !== undefined,
+      email: data.email !== undefined,
+      birthday: data.birthday !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      /* Check the first name */
+      if (errorObj.first_name && isAlpha(data.first_name,
+        locale as AlphanumericLocale)) {
+        errorObj.first_name = false;
+      }
+
+      /* Check the last name */
+      if (errorObj.last_name && isAlpha(data.last_name,
+        locale as AlphanumericLocale)) {
+        errorObj.last_name = false;
+      }
+
+      /* Check the middle name */
+      if (errorObj.middle_name && isAlpha(data.middle_name as string,
+        locale as AlphanumericLocale)) {
+        errorObj.middle_name = false;
+      }
+    }
+
+    /* Check birthday, locale-independent */
+    if (errorObj.birthday && isDate(data.birthday as Date)) {
+      errorObj.birthday = false;
+    }
+
+    /* check email, locale-independent */
+    if (errorObj.email && isEmail(data.email as string)) {
+      errorObj.email = false;
+    }
+
+    this.checkErrorObject(errorObj);
   }
 }

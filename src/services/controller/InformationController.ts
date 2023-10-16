@@ -236,4 +236,32 @@ export default class InformationController
   protected removeStatistic(id: string): Promise<void> {
     throw new NotStatisticalError();
   }
+
+  /**
+   * Needs no checking.
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected validateCreation(data: information): Promise<void> | void {
+    return undefined; // Don't check
+  }
+
+  /**
+   * Needs no checking.
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected validateUpdate(data: Generic): Promise<void> | void {
+    return undefined; // Don't check
+  }
 }

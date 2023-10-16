@@ -27,6 +27,9 @@ import ProductController from "./ProductController";
 import Product from "../model/Product";
 import CategoryController from "./CategoryController";
 import StatisticsBlock from "../local_model/StatisticsBlock";
+import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
+import validator from "validator";
+import isAlphanumeric = validator.isAlphanumeric;
 
 
 /**
@@ -508,5 +511,72 @@ export default class RestockController extends BaseController<restock> {
    */
   protected async removeStatistic(id: string): Promise<void> {
     StatisticsBlock.subtractRestock(await this.get(id));
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected validateCreation(data: restock): Promise<void> | void {
+    /*
+     * validates the id and note.
+     */
+    let errorObj = {
+      id: true,
+      note: data.note !== undefined,
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.note && isAlphanumeric(data.note as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.note = false;
+      }
+    }
+
+    /* check id, locale-independent */
+    if (errorObj.id && isAlphanumeric(data.id)) {
+      errorObj.id = false;
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected validateUpdate(data: Generic): Promise<void> | void {
+    /*
+     * validates the id and note.
+     */
+    let errorObj = {
+      id: data.id !== undefined,
+      note: data.note !== undefined,
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.note && isAlphanumeric(data.note as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.note = false;
+      }
+    }
+
+    this.checkErrorObject(errorObj);
   }
 }

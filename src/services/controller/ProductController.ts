@@ -12,6 +12,9 @@ import Product from "../model/Product";
 import { IdDoesNotExistError, NotStatisticalError } from "./Errors";
 import CategoryController from "./CategoryController";
 import VendorController from "./VendorController";
+import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
+import validator from "validator";
+import isAlphanumeric = validator.isAlphanumeric;
 
 
 /**
@@ -208,5 +211,106 @@ export default class ProductController extends BaseController<product> {
    */
   protected removeStatistic(id: string): Promise<void> {
     throw new NotStatisticalError();
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected async validateCreation(data: product): Promise<void> {
+    /* validates the id, name, description, category_id, & vendor_id  */
+    let errorObj = {
+      id: true,
+      name: true,
+      description: data.description !== undefined,
+      category_id: true,
+      vendor_id: true,
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.description && isAlphanumeric(data.description as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.description = false;
+      }
+
+      if (errorObj.name && isAlphanumeric(data.name, locale as AlphanumericLocale)) {
+        errorObj.name = false;
+      }
+    }
+
+    /* check if category exists, locale-independent */
+    if (errorObj.category_id
+      && !(await this.categoryController.isIdAvailable(data.category_id))) {
+      errorObj.category_id = false;
+    }
+
+    /* check if vendor exists, locale-independent */
+    if (errorObj.vendor_id
+      && !(await this.vendorController.isIdAvailable(data.vendor_id))) {
+      errorObj.vendor_id = false;
+    }
+
+    /* check id, locale-independent */
+    if (errorObj.id && isAlphanumeric(data.id)) {
+      errorObj.id = false;
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected async validateUpdate(data: Generic): Promise<void> {
+    /* validates the id, name, description, category_id, & vendor_id  */
+    let errorObj = {
+      id: data.id !== undefined,
+      name: true,
+      description: data.description !== undefined,
+      category_id: true,
+      vendor_id: true,
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.description && isAlphanumeric(data.description as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.description = false;
+      }
+
+      if (errorObj.name && isAlphanumeric(data.name, locale as AlphanumericLocale)) {
+        errorObj.name = false;
+      }
+    }
+
+    /* check if category exists, locale-independent */
+    if (errorObj.category_id
+      && !(await this.categoryController.isIdAvailable(data.category_id))) {
+      errorObj.category_id = false;
+    }
+
+    /* check if vendor exists, locale-independent */
+    if (errorObj.vendor_id
+      && !(await this.vendorController.isIdAvailable(data.vendor_id))) {
+      errorObj.vendor_id = false;
+    }
+
+    this.checkErrorObject(errorObj);
   }
 }

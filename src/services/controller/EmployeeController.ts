@@ -6,6 +6,13 @@ import Employee from "../model/Employee";
 import database from "@react-native-firebase/database";
 import BaseModel from "../model/BaseModel";
 import { NotStatisticalError } from "./Errors";
+import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
+import validator from "validator";
+import isAlpha = validator.isAlpha;
+import { isDate } from "lodash";
+import isEmail from "validator/lib/isEmail";
+import isMobilePhone = validator.isMobilePhone;
+import isAlphanumeric = validator.isAlphanumeric;
 
 
 /**
@@ -146,5 +153,173 @@ export default class EmployeeController extends BaseController<employee> {
    */
   protected removeStatistic(id: string): Promise<void> {
     throw new NotStatisticalError();
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected validateCreation(data: employee): Promise<void> | void {
+    /*
+     * validates the name, phone number, email, birthday, join date,
+     * salary, id, & commission rate.
+     */
+    let errorObj = {
+      id: true,
+      salary: true,
+      join_date: true,
+      commission_percent: data.join_date !== undefined,
+      phone_number: data.join_date !== undefined,
+      first_name: true,
+      last_name: true,
+      middle_name: data.middle_name !== undefined,
+      email: data.email !== undefined,
+      birthday: data.birthday !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      /* Check the first name */
+      if (errorObj.first_name && isAlpha(data.first_name,
+        locale as AlphanumericLocale, {
+          ignore: " "
+        })) {
+        errorObj.first_name = false;
+      }
+
+      /* Check the last name */
+      if (errorObj.last_name && isAlpha(data.last_name,
+        locale as AlphanumericLocale, {
+          ignore: " "
+        })) {
+        errorObj.last_name = false;
+      }
+
+      /* Check the middle name */
+      if (errorObj.middle_name && isAlpha(data.middle_name as string,
+        locale as AlphanumericLocale)) {
+        errorObj.middle_name = false;
+      }
+    }
+
+    /* check id, locale-independent */
+    if (errorObj.id && isAlphanumeric(data.id)) {
+      errorObj.id = false;
+    }
+
+    /* check salary, locale-independent */
+    if (errorObj.salary && data.salary > 0) {
+      errorObj.salary = false;
+    }
+
+    /* check commission, locale-independent */
+    const commission = data.commission_percent as number;
+    if (errorObj.commission_percent && 0 <= commission && commission <= 1) {
+      errorObj.commission_percent = false;
+    }
+
+    /* Check birthday, locale-independent */
+    if (errorObj.birthday && isDate(data.birthday as Date)) {
+      errorObj.birthday = false;
+    }
+
+    /* Check join date, locale-independent */
+    if (errorObj.join_date && isDate(data.join_date as Date)) {
+      errorObj.join_date = false;
+    }
+
+    /* check email, locale-independent */
+    if (errorObj.email && isEmail(data.email as string)) {
+      errorObj.email = false;
+    }
+
+    /* check phone number, locale-independent */
+    if (errorObj.phone_number && isMobilePhone(data.phone_number as string)) {
+      errorObj.phone_number = false;
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected validateUpdate(data: Generic): Promise<void> | void {
+    /*
+     * validates the name, phone number, email, birthday, join date,
+     * salary, id, & commission rate.
+     */
+    let errorObj = {
+      id: data.id !== undefined,
+      salary: true,
+      join_date: data.join_date !== undefined,
+      commission_percent: data.join_date !== undefined,
+      phone_number: data.join_date !== undefined,
+      first_name: true,
+      last_name: true,
+      middle_name: data.middle_name !== undefined,
+      email: data.email !== undefined,
+      birthday: data.birthday !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      /* Check the first name */
+      if (errorObj.first_name && isAlpha(data.first_name,
+        locale as AlphanumericLocale)) {
+        errorObj.first_name = false;
+      }
+
+      /* Check the last name */
+      if (errorObj.last_name && isAlpha(data.last_name,
+        locale as AlphanumericLocale)) {
+        errorObj.last_name = false;
+      }
+
+      /* Check the middle name */
+      if (errorObj.middle_name && isAlpha(data.middle_name as string,
+        locale as AlphanumericLocale)) {
+        errorObj.middle_name = false;
+      }
+    }
+
+    /* check salary, locale-independent */
+    if (errorObj.salary && data.salary > 0) {
+      errorObj.salary = false;
+    }
+
+    /* check commission, locale-independent */
+    const commission = data.commission_percent as number;
+    if (errorObj.commission_percent && 0 <= commission && commission <= 1) {
+      errorObj.commission_percent = false;
+    }
+
+    /* Check birthday, locale-independent */
+    if (errorObj.birthday && isDate(data.birthday as Date)) {
+      errorObj.birthday = false;
+    }
+
+    /* check email, locale-independent */
+    if (errorObj.email && isEmail(data.email as string)) {
+      errorObj.email = false;
+    }
+
+    /* check phone number, locale-independent */
+    if (errorObj.phone_number && isMobilePhone(data.phone_number as string)) {
+      errorObj.phone_number = false;
+    }
+
+    this.checkErrorObject(errorObj);
   }
 }

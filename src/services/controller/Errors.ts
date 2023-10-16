@@ -64,8 +64,8 @@ export class NoZonesError extends Error {
 }
 
 export class InvalidInputError extends Error {
-  public constructor() {
-    super("InvalidInputError");
+  public constructor(msg: string) {
+    super(msg);
   }
 }
 

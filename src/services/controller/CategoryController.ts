@@ -1,9 +1,12 @@
 import BaseController, { ControllerFlag } from "./BaseController";
 import { basicCategory, category, CategorySearchSchema, Generic, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
-import CollectionInfo from "../../CollectionInfo";
 import Category from "../model/Category";
 import { NotStatisticalError } from "./Errors";
+import validator from "validator";
+import isAlphanumeric = validator.isAlphanumeric;
+import CollectionInfo from "../../CollectionInfo";
+import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
 
 
 /**
@@ -100,5 +103,49 @@ export default class CategoryController extends BaseController<category> {
    */
   protected removeStatistic(id: string): Promise<void> {
     throw new NotStatisticalError();
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected validateCreation(data: category): void {
+    /* validates the name */
+    let errorObj = {
+      name: true,
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      /* Check the name */
+      if (errorObj.name && isAlphanumeric(data.name, locale as AlphanumericLocale)) {
+        errorObj.name = false;
+      }
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected validateUpdate(data: Generic): void {
+    /* validates the name is not sent */
+    let errorObj = {
+      name: data.name !== undefined,
+    };
+
+    this.checkErrorObject(errorObj);
   }
 }

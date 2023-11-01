@@ -5,9 +5,9 @@ import CollectionInfo from "../../CollectionInfo";
 import Vendor from "../model/Vendor";
 import { NotStatisticalError } from "./Errors";
 import validator from "validator";
+import isEmail from "validator/lib/isEmail";
 import isAlphanumeric = validator.isAlphanumeric;
 import isMobilePhone = validator.isMobilePhone;
-import isEmail from "validator/lib/isEmail";
 
 
 /**

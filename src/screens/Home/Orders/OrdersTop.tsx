@@ -34,22 +34,22 @@ const OrdersTop = ({ statistics, percentage }: Properties) => {
       {
         borderRadius: 10,
         height: 150,
-        padding: 25,
+        padding: 25
       }
     ]}
-    elevation={4}
+             elevation={4}
     >
       <View style={[
         Layout.row,
-        Layout.justifyContentBetween,
+        Layout.justifyContentBetween
       ]}>
-          <Text style={{
-            fontWeight: "600",
-            fontSize: 30,
-          }}>
-            Total Orders
-          </Text>
-          <ChangeBadge percentage={percentage} />
+        <Text style={{
+          fontWeight: "600",
+          fontSize: 30
+        }}>
+          Total Orders
+        </Text>
+        <ChangeBadge percentage={percentage} />
       </View>
 
       <View style={[

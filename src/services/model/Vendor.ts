@@ -38,6 +38,13 @@ export default class Vendor implements BaseModel {
   }
 
   /**
+   * @param value new name of the vendor
+   */
+  public set name(value) {
+    this.data.name = value;
+  }
+
+  /**
    * @returns list of phone numbers of the vendor or undefined if it does
    *          not exist
    */
@@ -46,10 +53,24 @@ export default class Vendor implements BaseModel {
   }
 
   /**
+   * @param value new list of phone numbers for the vendor
+   */
+  public set phone_numbers(value) {
+    this.data.phone_numbers = value;
+  }
+
+  /**
    * @returns list of emails of the vendor or undefined if it does not exist
    */
   public get emails() {
     return this.data.emails;
+  }
+
+  /**
+   * @param value new list of emails for the vendor
+   */
+  public set emails(value) {
+    this.data.emails = value;
   }
 
   /**
@@ -67,27 +88,6 @@ export default class Vendor implements BaseModel {
   }
 
   /**
-   * @param value new name of the vendor
-   */
-  public set name(value) {
-    this.data.name = value;
-  }
-
-  /**
-   * @param value new list of phone numbers for the vendor
-   */
-  public set phone_numbers(value) {
-    this.data.phone_numbers = value;
-  }
-
-  /**
-   * @param value new list of emails for the vendor
-   */
-  public set emails(value) {
-    this.data.emails = value;
-  }
-
-  /**
    * @returns whether the object is deactivated
    */
   public get isDeactivated(): boolean {
@@ -102,13 +102,6 @@ export default class Vendor implements BaseModel {
   }
 
   /**
-   * @param nature type of action done by the current employee
-   */
-  public stamp(nature: TrailNature): void {
-    BaseModel.stamp(this.trail, nature);
-  }
-
-  /**
    * @returns a deep copy of the raw data
    */
   public get dataCopy() {
@@ -120,5 +113,12 @@ export default class Vendor implements BaseModel {
    */
   public get copy() {
     return new Vendor(this.dataCopy);
+  }
+
+  /**
+   * @param nature type of action done by the current employee
+   */
+  public stamp(nature: TrailNature): void {
+    BaseModel.stamp(this.trail, nature);
   }
 }

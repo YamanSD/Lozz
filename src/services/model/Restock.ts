@@ -7,14 +7,13 @@ import Monetary from "../local_model/Monetary";
  * Class encapsulating the restocking data.
  */
 export default class Restock implements BaseModel {
-  /* raw restocking data */
-  private dataValue: restock;
-
   /*
    * if present at the end of a RUSI, indicates that quantity
    * if for inventory
    */
   private static INVENTORY_FLAG: string = "_INV";
+  /* raw restocking data */
+  private dataValue: restock;
 
   /**
    * @param data raw restocking data
@@ -31,35 +30,17 @@ export default class Restock implements BaseModel {
   }
 
   /**
-   * @returns a list of all product USIs in the restocking
-   */
-  public get rusiSet() {
-    return Object.keys(this.quantities);
-  }
-
-  /**
-   * @param rusi to be converted
-   * @returns the USI of the RUSI
-   */
-  public static removeTag(rusi: string): string {
-    return this.isToInventory(rusi)
-      ? rusi.replace(Restock.INVENTORY_FLAG, "")
-      : rusi;
-  }
-
-  /**
-   * @param rusi to be converted
-   * @return the RUSI of the USI
-   */
-  public static addTag(rusi: string): string {
-    return this.isToInventory(rusi) ? rusi : rusi + Restock.INVENTORY_FLAG;
-  }
-
-  /**
    * @param value new value of the raw data
    */
   public set data(value: restock) {
     this.dataValue = value;
+  }
+
+  /**
+   * @returns a list of all product USIs in the restocking
+   */
+  public get rusiSet() {
+    return Object.keys(this.quantities);
   }
 
   /**
@@ -84,14 +65,6 @@ export default class Restock implements BaseModel {
   }
 
   /**
-   * @param rusi to check
-   * @returns true if the RUSI is for the inventory
-   */
-  public static isToInventory(rusi: string): boolean {
-    return rusi.endsWith(Restock.INVENTORY_FLAG);
-  }
-
-  /**
    * @param value new quantities
    */
   public set quantities(value) {
@@ -103,80 +76,6 @@ export default class Restock implements BaseModel {
    */
   public get inventory_flag() {
     return Restock.INVENTORY_FLAG;
-  }
-
-  /**
-   * @param usi to generate the RUSI for
-   * @param to_inventory true indicates that the USI is for inventory
-   * @returns the RUSI
-   */
-  public static getRusi(usi: string, to_inventory: boolean) {
-    return to_inventory ? Restock.addTag(usi) : Restock.removeTag(usi);
-  }
-
-  /**
-   * @param rusi to be converted
-   * @returns USI or RUSI depending on the input
-   */
-  public static convert(rusi: string) {
-    if (Restock.isToInventory(rusi)) {
-      return Restock.removeTag(rusi);
-    } else {
-      return Restock.addTag(rusi);
-    }
-  }
-
-  /**
-   * Adds the given quantity to the quantity of the USI in the restocking.
-   * If the resulting quantity is zero, delete the USI from the quantities.
-   *
-   * @param usi to add quantity for
-   * @param quantity value to be added, can be negative or non-integer
-   * @param to_inventory if true, the quantity is targeted to the inventory
-   */
-  public add(usi: string, quantity: number, to_inventory: boolean): void {
-    const rusi = Restock.getRusi(usi, to_inventory);
-
-    if (!(rusi in this.quantities)) {
-      this.quantities[rusi] = 0;
-    }
-
-    this.quantities[rusi] += quantity;
-    this.item_count += Math.abs(quantity);
-
-    if (this.quantities[rusi] === 0) {
-      delete this.quantities[rusi];
-    }
-  }
-
-  /**
-   * @param rusi to check quantity for
-   * @returns the quantity of the RUSI
-   */
-  public getQuantity(rusi: string): number {
-    if (!(rusi in this.quantities)) {
-      return 0;
-    }
-
-    return this.quantities[rusi];
-  }
-
-  /**
-   * @param to_inventory if true all products become to inventory.
-   *        Otherwise, all products become to display.
-   */
-  public convertDestination(to_inventory: boolean): QuantityType {
-    let result: QuantityType = {};
-
-    for (let rusi of this.rusiSet) {
-      const newRusi = to_inventory
-        ? Restock.addTag(rusi)
-        : Restock.removeTag(rusi);
-
-      result[newRusi] = this.quantities[rusi];
-    }
-
-    return result;
   }
 
   /**
@@ -194,18 +93,6 @@ export default class Restock implements BaseModel {
   }
 
   /**
-   * @param rusi whose USI is to be added to the costs
-   * @param value cost of a single unit of the USI
-   */
-  public setCost(rusi: string, value: Monetary): void {
-    if (this.costs === undefined) {
-      this.costs = {};
-    }
-
-    this.costs[Restock.removeTag(rusi)] = value.data;
-  }
-
-  /**
    * Quantities not in the inventory are added to the inventory.
    * Quantities not on display are added to the on display.
    *
@@ -220,15 +107,6 @@ export default class Restock implements BaseModel {
     }
 
     return invQuantities;
-  }
-
-  /**
-   * @param usi to get quantity for
-   * @param to_inventory source of quantity
-   * @returns the quantity of the USI in the given source
-   */
-  public getUsiQuantity(usi: string, to_inventory: boolean) {
-    return this.getQuantity(Restock.getRusi(usi, to_inventory))
   }
 
   /**
@@ -325,5 +203,126 @@ export default class Restock implements BaseModel {
    */
   public get isDeleted(): boolean {
     return BaseModel.isDeleted(this.trail);
+  }
+
+  /**
+   * @param rusi to be converted
+   * @returns the USI of the RUSI
+   */
+  public static removeTag(rusi: string): string {
+    return this.isToInventory(rusi)
+      ? rusi.replace(Restock.INVENTORY_FLAG, "")
+      : rusi;
+  }
+
+  /**
+   * @param rusi to be converted
+   * @return the RUSI of the USI
+   */
+  public static addTag(rusi: string): string {
+    return this.isToInventory(rusi) ? rusi : rusi + Restock.INVENTORY_FLAG;
+  }
+
+  /**
+   * @param rusi to check
+   * @returns true if the RUSI is for the inventory
+   */
+  public static isToInventory(rusi: string): boolean {
+    return rusi.endsWith(Restock.INVENTORY_FLAG);
+  }
+
+  /**
+   * @param usi to generate the RUSI for
+   * @param to_inventory true indicates that the USI is for inventory
+   * @returns the RUSI
+   */
+  public static getRusi(usi: string, to_inventory: boolean) {
+    return to_inventory ? Restock.addTag(usi) : Restock.removeTag(usi);
+  }
+
+  /**
+   * @param rusi to be converted
+   * @returns USI or RUSI depending on the input
+   */
+  public static convert(rusi: string) {
+    if (Restock.isToInventory(rusi)) {
+      return Restock.removeTag(rusi);
+    } else {
+      return Restock.addTag(rusi);
+    }
+  }
+
+  /**
+   * Adds the given quantity to the quantity of the USI in the restocking.
+   * If the resulting quantity is zero, delete the USI from the quantities.
+   *
+   * @param usi to add quantity for
+   * @param quantity value to be added, can be negative or non-integer
+   * @param to_inventory if true, the quantity is targeted to the inventory
+   */
+  public add(usi: string, quantity: number, to_inventory: boolean): void {
+    const rusi = Restock.getRusi(usi, to_inventory);
+
+    if (!(rusi in this.quantities)) {
+      this.quantities[rusi] = 0;
+    }
+
+    this.quantities[rusi] += quantity;
+    this.item_count += Math.abs(quantity);
+
+    if (this.quantities[rusi] === 0) {
+      delete this.quantities[rusi];
+    }
+  }
+
+  /**
+   * @param rusi to check quantity for
+   * @returns the quantity of the RUSI
+   */
+  public getQuantity(rusi: string): number {
+    if (!(rusi in this.quantities)) {
+      return 0;
+    }
+
+    return this.quantities[rusi];
+  }
+
+  /**
+   * @param to_inventory if true all products become to inventory.
+   *        Otherwise, all products become to display.
+   */
+  public convertDestination(to_inventory: boolean): QuantityType {
+    let result: QuantityType = {};
+
+    for (let rusi of this.rusiSet) {
+      const newRusi = to_inventory
+        ? Restock.addTag(rusi)
+        : Restock.removeTag(rusi);
+
+      result[newRusi] = this.quantities[rusi];
+    }
+
+    return result;
+  }
+
+  /**
+   * @param rusi whose USI is to be added to the costs
+   * @param value cost of a single unit of the USI
+   */
+  public setCost(rusi: string, value: Monetary): void {
+    if (this.costs === undefined) {
+      this.costs = {};
+    }
+
+    this.costs[Restock.removeTag(rusi)] = value.data;
+  }
+
+  /**
+   * @param usi to get quantity for
+   * @param to_inventory source of quantity
+   * @returns the quantity of the USI in the given source
+   */
+  public getUsiQuantity(usi: string, to_inventory: boolean) {
+    return this.getQuantity(Restock.getRusi(usi, to_inventory));
   }
 }

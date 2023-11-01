@@ -48,7 +48,7 @@ export default {
     name: "products",
     id: "id",
     properties: "productProperties",
-    maxImageCount: 15,
+    maxImageCount: 15
   },
   order: {
     name: "orders",
@@ -56,6 +56,6 @@ export default {
   },
   information: {
     name: "informationProperties",
-    id: "type",
+    id: "type"
   }
 };

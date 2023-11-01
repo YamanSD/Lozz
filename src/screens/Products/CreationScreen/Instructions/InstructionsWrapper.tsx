@@ -1,5 +1,5 @@
-import React from 'react';
-import { View } from 'react-native';
+import React from "react";
+import { View } from "react-native";
 import { useTheme as useBoilerTheme } from "../../../../hooks";
 import { useTheme as usePaperTheme } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -35,7 +35,7 @@ const InstructionsWrapper = ({ children, onPress }: Properties) => {
         borderTopColor: theme.colors.secondary,
         borderTopWidth: 1,
         paddingVertical: 20,
-        paddingHorizontal: 5,
+        paddingHorizontal: 5
       }
     ]}>
       <View style={{
@@ -51,7 +51,7 @@ const InstructionsWrapper = ({ children, onPress }: Properties) => {
             size={35}
             style={{
               margin: 0,
-              padding: 0,
+              padding: 0
             }}
       />
     </View>

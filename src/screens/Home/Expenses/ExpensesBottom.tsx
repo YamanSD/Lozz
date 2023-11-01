@@ -27,8 +27,10 @@ type Properties = {
  * @param setStatistics setter for the top component statistics
  * @constructor
  */
-const ExpensesBottom = ({ timescale,
-                       setStatistics }: Properties) => {
+const ExpensesBottom = ({
+                          timescale,
+                          setStatistics
+                        }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
 
@@ -60,15 +62,15 @@ const ExpensesBottom = ({ timescale,
     if (timescale === Timescale.H
       || timescale === Timescale.W
       || (position !== 0
-      && position !== n
-      && position !== Math.floor(n / 2))) {
+        && position !== n
+        && position !== Math.floor(n / 2))) {
       switch (timescale) {
         case Timescale.H:
           const hours = date.getHours();
           return (position <= n - 1)
           && (position === n - 1
-          || (position + 1) % 5 === 0
-          || position === 0)
+            || (position + 1) % 5 === 0
+            || position === 0)
             ? `${(hours + 11) % 12 + 1}:00${hours < 12 ? "A" : "P"}M`
             : "";
         case Timescale.W:
@@ -86,7 +88,7 @@ const ExpensesBottom = ({ timescale,
       case Timescale.Y:
         return date.getFullYear().toString();
     }
-  }
+  };
 
   /**
    * Generates the statistics data based on the current timescale
@@ -114,7 +116,7 @@ const ExpensesBottom = ({ timescale,
 
     return {
       labels: temp.tags,
-      datasets: [{ data: temp.data }],
+      datasets: [{ data: temp.data }]
     };
   };
 
@@ -131,16 +133,16 @@ const ExpensesBottom = ({ timescale,
 
   useEffect(() => {
     setPieData([{
-        name: "Employees",
-        value: totalStats.employee_payments.data,
-        color: "rgb(255, 51, 51)",
-        legendFontColor: legendFontColor
-      },
+      name: "Employees",
+      value: totalStats.employee_payments.data,
+      color: "rgb(255, 51, 51)",
+      legendFontColor: legendFontColor
+    },
       {
         name: "Shipping",
         value: totalStats.shipping_fees.data,
         color: "rgb(241, 235, 156)",
-        legendFontColor: legendFontColor,
+        legendFontColor: legendFontColor
       },
       {
         name: "Vendors",
@@ -188,13 +190,13 @@ const ExpensesBottom = ({ timescale,
     <>
       <Surface
         style={[
-        Layout.justifyContentAround,
+          Layout.justifyContentAround,
           {
             height: 300,
             borderRadius: 10,
-            marginBottom: 20,
+            marginBottom: 20
           }
-      ]}
+        ]}
         elevation={elevation}
       >
         {/* Net value header */}
@@ -202,23 +204,23 @@ const ExpensesBottom = ({ timescale,
           Layout.row,
           Layout.rowHCenter,
           Layout.justifyContentBetween,
-          { padding: 25, paddingTop: 35, paddingBottom: 45}
+          { padding: 25, paddingTop: 35, paddingBottom: 45 }
         ]}>
           <Text style={{
             fontWeight: "600",
-            fontSize: 30,
+            fontSize: 30
           }}>
             Expenses
           </Text>
 
           <Text style={{
             fontWeight: "800",
-            fontSize: 30,
+            fontSize: 30
           }}>
             ${formattedNumber(
-              totalStats.total_expenses.data,
+            totalStats.total_expenses.data,
             true
-            )}
+          )}
           </Text>
         </View>
         <LineChart
@@ -232,17 +234,17 @@ const ExpensesBottom = ({ timescale,
           // withVerticalLines={false}
           withOuterLines={false}
           style={{
-            marginBottom: 20,
+            marginBottom: 20
           }}
           chartConfig={{
             decimalPlaces: 0,
             propsForBackgroundLines: {
               strokeDasharray: [],
-              opacity: 0.2,
+              opacity: 0.2
             },
             propsForLabels: {
               fontWeight: "bold",
-              fontSize: 10,
+              fontSize: 10
             },
             backgroundGradientFrom: backgroundColor,
             backgroundGradientTo: backgroundColor,
@@ -260,7 +262,7 @@ const ExpensesBottom = ({ timescale,
       <View style={[
         Layout.fullSize,
         {
-          paddingBottom: 20,
+          paddingBottom: 20
         }
       ]}>
         <Surface
@@ -269,7 +271,7 @@ const ExpensesBottom = ({ timescale,
             {
               height: 300,
               borderRadius: 10,
-              marginBottom: 20,
+              marginBottom: 20
             }
           ]}
           elevation={elevation}
@@ -279,11 +281,11 @@ const ExpensesBottom = ({ timescale,
             Layout.row,
             Layout.rowHCenter,
             Layout.justifyContentBetween,
-            { padding: 25, paddingTop: 35, paddingBottom: 45}
+            { padding: 25, paddingTop: 35, paddingBottom: 45 }
           ]}>
             <Text style={{
               fontWeight: "600",
-              fontSize: 30,
+              fontSize: 30
             }}>
               Expense Types
             </Text>
@@ -297,10 +299,10 @@ const ExpensesBottom = ({ timescale,
             paddingLeft={"30"}
             fromZero={true}
             style={{
-              marginBottom: 20,
+              marginBottom: 20
             }}
             chartConfig={{
-              color: colorFunction,
+              color: colorFunction
             }}
             avoidFalseZero={true}
           />

@@ -6,7 +6,7 @@ import { useTheme as useBoilerTheme } from "../../../hooks";
 import { addAlpha, LatestTimeUnit, Statistics, Timescale } from "../../../services";
 import { useEffect, useState } from "react";
 import { ProgressChartData } from "react-native-chart-kit/dist/ProgressChart";
-import { Generic, OrderStatus } from "../../../services/model/types";
+import { Generic, OrderStatus } from "../../../services";
 import GraphLabel from "./GraphLabel";
 import OrderCountIsland from "./OrderCountIsland";
 
@@ -47,7 +47,7 @@ const OrderStatusMapping: Generic = {
     represented: [OrderStatus.paid],
     color: "rgb(255, 128, 0)"
   }
-}
+};
 
 /**
  * @param block to calculate based on
@@ -111,9 +111,11 @@ type Properties = {
  * @param setPercentage percentage setter for the top component
  * @constructor
  */
-const OrdersBottom = ({ timescale,
-                       setStatistics,
-                       setPercentage }: Properties) => {
+const OrdersBottom = ({
+                        timescale,
+                        setStatistics,
+                        setPercentage
+                      }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
 
@@ -158,7 +160,7 @@ const OrdersBottom = ({ timescale,
       timescaleToUnit[timescale],
       (block) => {
         return block.order_counts;
-      },
+      }
     );
 
     const totalStats: Statistics = temp.data.pop();
@@ -178,7 +180,7 @@ const OrdersBottom = ({ timescale,
 
     return {
       labels: mappingList,
-      data: calculateLabelPercentage(totalStats),
+      data: calculateLabelPercentage(totalStats)
     };
   };
 
@@ -223,13 +225,13 @@ const OrdersBottom = ({ timescale,
     <>
       <Surface
         style={[
-        Layout.justifyContentAround,
+          Layout.justifyContentAround,
           {
             height: 300,
             borderRadius: 10,
-            marginBottom: 20,
+            marginBottom: 20
           }
-      ]}
+        ]}
         elevation={elevation}
       >
         {/* Net value header */}
@@ -237,11 +239,11 @@ const OrdersBottom = ({ timescale,
           Layout.row,
           Layout.rowHCenter,
           Layout.justifyContentBetween,
-          { padding: 25, paddingVertical: 35}
+          { padding: 25, paddingVertical: 35 }
         ]}>
           <Text style={{
             fontWeight: "600",
-            fontSize: 30,
+            fontSize: 30
           }}>
             Status Distribution
           </Text>
@@ -257,20 +259,20 @@ const OrdersBottom = ({ timescale,
             style={{
               padding: 0,
               margin: 0,
-              marginBottom: 20,
+              marginBottom: 20
             }}
             chartConfig={{
               backgroundGradientFrom: backgroundColor,
               backgroundGradientTo: backgroundColor,
               color: colorFunction,
-              labelColor: labelColorFunction,
+              labelColor: labelColorFunction
             }}
           />
           <View style={[
             Layout.colVCenter,
             Layout.justifyContentBetween,
             {
-              height: 120,
+              height: 120
             }
           ]}>
             {
@@ -288,7 +290,7 @@ const OrdersBottom = ({ timescale,
       <View style={[
         Layout.fullSize,
         {
-          paddingBottom: 20,
+          paddingBottom: 20
         }
       ]}>
         <View>
@@ -311,7 +313,7 @@ const OrdersBottom = ({ timescale,
                   {
                     marginBottom: 20
                   }
-                  ]}>
+                ]}>
                   {
                     // @ts-ignore
                     labels.map((label, index) => {
@@ -323,7 +325,7 @@ const OrdersBottom = ({ timescale,
                         key={label}
                         color={OrderStatusMapping[label].color}
                         label={
-                          label + `${labels.length === 1 ? ' ' : '\n'}Orders`
+                          label + `${labels.length === 1 ? " " : "\n"}Orders`
                         }
                         // @ts-ignore, this works but IDE does not detect
                         count={statusCounts[labels.length * majorIndex + index]}

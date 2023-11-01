@@ -48,73 +48,6 @@ export default class InformationController
   }
 
   /**
-   * Updates all model information from cache
-   * @private
-   */
-  private async updateModels() {
-    for (let [_, type] of Object.entries(InformationType)) {
-      try {
-        let model = await this.get(type);
-        this.updateModel(type, model.data);
-      } catch (e) {
-        if (e instanceof IdDoesNotExistError) {
-          return;
-        } else {
-          throw e;
-        }
-      }
-    }
-  }
-
-  /**
-   * Updates the model information.
-   *
-   * @param type of the information
-   * @param data of the information
-   * @private
-   */
-  private updateModel(type: string, data: information) {
-    if (type === InformationType.zones) {
-      Courier.zones = new ZoneInformation(data);
-    } else if (type === InformationType.provinces) {
-      Courier.provinces = new ProvinceInformation(data);
-    }
-  }
-
-  /**
-   * Activates the listener for the collection.
-   * Handles update processing between documents.
-   *
-   * @private
-   */
-  protected activateListener() {
-    this.collection.onSnapshot(snapshot => {
-      snapshot.docChanges().forEach(async (change) => {
-        const document = change.doc;
-        const id = document.id;
-
-        if (change.type === "added") {
-          if (this.checkCache(id)) {
-            return;
-          }
-
-          const data = document.data() as information;
-
-          await this.setCache(id, data as information);
-          this.updateModel(id, data);
-        } else if (change.type === "modified") {
-          const data = document.data() as information;
-
-          await this.updateCache(id, data);
-          this.updateModel(id, data);
-        } else if (change.type === "removed") {
-          this.removeCache(id);
-        }
-      });
-    });
-  }
-
-  /**
    * Note that this function is called only once by layer-2
    *
    * @param data to be created
@@ -189,18 +122,44 @@ export default class InformationController
     return await this.get(InformationType.provinces) as ProvinceInformation;
   }
 
-  // /**
-  //  * @returns the rate information object
-  //  */
-  // public async getRate(): Promise<RateInformation> {
-  //   return await this.get(InformationType.rate) as RateInformation;
-  // }
-
   /**
    * @returns the zone information object
    */
   public async getZones(): Promise<ZoneInformation> {
     return await this.get(InformationType.zones) as ZoneInformation;
+  }
+
+  /**
+   * Activates the listener for the collection.
+   * Handles update processing between documents.
+   *
+   * @private
+   */
+  protected activateListener() {
+    this.collection.onSnapshot(snapshot => {
+      snapshot.docChanges().forEach(async (change) => {
+        const document = change.doc;
+        const id = document.id;
+
+        if (change.type === "added") {
+          if (this.checkCache(id)) {
+            return;
+          }
+
+          const data = document.data() as information;
+
+          await this.setCache(id, data as information);
+          this.updateModel(id, data);
+        } else if (change.type === "modified") {
+          const data = document.data() as information;
+
+          await this.updateCache(id, data);
+          this.updateModel(id, data);
+        } else if (change.type === "removed") {
+          this.removeCache(id);
+        }
+      });
+    });
   }
 
   /**
@@ -211,6 +170,13 @@ export default class InformationController
   protected fillDataGaps(data: Generic): information {
     throw new IllegalStateError();
   }
+
+  // /**
+  //  * @returns the rate information object
+  //  */
+  // public async getRate(): Promise<RateInformation> {
+  //   return await this.get(InformationType.rate) as RateInformation;
+  // }
 
   /**
    * @param data to be fixed
@@ -263,5 +229,39 @@ export default class InformationController
    */
   protected validateUpdate(data: Generic): Promise<void> | void {
     return undefined; // Don't check
+  }
+
+  /**
+   * Updates all model information from cache
+   * @private
+   */
+  private async updateModels() {
+    for (let [_, type] of Object.entries(InformationType)) {
+      try {
+        let model = await this.get(type);
+        this.updateModel(type, model.data);
+      } catch (e) {
+        if (e instanceof IdDoesNotExistError) {
+          return;
+        } else {
+          throw e;
+        }
+      }
+    }
+  }
+
+  /**
+   * Updates the model information.
+   *
+   * @param type of the information
+   * @param data of the information
+   * @private
+   */
+  private updateModel(type: string, data: information) {
+    if (type === InformationType.zones) {
+      Courier.zones = new ZoneInformation(data);
+    } else if (type === InformationType.provinces) {
+      Courier.provinces = new ProvinceInformation(data);
+    }
   }
 }

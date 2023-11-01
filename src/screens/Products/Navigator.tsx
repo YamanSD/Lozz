@@ -8,7 +8,7 @@ import NavigationList from "./NavigationList";
  */
 const ProductsNavigator = () => {
   return <StackNavigator key={"ProductsNavigator"}
-                         screens={NavigationList} />
-}
+                         screens={NavigationList} />;
+};
 
 export default ProductsNavigator;

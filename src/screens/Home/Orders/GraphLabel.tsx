@@ -33,14 +33,14 @@ const GraphLabel = ({ color, label }: Properties) => {
         width: 10,
         borderRadius: 10,
         backgroundColor: color,
-        marginRight: 10,
+        marginRight: 10
       }} />
       <Text style={{
-        fontWeight: "bold",
-      }} >{label}</Text>
+        fontWeight: "bold"
+      }}>{label}</Text>
     </View>
   );
-}
+};
 
 export default GraphLabel;
 

@@ -8,13 +8,15 @@ import { category, TrailNature, TrailType } from "./types";
  * @returns a double array containing the cartesian product of the arrays
  */
 export function cartesianProduct(arrays: any[][]) {
-  return arrays.reduce(function(a, b){
-    return a.map(function(x: any){
-      return b.map(function(y: any){
+  return arrays.reduce(function(a, b) {
+    return a.map(function(x: any) {
+      return b.map(function(y: any) {
         return x.concat([y]);
-      })
-    }).reduce(function(a: any[], b: any[]){ return a.concat(b) },[])
-  }, [[]])
+      });
+    }).reduce(function(a: any[], b: any[]) {
+      return a.concat(b);
+    }, []);
+  }, [[]]);
 }
 
 /**
@@ -53,6 +55,13 @@ export default class Category implements BaseModel {
   }
 
   /**
+   * @param value new name of the category
+   */
+  public set name(value) {
+    this.data.name = value;
+  }
+
+  /**
    * @returns the option keys of the category, if they exist.
    *          Otherwise, undefined.
    */
@@ -76,18 +85,10 @@ export default class Category implements BaseModel {
   }
 
   /**
-   * @param usp represents the added price on the USP for all the category.
-   * @returns the added Monetary value on the given USP iff
-   *          there are added prices and the USP is in them.
-   *          Otherwise, returns a zero monetary value.
+   * @param value new added prices object for the category
    */
-  public addedPrice(usp: string): Monetary {
-    if (this.added_price === undefined ||
-        !(usp in this.added_price)) {
-      return Monetary.noValue();
-    }
-
-    return new Monetary(this.added_price[usp]);
+  public set added_price(value) {
+    this.data.added_price = value;
   }
 
   /**
@@ -105,20 +106,6 @@ export default class Category implements BaseModel {
   }
 
   /**
-   * @param value new name of the category
-   */
-  public set name(value) {
-    this.data.name = value;
-  }
-
-  /**
-   * @param value new added prices object for the category
-   */
-  public set added_price(value) {
-    this.data.added_price = value;
-  }
-
-  /**
    * @returns whether the object is deactivated
    */
   public get isDeactivated(): boolean {
@@ -130,13 +117,6 @@ export default class Category implements BaseModel {
    */
   public get isDeleted(): boolean {
     return BaseModel.isDeleted(this.trail);
-  }
-
-  /**
-   * @param nature type of action done by the current employee
-   */
-  public stamp(nature: TrailNature): void {
-    BaseModel.stamp(this.trail, nature);
   }
 
   /**
@@ -168,5 +148,27 @@ export default class Category implements BaseModel {
     }
 
     return cartesianProduct(sets);
+  }
+
+  /**
+   * @param usp represents the added price on the USP for all the category.
+   * @returns the added Monetary value on the given USP iff
+   *          there are added prices and the USP is in them.
+   *          Otherwise, returns a zero monetary value.
+   */
+  public addedPrice(usp: string): Monetary {
+    if (this.added_price === undefined ||
+      !(usp in this.added_price)) {
+      return Monetary.noValue();
+    }
+
+    return new Monetary(this.added_price[usp]);
+  }
+
+  /**
+   * @param nature type of action done by the current employee
+   */
+  public stamp(nature: TrailNature): void {
+    BaseModel.stamp(this.trail, nature);
   }
 }

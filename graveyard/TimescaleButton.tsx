@@ -20,10 +20,10 @@ type Properties = {
 const TimescaleButton = ({ timescale, onPress }: Properties) => {
   return (
     <SpringButton rippleColor={"#FFFFFF"}
-                  mode={'contained-tonal'}
+                  mode={"contained-tonal"}
                   buttonColor={"#000080"}
                   style={{
-                    borderRadius: 10,
+                    borderRadius: 10
                   }}
                   contentStyle={{
                     height: 30,
@@ -32,15 +32,17 @@ const TimescaleButton = ({ timescale, onPress }: Properties) => {
                   }}
                   labelStyle={{
                     fontWeight: "700",
-                    height: "65%",
+                    height: "65%"
                   }}
                   icon={"chevron-down"}
                   expandBy={0.05}
                   textColor={"white"}
-                  onPress={() => {onPress()}}>
+                  onPress={() => {
+                    onPress();
+                  }}>
       {timescale}
     </SpringButton>
   );
-}
+};
 
 export default TimescaleButton;

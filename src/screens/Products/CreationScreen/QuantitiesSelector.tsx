@@ -49,13 +49,13 @@ const QuantitiesSelector = ({ quantities }: Properties) => {
         width: "95%",
         marginTop: 20,
         borderRadius: 10,
-        padding: 25,
+        padding: 25
       }
     ]} elevation={4}>
       <Text style={{
         fontWeight: "600",
         fontSize: 22,
-        marginBottom: 15,
+        marginBottom: 15
       }}>
         Inventory
       </Text>
@@ -66,7 +66,7 @@ const QuantitiesSelector = ({ quantities }: Properties) => {
         Layout.rowHCenter,
         Layout.row,
         {
-          paddingLeft: 5,
+          paddingLeft: 5
         }
       ]} onPress={onClick}>
         <Text style={{

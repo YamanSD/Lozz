@@ -1,7 +1,6 @@
 import React from "react";
-import { Surface, Text, Button } from "react-native-paper";
+import { Button, Surface, Text, useTheme as usePaperTheme } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../../hooks";
-import { useTheme as usePaperTheme } from "react-native-paper";
 import { TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import NavigationNames from "../NavigationNames";
@@ -12,8 +11,10 @@ import {
   checkPrice,
   formatPrice,
   maxIdLength,
-  maxNameLength, maxPrice,
-  MonetaryType, unpackPrice
+  maxNameLength,
+  maxPrice,
+  MonetaryType,
+  unpackPrice
 } from "../../../services";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import GeneralImagePicker from "./GeneralImagePicker/GeneralImagePicker";
@@ -52,18 +53,18 @@ type Properties = {
  * @constructor
  */
 const GeneralInfoSelector = ({
-    setImages,
-    images,
-    setName,
-    name,
-    description,
-    setId,
-    id,
-    setPrice,
-    price,
-    setCost,
-    cost,
-  }: Properties) => {
+                               setImages,
+                               images,
+                               setName,
+                               name,
+                               description,
+                               setId,
+                               id,
+                               setPrice,
+                               price,
+                               setCost,
+                               cost
+                             }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
   const navigation = useNavigation();
@@ -88,14 +89,14 @@ const GeneralInfoSelector = ({
         marginTop: 20,
         borderRadius: 10,
         padding: 25,
-        marginBottom: 0,
+        marginBottom: 0
       }
     ]}
-    elevation={4}>
+             elevation={4}>
       <Text style={{
         fontWeight: "600",
         fontSize: 22,
-        marginBottom: 13,
+        marginBottom: 13
       }}>
         Media
       </Text>
@@ -112,7 +113,7 @@ const GeneralInfoSelector = ({
                   errorMessage={(value) => {
                     return checkName(value) === 1
                       ? `Maximum length is ${maxNameLength} characters`
-                      : "Only letters, numbers, & spaces are allowed"
+                      : "Only letters, numbers, & spaces are allowed";
                   }}
                   viewStyle={{ marginTop: 20 }}
       />
@@ -127,24 +128,24 @@ const GeneralInfoSelector = ({
                   errorMessage={(value) => {
                     return checkId(value) === 1
                       ? `Maximum length is ${maxIdLength} characters`
-                      : "Only lower case letters & numbers"
+                      : "Only lower case letters & numbers";
                   }}
       />
 
       {/* description field */}
       <TouchableOpacity style={[
-          Layout.fullWidth,
-          Layout.justifyContentBetween,
-          Layout.rowHCenter,
-          Layout.row,
-          {
-            borderBottomColor: theme.colors.secondary,
-            borderBottomWidth: 1,
-            paddingRight: 10,
-            marginBottom: 20,
-          }
-        ]}
-        onPress={onDescriptionClick}>
+        Layout.fullWidth,
+        Layout.justifyContentBetween,
+        Layout.rowHCenter,
+        Layout.row,
+        {
+          borderBottomColor: theme.colors.secondary,
+          borderBottomWidth: 1,
+          paddingRight: 10,
+          marginBottom: 20
+        }
+      ]}
+                        onPress={onDescriptionClick}>
         <Button icon={description.length === 0 ? "plus" : undefined}
                 textColor={theme.colors.secondary}
                 style={[Layout.alignItemsStart, { width: "96%" }]}
@@ -167,7 +168,7 @@ const GeneralInfoSelector = ({
         errorMessage={(value: MonetaryType) => {
           return checkPrice(value) === 1
             ? `Maximum value is ${maxPrice}`
-            : "Only positive values allowed"
+            : "Only positive values allowed";
         }}
         inputMode={"numeric"}
         unpackValue={unpackPrice}
@@ -187,7 +188,7 @@ const GeneralInfoSelector = ({
         errorMessage={(value: MonetaryType) => {
           return checkPrice(value) === 1
             ? `Maximum value is $${maxPrice.toFixed(2)}`
-            : "Only positive values allowed"
+            : "Only positive values allowed";
         }}
         inputMode={"numeric"}
         unpackValue={unpackPrice}

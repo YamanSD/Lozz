@@ -1,5 +1,5 @@
-import { NavigatorScreenParams } from '@react-navigation/native';
-import { StackScreenProps } from '@react-navigation/stack';
+import { NavigatorScreenParams } from "@react-navigation/native";
+import { StackScreenProps } from "@react-navigation/stack";
 
 export type MainParamsList = {
   Home: undefined;

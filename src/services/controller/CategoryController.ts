@@ -4,9 +4,9 @@ import firestore from "@react-native-firebase/firestore";
 import Category from "../model/Category";
 import { NotStatisticalError } from "./Errors";
 import validator from "validator";
-import isAlphanumeric = validator.isAlphanumeric;
 import CollectionInfo from "../../CollectionInfo";
 import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
+import isAlphanumeric = validator.isAlphanumeric;
 
 
 /**
@@ -117,7 +117,7 @@ export default class CategoryController extends BaseController<category> {
   protected validateCreation(data: category): void {
     /* validates the name */
     let errorObj = {
-      name: true,
+      name: true
     };
 
     /* Iterate over the locales and test */
@@ -143,7 +143,7 @@ export default class CategoryController extends BaseController<category> {
   protected validateUpdate(data: Generic): void {
     /* validates the name is not sent */
     let errorObj = {
-      name: data.name !== undefined,
+      name: data.name !== undefined
     };
 
     this.checkErrorObject(errorObj);

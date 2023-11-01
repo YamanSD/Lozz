@@ -23,15 +23,29 @@ import CollectionInfo from "../../CollectionInfo";
  * Class encapsulating the order data.
  */
 export default class Order implements BaseModel {
+  /**
+   * - undefined indicates both quantities change
+   * - false indicates only display quantities change
+   * - true indicates only inventory quantities change
+   *
+   * This function is used on creation only.
+   *
+   * @private
+   */
+  private static creationStatusToInventory: {
+    [status: number]: boolean | null
+  } = {
+    [OrderStatus.confirmed]: false,
+    [OrderStatus.packaged]: null,
+    [OrderStatus.sent_to_courier]: null,
+    [OrderStatus.paid]: null
+  };
   /* raw order data */
   private dataValue: order;
-
   /* courier instance that will deliver the order */
   private courierInstance?: Courier;
-
   /* customer instance representing the customer of the order */
   private readonly customerInstance: Customer;
-
   /* link order of this exchange order */
   private readonly linkInstance?: Order;
 
@@ -55,84 +69,6 @@ export default class Order implements BaseModel {
     }
 
     this.linkInstance = link;
-  }
-
-  /**
-   * @param product item quantity to extract the quantities from
-   * @returns the quantity and inventory quantity
-   */
-  public static extractQuantities(product: ItemQuantityType) {
-    return {
-      quantity: product.quantity,
-      inv_quantity: product.inv_quantity
-    }
-  }
-
-  /**
-   * @param products to convert
-   * @param to_inventory if true all products become to inventory.
-   *        Otherwise, all products become to display.
-   * @returns converted products
-   */
-  public static convertDestination(products: orderProducts,
-                                   to_inventory: boolean): orderProducts {
-    let result: orderProducts = {};
-
-    for (let usi of Object.keys(products)) {
-      if (!(usi in result)) {
-        result[usi] = products[usi];
-      }
-
-      if (to_inventory) {
-        if (result[usi].inv_quantity === 0 && result[usi].quantity !== 0) {
-          result[usi].inv_quantity = result[usi].quantity;
-        }
-
-        result[usi].quantity = 0;
-      } else {
-        if (result[usi].quantity === 0 && result[usi].inv_quantity !== 0) {
-          result[usi].quantity = result[usi].inv_quantity;
-        }
-
-        result[usi].inv_quantity = 0;
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * @param to_inventory if true all products become to inventory.
-   *        Otherwise, all products become to display.
-   * @returns converted products
-   */
-  public convertDestination(to_inventory: boolean): orderProducts {
-    return Order.convertDestination(this.products, to_inventory);
-  }
-
-  /**
-   * Quantities not in the inventory are added to the inventory.
-   * Quantities not on display are added to the on display.
-   *
-   * @param products to be converted
-   * @returns the duplicated products according to the above criteria
-   */
-  public static duplicateProducts(products: orderProducts): orderProducts {
-    let result: orderProducts = {};
-
-    for (let usi of Object.keys(products)) {
-      if (!(usi in result)) {
-        result[usi] = products[usi];
-      }
-
-      if (result[usi].inv_quantity === 0) {
-        result[usi].inv_quantity = result[usi].quantity;
-      } else if (result[usi].quantity === 0) {
-        result[usi].quantity = result[usi].inv_quantity;
-      }
-    }
-
-    return result;
   }
 
   /**
@@ -174,6 +110,13 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @param value new note associated with the order
+   */
+  public set note(value) {
+    this.data.note = value;
+  }
+
+  /**
    * @returns the RUSI set in the order
    */
   public get usiSet() {
@@ -188,35 +131,6 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @param products to extract quantities from
-   * @returns the quantities in the products object
-   */
-  public static getQuantities(products: orderProducts) {
-    let result: OrderProductQuantities = {};
-
-    for (let usi of Object.keys(products)) {
-      result[usi] = {
-        quantity: products[usi].quantity,
-        inv_quantity: products[usi].inv_quantity
-      };
-    }
-
-    return result;
-  }
-
-  /**
-   * This method is exclusive to pending orders.
-   * If the order is not pending, NO ACTION IS TAKEN.
-   *
-   * @param value new quantities of the order
-   */
-  public set products(value: orderProducts) {
-    if (this.status === OrderStatus.pending) {
-      (this.data as Generic).products = value;
-    }
-  }
-
-  /**
    * @returns the discount of the order
    */
   public get discount() {
@@ -226,10 +140,79 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @param value new value of the discount, must be positive
+   */
+  public set discount(value) {
+    if (value !== undefined && !value.isNegative) {
+      this.data.discount = value.data;
+    }
+  }
+
+  /**
    * @returns the status of the order
    */
   public get status() {
     return this.data.status;
+  }
+
+  /**
+   * @param value new status of the order
+   * @throws TypeError if the status is not attainable
+   */
+  public set status(value) {
+    /* Check compatibility */
+    switch (value) {
+      case OrderStatus.pending:
+        throw new TypeError(`Order cannot be set to pending in any case`);
+      case OrderStatus.confirmed:
+        if (this.status !== OrderStatus.pending) {
+          throw new TypeError(`Order is ${this.status}, but trying to confirm`);
+        }
+        break;
+      case OrderStatus.packaged:
+        if (this.status !== OrderStatus.confirmed
+          && this.status !== OrderStatus.pending) {
+          throw new TypeError(`Order is ${this.status}, but trying to package`);
+        }
+        break;
+      case OrderStatus.sent_to_courier:
+        if (this.status !== OrderStatus.packaged) {
+          throw new TypeError(`Order is ${this.status}
+          , but trying to send to courier`);
+        }
+        break;
+      case OrderStatus.paid:
+        if (this.status !== OrderStatus.sent_to_courier
+          && this.status !== OrderStatus.packaged
+          && this.status !== OrderStatus.confirmed
+          && this.status === OrderStatus.paid) {
+          throw new TypeError(`Order is ${this.status}, but trying to pay`);
+        }
+        break;
+      case OrderStatus.canceled:
+        if (this.status === OrderStatus.canceled ||
+          this.status === OrderStatus.canceled_at_courier ||
+          this.status === OrderStatus.received_from_courier) {
+          throw new TypeError(`Order is ${this.status}, but trying cancel`);
+        }
+        break;
+      case OrderStatus.canceled_at_courier:
+        if (this.status !== OrderStatus.sent_to_courier) {
+          throw new TypeError(`Order is ${this.status}
+          , but trying to cancel at courier`);
+        }
+        break;
+      case OrderStatus.received_from_courier:
+        if (this.status !== OrderStatus.canceled_at_courier) {
+          throw new TypeError(`Order is ${this.status}
+          , but trying to receive from courier`);
+        }
+        break;
+      default:
+        throw new Error("Unreachable order status");
+    }
+
+    this.data.status = value;
   }
 
   /**
@@ -260,10 +243,24 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @param value new province associated with the order
+   */
+  public set province(value) {
+    this.data.province = value;
+  }
+
+  /**
    * @returns the address associated with the order
    */
   public get address() {
     return this.data.address;
+  }
+
+  /**
+   * @param value new address associated with the order
+   */
+  public set address(value) {
+    this.data.address = value;
   }
 
   /**
@@ -317,10 +314,29 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @param value new delivery fee associated with the order
+   */
+  public set delivery(value) {
+    if (value !== undefined) {
+      this.data.delivery = value.data;
+    }
+  }
+
+  /**
    * @returns the courier instance associated with the order
    */
   public get courier() {
     return this.courierInstance;
+  }
+
+  /**
+   * @param value new courier associated with the order
+   */
+  public set courier(value) {
+    if (value !== undefined) {
+      this.courierInstance = value;
+      this.data.courier_id = value.name;
+    }
   }
 
   /**
@@ -340,6 +356,15 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @param value new payment associated with the order
+   */
+  public set payment(value) {
+    if (value !== undefined) {
+      this.data.payment = value.data;
+    }
+  }
+
+  /**
    * @returns the commission associated with the order for the employee
    */
   public get commission_percent() {
@@ -354,6 +379,15 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @param value new phone number associated with the order
+   */
+  public set phone_number(value) {
+    if (value !== undefined) {
+      this.data.phone_number = value;
+    }
+  }
+
+  /**
    * @returns the products mapping in the order
    */
   public get products() {
@@ -361,10 +395,31 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * This method is exclusive to pending orders.
+   * If the order is not pending, NO ACTION IS TAKEN.
+   *
+   * @param value new quantities of the order
+   */
+  public set products(value: orderProducts) {
+    if (this.status === OrderStatus.pending) {
+      (this.data as Generic).products = value;
+    }
+  }
+
+  /**
    * @returns the email associated with the order
    */
   public get email() {
     return this.data.email;
+  }
+
+  /**
+   * @param value new email associated with the order
+   */
+  public set email(value) {
+    if (value !== undefined) {
+      this.data.email = value;
+    }
   }
 
   /**
@@ -382,22 +437,6 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @param value new note associated with the order
-   */
-  public set note(value) {
-    this.data.note = value;
-  }
-
-  /**
-   * @param value new value of discount percent.
-   *        Must be in [0, 1]
-   * @throws EvalError if the value is invalid
-   */
-  public set discount_percent(value: number) {
-    this.discount = this.total?.applyDiscountPercentCopy(value);
-  }
-
-  /**
    * Note that this does not change the linked instance.
    *
    * @param value new link ID for the order
@@ -407,221 +446,12 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @param value new value of the discount, must be positive
+   * @param value new value of discount percent.
+   *        Must be in [0, 1]
+   * @throws EvalError if the value is invalid
    */
-  public set discount(value) {
-    if (value !== undefined && !value.isNegative) {
-      this.data.discount = value.data;
-    }
-  }
-
-  /**
-   * @param value new status of the order
-   * @throws TypeError if the status is not attainable
-   */
-  public set status(value) {
-    /* Check compatibility */
-    switch (value) {
-      case OrderStatus.pending:
-        throw new TypeError(`Order cannot be set to pending in any case`);
-      case OrderStatus.confirmed:
-        if (this.status !== OrderStatus.pending) {
-          throw new TypeError(`Order is ${this.status}, but trying to confirm`);
-        }
-        break;
-      case OrderStatus.packaged:
-        if (this.status !== OrderStatus.confirmed
-          && this.status !== OrderStatus.pending) {
-          throw new TypeError(`Order is ${this.status}, but trying to package`);
-        }
-        break;
-      case OrderStatus.sent_to_courier:
-        if (this.status !== OrderStatus.packaged) {
-          throw new TypeError(`Order is ${this.status}
-          , but trying to send to courier`);
-        }
-        break;
-      case OrderStatus.paid:
-        if (this.status !== OrderStatus.sent_to_courier
-          && this.status !== OrderStatus.packaged
-          && this.status !== OrderStatus.confirmed
-          && this.status === OrderStatus.paid) {
-          throw new TypeError(`Order is ${this.status}, but trying to pay`);
-        }
-        break;
-      case OrderStatus.canceled:
-        if (this.status === OrderStatus.canceled ||
-            this.status === OrderStatus.canceled_at_courier ||
-            this.status === OrderStatus.received_from_courier) {
-          throw new TypeError(`Order is ${this.status}, but trying cancel`);
-        }
-        break;
-      case OrderStatus.canceled_at_courier:
-        if (this.status !== OrderStatus.sent_to_courier) {
-          throw new TypeError(`Order is ${this.status}
-          , but trying to cancel at courier`);
-        }
-        break;
-      case OrderStatus.received_from_courier:
-        if (this.status !== OrderStatus.canceled_at_courier) {
-          throw new TypeError(`Order is ${this.status}
-          , but trying to receive from courier`);
-        }
-        break;
-      default:
-        throw new Error("Unreachable order status");
-    }
-
-    this.data.status = value;
-  }
-
-  /**
-   * @param value new province associated with the order
-   */
-  public set province(value) {
-    this.data.province = value;
-  }
-
-  /**
-   * @param value new address associated with the order
-   */
-  public set address(value) {
-    this.data.address = value;
-  }
-
-  /**
-   * @param value new delivery fee associated with the order
-   */
-  public set delivery(value) {
-    if (value !== undefined) {
-      this.data.delivery = value.data;
-    }
-  }
-
-  /**
-   * @param value new courier associated with the order
-   */
-  public set courier(value) {
-    if (value !== undefined) {
-      this.courierInstance = value;
-      this.data.courier_id = value.name;
-    }
-  }
-
-  /**
-   * @param value new payment associated with the order
-   */
-  public set payment(value) {
-    if (value !== undefined) {
-      this.data.payment = value.data;
-    }
-  }
-
-  /**
-   * @param value new phone number associated with the order
-   */
-  public set phone_number(value) {
-    if (value !== undefined) {
-      this.data.phone_number = value;
-    }
-  }
-
-  /**
-   * @param value new email associated with the order
-   */
-  public set email(value) {
-    if (value !== undefined) {
-      this.data.email = value;
-    }
-  }
-
-  /**
-   * @param value monetary value to be added
-   * @param quantity multiplier for the value
-   */
-  public addToTotal(value: Monetary, quantity: number = 1) {
-    this.total?.add(value.multiplyCopy(quantity));
-  }
-
-  /**
-   * @param usi USI of the product
-   * @param value price value of the product
-   */
-  public addToPrices(usi: string, value: Monetary): void {
-    this.products[usi].price = value.data;
-
-    if (this.getQuantity(usi) === 0) {
-      delete this.products[usi];
-    }
-  }
-
-  /**
-   * @param usi USI of the product
-   * @param value price value of the product
-   */
-  public addToCosts(usi: string, value: Monetary): void {
-    this.products[usi].cost = value.data;
-
-    if (this.getQuantity(usi) === 0) {
-      delete this.products[usi];
-    }
-  }
-
-  /**
-   * Adds the given quantity to the quantity of the USI in the order.
-   *
-   * @param usi to add quantity for
-   * @param quantity value to be added
-   * @param value price of the product
-   * @param cost value of the product
-   * @param to_inventory if true the quantities are added to the inventory.
-   *        Otherwise, if false, to display only.
-   *        Otherwise, if null to both
-   */
-  public add(usi: string, quantity: number,
-             value: Monetary, cost: Monetary,
-             to_inventory: boolean | null): void {
-    if (!(usi in this.products)) {
-      this.products[usi] = {
-        inv_quantity: 0,
-        quantity: 0,
-        price: value.data,
-        cost: cost.data
-      }
-    }
-
-    this.item_count += Math.abs(quantity);
-
-    if (to_inventory !== false) {
-      this.products[usi].inv_quantity += quantity;
-    }
-
-    if (to_inventory !== true) {
-      this.products[usi].quantity += quantity;
-    }
-
-    this.addToTotal(value, quantity);
-    this.addToPrices(usi, value);
-    this.addToCosts(usi, cost);
-  }
-
-  /**
-   * @param usi to check quantity for
-   */
-  public getQuantity(usi: string): number {
-    const quantity = this.products[usi]?.quantity ?? 0;
-    const invQuantity = this.products[usi]?.inv_quantity ?? 0;
-
-    return quantity === 0 ? invQuantity : quantity;
-  }
-
-  /**
-   * @param product CartProduct to be added to the order
-   *
-   * Adds the given cart product to the order
-   */
-  public addCartProduct(product: CartProduct): void {
-    this.add(product.usi, product.quantity, product.price, product.cost, false);
+  public set discount_percent(value: number) {
+    this.discount = this.total?.applyDiscountPercentCopy(value);
   }
 
   /**
@@ -687,13 +517,6 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @param nature type of action done by the employee
-   */
-  public stamp(nature: TrailNature): void {
-    BaseModel.stamp(this.trail, nature);
-  }
-
-  /**
    * @returns a deep copy of the raw data
    */
   public get dataCopy() {
@@ -712,6 +535,251 @@ export default class Order implements BaseModel {
   }
 
   /**
+   * @returns the zone of the order
+   */
+  public get zone() {
+    return this.data.zone;
+  }
+
+  /**
+   * @param value new value of the zone
+   */
+  public set zone(value) {
+    this.data.zone = value;
+  }
+
+  /**
+   * @returns a copy of the quantities, but values are zeros
+   */
+  public get zeroQuantityProducts() {
+    let result: orderProducts = {};
+
+    for (let usi of Object.keys(this.products)) {
+      result[usi] = {
+        price: this.products[usi].price,
+        cost: this.products[usi].cost,
+        quantity: 0,
+        inv_quantity: 0
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * @returns the name of the province of the order
+   */
+  public get provinceName() {
+    return CollectionInfo.provinces[
+    this.province ?? (CollectionInfo.provinces.length - 1)
+      ];
+  }
+
+  /**
+   * @param product item quantity to extract the quantities from
+   * @returns the quantity and inventory quantity
+   */
+  public static extractQuantities(product: ItemQuantityType) {
+    return {
+      quantity: product.quantity,
+      inv_quantity: product.inv_quantity
+    };
+  }
+
+  /**
+   * @param products to convert
+   * @param to_inventory if true all products become to inventory.
+   *        Otherwise, all products become to display.
+   * @returns converted products
+   */
+  public static convertDestination(products: orderProducts,
+                                   to_inventory: boolean): orderProducts {
+    let result: orderProducts = {};
+
+    for (let usi of Object.keys(products)) {
+      if (!(usi in result)) {
+        result[usi] = products[usi];
+      }
+
+      if (to_inventory) {
+        if (result[usi].inv_quantity === 0 && result[usi].quantity !== 0) {
+          result[usi].inv_quantity = result[usi].quantity;
+        }
+
+        result[usi].quantity = 0;
+      } else {
+        if (result[usi].quantity === 0 && result[usi].inv_quantity !== 0) {
+          result[usi].quantity = result[usi].inv_quantity;
+        }
+
+        result[usi].inv_quantity = 0;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Quantities not in the inventory are added to the inventory.
+   * Quantities not on display are added to the on display.
+   *
+   * @param products to be converted
+   * @returns the duplicated products according to the above criteria
+   */
+  public static duplicateProducts(products: orderProducts): orderProducts {
+    let result: orderProducts = {};
+
+    for (let usi of Object.keys(products)) {
+      if (!(usi in result)) {
+        result[usi] = products[usi];
+      }
+
+      if (result[usi].inv_quantity === 0) {
+        result[usi].inv_quantity = result[usi].quantity;
+      } else if (result[usi].quantity === 0) {
+        result[usi].quantity = result[usi].inv_quantity;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * @param products to extract quantities from
+   * @returns the quantities in the products object
+   */
+  public static getQuantities(products: orderProducts) {
+    let result: OrderProductQuantities = {};
+
+    for (let usi of Object.keys(products)) {
+      result[usi] = {
+        quantity: products[usi].quantity,
+        inv_quantity: products[usi].inv_quantity
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * @param status to be checked if it affects the inventory
+   * @returns the type of inventory change needed for the given status
+   */
+  public static isStatusToInventory(status: OrderStatus):
+    boolean | null {
+    if (status in Order.creationStatusToInventory) {
+      return Order.creationStatusToInventory[status];
+    }
+
+    throw new InvalidOrderCreationStatusError();
+  }
+
+  /**
+   * @param to_inventory if true all products become to inventory.
+   *        Otherwise, all products become to display.
+   * @returns converted products
+   */
+  public convertDestination(to_inventory: boolean): orderProducts {
+    return Order.convertDestination(this.products, to_inventory);
+  }
+
+  /**
+   * @param value monetary value to be added
+   * @param quantity multiplier for the value
+   */
+  public addToTotal(value: Monetary, quantity: number = 1) {
+    this.total?.add(value.multiplyCopy(quantity));
+  }
+
+  /**
+   * @param usi USI of the product
+   * @param value price value of the product
+   */
+  public addToPrices(usi: string, value: Monetary): void {
+    this.products[usi].price = value.data;
+
+    if (this.getQuantity(usi) === 0) {
+      delete this.products[usi];
+    }
+  }
+
+  /**
+   * @param usi USI of the product
+   * @param value price value of the product
+   */
+  public addToCosts(usi: string, value: Monetary): void {
+    this.products[usi].cost = value.data;
+
+    if (this.getQuantity(usi) === 0) {
+      delete this.products[usi];
+    }
+  }
+
+  /**
+   * Adds the given quantity to the quantity of the USI in the order.
+   *
+   * @param usi to add quantity for
+   * @param quantity value to be added
+   * @param value price of the product
+   * @param cost value of the product
+   * @param to_inventory if true the quantities are added to the inventory.
+   *        Otherwise, if false, to display only.
+   *        Otherwise, if null to both
+   */
+  public add(usi: string, quantity: number,
+             value: Monetary, cost: Monetary,
+             to_inventory: boolean | null): void {
+    if (!(usi in this.products)) {
+      this.products[usi] = {
+        inv_quantity: 0,
+        quantity: 0,
+        price: value.data,
+        cost: cost.data
+      };
+    }
+
+    this.item_count += Math.abs(quantity);
+
+    if (to_inventory !== false) {
+      this.products[usi].inv_quantity += quantity;
+    }
+
+    if (to_inventory !== true) {
+      this.products[usi].quantity += quantity;
+    }
+
+    this.addToTotal(value, quantity);
+    this.addToPrices(usi, value);
+    this.addToCosts(usi, cost);
+  }
+
+  /**
+   * @param usi to check quantity for
+   */
+  public getQuantity(usi: string): number {
+    const quantity = this.products[usi]?.quantity ?? 0;
+    const invQuantity = this.products[usi]?.inv_quantity ?? 0;
+
+    return quantity === 0 ? invQuantity : quantity;
+  }
+
+  /**
+   * @param product CartProduct to be added to the order
+   *
+   * Adds the given cart product to the order
+   */
+  public addCartProduct(product: CartProduct): void {
+    this.add(product.usi, product.quantity, product.price, product.cost, false);
+  }
+
+  /**
+   * @param nature type of action done by the employee
+   */
+  public stamp(nature: TrailNature): void {
+    BaseModel.stamp(this.trail, nature);
+  }
+
+  /**
    * @param usi to get the price for
    * @returns the price for the given USI
    */
@@ -725,41 +793,6 @@ export default class Order implements BaseModel {
    */
   public getCost(usi: string): MonetaryType {
     return this.products[usi].price;
-  }
-
-  /**
-   * @returns basic quantities suitable for getBasicData
-   * @private
-   */
-  private generateBasicQuantities() {
-    let result: orderProducts = {};
-
-    let quantities = this.quantities;
-
-    for (let usi of Object.keys(quantities)) {
-      result[usi] = {
-        quantity: quantities[usi].quantity,
-        inv_quantity: quantities[usi].inv_quantity,
-        price: this.getPrice(usi),
-        cost: this.getCost(usi)
-      };
-    }
-
-    return result;
-  }
-
-  /**
-   * @returns the zone of the order
-   */
-  public get zone() {
-    return this.data.zone;
-  }
-
-  /**
-   * @param value new value of the zone
-   */
-  public set zone(value) {
-    this.data.zone = value;
   }
 
   /**
@@ -786,60 +819,23 @@ export default class Order implements BaseModel {
   }
 
   /**
-   * @returns a copy of the quantities, but values are zeros
+   * @returns basic quantities suitable for getBasicData
+   * @private
    */
-  public get zeroQuantityProducts() {
+  private generateBasicQuantities() {
     let result: orderProducts = {};
 
-    for (let usi of Object.keys(this.products)) {
+    let quantities = this.quantities;
+
+    for (let usi of Object.keys(quantities)) {
       result[usi] = {
-        price: this.products[usi].price,
-        cost: this.products[usi].cost,
-        quantity: 0,
-        inv_quantity: 0
+        quantity: quantities[usi].quantity,
+        inv_quantity: quantities[usi].inv_quantity,
+        price: this.getPrice(usi),
+        cost: this.getCost(usi)
       };
     }
 
     return result;
-  }
-
-  /**
-   * @returns the name of the province of the order
-   */
-  public get provinceName() {
-    return CollectionInfo.provinces[
-      this.province ?? (CollectionInfo.provinces.length - 1)
-      ];
-  }
-
-  /**
-   * - undefined indicates both quantities change
-   * - false indicates only display quantities change
-   * - true indicates only inventory quantities change
-   *
-   * This function is used on creation only.
-   *
-   * @private
-   */
-  private static creationStatusToInventory: {
-    [status: number]: boolean | null
-  } = {
-    [OrderStatus.confirmed]: false,
-    [OrderStatus.packaged]: null,
-    [OrderStatus.sent_to_courier]: null,
-    [OrderStatus.paid]: null,
-  };
-
-  /**
-   * @param status to be checked if it affects the inventory
-   * @returns the type of inventory change needed for the given status
-   */
-  public static isStatusToInventory(status: OrderStatus):
-    boolean | null {
-    if (status in Order.creationStatusToInventory) {
-      return Order.creationStatusToInventory[status];
-    }
-
-    throw new InvalidOrderCreationStatusError();
   }
 }

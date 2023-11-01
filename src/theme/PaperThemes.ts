@@ -1,4 +1,4 @@
-import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { MD3DarkTheme, MD3LightTheme } from "react-native-paper";
 
 export const LightTheme: typeof MD3LightTheme = {
   ...MD3LightTheme,
@@ -11,10 +11,10 @@ export const LightTheme: typeof MD3LightTheme = {
     primaryContainer: "rgb(255, 255, 255)",
     elevation: {
       ...MD3LightTheme.colors.elevation,
-      level2: "rgb(255, 255, 255)",
+      level2: "rgb(255, 255, 255)"
     }
   }
-}
+};
 
 export const DarkTheme: typeof MD3DarkTheme = {
   ...MD3DarkTheme,
@@ -27,7 +27,7 @@ export const DarkTheme: typeof MD3DarkTheme = {
     primaryContainer: "rgb(0, 0, 0)",
     elevation: {
       ...MD3DarkTheme.colors.elevation,
-      level2: "rgb(0, 0, 0)",
+      level2: "rgb(0, 0, 0)"
     }
   }
 };

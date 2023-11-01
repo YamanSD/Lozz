@@ -6,9 +6,10 @@ import {
   product,
   QuantityType,
   restock,
-  RestockSearchSchema, restockUpdate,
+  RestockSearchSchema,
+  restockUpdate,
   SpecialFields,
-  TrailNature,
+  TrailNature
 } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../CollectionInfo";
@@ -62,22 +63,6 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
-   * Loads the restocks into the statistics iff the operation has not been done
-   * @private
-   */
-  private async loadStatistics(): Promise<void> {
-    if (StatisticsBlock.isLoaded(this.collectionName)) {
-      return;
-    }
-
-    for (let id of this.idSet) {
-      StatisticsBlock.addRestock(await this.get(id));
-    }
-
-    StatisticsBlock.setLoaded(this.collectionName);
-  }
-
-  /**
    * @returns the products controller for the server
    */
   public get productController(): ProductController {
@@ -97,21 +82,6 @@ export default class RestockController extends BaseController<restock> {
       CategoryController,
       this.metaServer
     );
-  }
-
-  /**
-   * @param id of the restocking to be fetched
-   * @returns restock data
-   * @throws IdDoesNotExistError if the id does not belong to a restocking
-   */
-  public async get(id: string) {
-    const data = await this.getData(id);
-
-    if (data === undefined) {
-      throw new IdDoesNotExistError();
-    }
-
-    return new Restock(data);
   }
 
   /**
@@ -139,81 +109,6 @@ export default class RestockController extends BaseController<restock> {
     }
 
     return restock.convertDestination(to_inventory);
-  }
-
-  /**
-   * @param data basic raw data to create a restocking
-   * @throws IdAlreadyExistsError if the name of the restocking is taken
-   * @throws EvalError if transaction fails
-   */
-  public async create(data: basicRestock) {
-    await this.checkQuantities(data.quantities);
-
-    let uploadData = this.fillDataGaps(data);
-    uploadData.quantities = RestockController.transformQuantities(
-      uploadData.quantities,
-      data.to_inventory
-    );
-    const id = BaseModel.getRandomTimestamp(2);
-
-    /* try to change quantities */
-    await this.performQuantityTransaction(uploadData.quantities);
-
-    /* create the restocking document on the server */
-    await this.createServer(id, uploadData);
-    await this.uploadIds();
-
-    return id;
-  }
-
-  /**
-   * @throws NoUpdateError, restocks do not allow non-quantity updates
-   */
-  public async update(model: Restock) {
-    throw new NoUpdateError();
-  }
-
-  /**
-   * @param id ID of the restocking to be updated
-   * @param new_quantities new quantities of the restocking
-   * @param deactivate if true, stamp restock with deactivate rather than
-   *        updated.
-   */
-  public async updateQuantities(
-    id: string,
-    new_quantities: QuantityType,
-    deactivate?: boolean) {
-    const oldRestock = await this.get(id);
-
-    let quantities = RestockController.combineQuantities(
-        new_quantities,
-        oldRestock.quantities
-    );
-
-    // Also updates restock
-    await this.performQuantityTransaction(quantities, {
-      id: id,
-      quantities: deactivate ? oldRestock.quantities : new_quantities,
-      stamp: deactivate ? TrailNature.D : TrailNature.U,
-      [SpecialFields.trail]: oldRestock.trail
-    });
-  }
-
-  /**
-   * @param id of the restocking operation whose effects revoked completely
-   */
-  public async revoke(id: string) {
-    const restock = await this.get(id);
-
-    if (restock.isDeactivated) {
-      throw new RestockAlreadyRevokedError();
-    }
-
-    await this.updateQuantities(
-      id,
-      restock.zeroQuantities,
-      true
-    );
   }
 
   /**
@@ -286,6 +181,290 @@ export default class RestockController extends BaseController<restock> {
     }
 
     return result;
+  }
+
+  /**
+   * @param quantities to be counter
+   * @returns the total number of items
+   * @private
+   */
+  private static countItems(quantities: QuantityType): number {
+    return Math.abs(sum(Object.values(quantities)));
+  }
+
+  /**
+   * @param id of the restocking to be fetched
+   * @returns restock data
+   * @throws IdDoesNotExistError if the id does not belong to a restocking
+   */
+  public async get(id: string) {
+    const data = await this.getData(id);
+
+    if (data === undefined) {
+      throw new IdDoesNotExistError();
+    }
+
+    return new Restock(data);
+  }
+
+  /**
+   * @param data basic raw data to create a restocking
+   * @throws IdAlreadyExistsError if the name of the restocking is taken
+   * @throws EvalError if transaction fails
+   */
+  public async create(data: basicRestock) {
+    await this.checkQuantities(data.quantities);
+
+    let uploadData = this.fillDataGaps(data);
+    uploadData.quantities = RestockController.transformQuantities(
+      uploadData.quantities,
+      data.to_inventory
+    );
+    const id = BaseModel.getRandomTimestamp(2);
+
+    /* try to change quantities */
+    await this.performQuantityTransaction(uploadData.quantities);
+
+    /* create the restocking document on the server */
+    await this.createServer(id, uploadData);
+    await this.uploadIds();
+
+    return id;
+  }
+
+  /**
+   * @throws NoUpdateError, restocks do not allow non-quantity updates
+   */
+  public async update(model: Restock) {
+    throw new NoUpdateError();
+  }
+
+  /**
+   * @param id ID of the restocking to be updated
+   * @param new_quantities new quantities of the restocking
+   * @param deactivate if true, stamp restock with deactivate rather than
+   *        updated.
+   */
+  public async updateQuantities(
+    id: string,
+    new_quantities: QuantityType,
+    deactivate?: boolean) {
+    const oldRestock = await this.get(id);
+
+    let quantities = RestockController.combineQuantities(
+      new_quantities,
+      oldRestock.quantities
+    );
+
+    // Also updates restock
+    await this.performQuantityTransaction(quantities, {
+      id: id,
+      quantities: deactivate ? oldRestock.quantities : new_quantities,
+      stamp: deactivate ? TrailNature.D : TrailNature.U,
+      [SpecialFields.trail]: oldRestock.trail
+    });
+  }
+
+  /**
+   * @param id of the restocking operation whose effects revoked completely
+   */
+  public async revoke(id: string) {
+    const restock = await this.get(id);
+
+    if (restock.isDeactivated) {
+      throw new RestockAlreadyRevokedError();
+    }
+
+    await this.updateQuantities(
+      id,
+      restock.zeroQuantities,
+      true
+    );
+  }
+
+  /**
+   * @param quantities to be completely deleted without any trace
+   * @param reason of deletion of the quantities
+   */
+  public async deleteQuantities(quantities: QuantityType, reason: string) {
+    for (let quantity of Object.values(quantities)) {
+      if (0 < quantity) {
+        throw new RestockDeletionError();
+      }
+    }
+
+    await this.create({
+      note: reason,
+      quantities: quantities
+    });
+  }
+
+  /**
+   * @param id of the restocking whose quantities moved
+   *        to the inventory only.
+   */
+  public async transferToInventory(id: string) {
+    const restock = await this.get(id);
+    const quantities = restock.convertDestination(true);
+
+    await this.updateQuantities(id, quantities);
+  }
+
+  /**
+   * @param id of the restocking whose quantities moved
+   *        to the display only.
+   */
+  public async transferFromInventory(id: string) {
+    const restock = await this.get(id);
+    const quantities = restock.convertDestination(false);
+
+    await this.updateQuantities(id, quantities);
+  }
+
+  /**
+   * Quantities not in the inventory are added to the inventory.
+   * Quantities not on display are added to the on display.
+   *
+   * @param id of the restocking whose quantities moved
+   *        to both inventory & display.
+   */
+  public async transferToBoth(id: string) {
+    const restock = await this.get(id);
+    const quantities = restock.duplicateQuantities;
+
+    await this.updateQuantities(id, quantities);
+  }
+
+  /**
+   * @param data basic restock data
+   * @returns restock data suitable for upload
+   * @protected
+   */
+  protected fillDataGaps(data: basicRestock): restock {
+    return super.fixDataGaps({
+      id: data.id,
+      note: data.note,
+      quantities: data.quantities,
+      costs: data.costs,
+      item_count: RestockController.countItems(data.quantities),
+      trail: this.generateInitialTrail()
+    });
+  }
+
+  /**
+   * @param data to be fixed
+   * @returns data suitable for the search engine insertion schema
+   * @protected
+   */
+  protected fixSearchEngineData(data: restock): Generic {
+    return {
+      id: data.id,
+      date: data.id,
+      note: data.note,
+      invoice_linked: data.costs !== undefined,
+      item_count: data.item_count,
+      employee_id: BaseModel.initialEmployee(data[SpecialFields.trail]),
+      quantities: Object.keys(data.quantities)
+    };
+  }
+
+  /**
+   * @param id of the restock to be inserted to statistics
+   * @protected
+   */
+  protected async insertStatistic(id: string): Promise<void> {
+    StatisticsBlock.addRestock(await this.get(id));
+  }
+
+  /**
+   * @param id of the restock to be removed to statistics
+   * @protected
+   */
+  protected async removeStatistic(id: string): Promise<void> {
+    StatisticsBlock.subtractRestock(await this.get(id));
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on creation.
+   */
+  protected validateCreation(data: restock): Promise<void> | void {
+    /*
+     * validates the id and note.
+     */
+    let errorObj = {
+      id: true,
+      note: data.note !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.note && isAlphanumeric(data.note as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.note = false;
+      }
+    }
+
+    /* check id, locale-independent */
+    if (errorObj.id && isAlphanumeric(data.id)) {
+      errorObj.id = false;
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   *
+   * @param data generic data to be verified
+   * @throws an error, whose message is a stringifies json object iff the
+   *         validation fails. Each entry in the json is a field in the data,
+   *         if marked true, indicates that the field failed.
+   *         If no errors occur, no side effects.
+   *         Used on update.
+   */
+  protected validateUpdate(data: Generic): Promise<void> | void {
+    /*
+     * validates the id and note.
+     */
+    let errorObj = {
+      id: data.id !== undefined,
+      note: data.note !== undefined
+    };
+
+    /* Iterate over the locales and test */
+    for (const locale of CollectionInfo.locale) {
+      if (errorObj.note && isAlphanumeric(data.note as string,
+        locale as AlphanumericLocale, {
+          ignore: BaseController.alphanumericIgnoreSeq
+        })) {
+        errorObj.note = false;
+      }
+    }
+
+    this.checkErrorObject(errorObj);
+  }
+
+  /**
+   * Loads the restocks into the statistics iff the operation has not been done
+   * @private
+   */
+  private async loadStatistics(): Promise<void> {
+    if (StatisticsBlock.isLoaded(this.collectionName)) {
+      return;
+    }
+
+    for (let id of this.idSet) {
+      StatisticsBlock.addRestock(await this.get(id));
+    }
+
+    StatisticsBlock.setLoaded(this.collectionName);
   }
 
   /**
@@ -370,23 +549,6 @@ export default class RestockController extends BaseController<restock> {
   }
 
   /**
-   * @param quantities to be completely deleted without any trace
-   * @param reason of deletion of the quantities
-   */
-  public async deleteQuantities(quantities: QuantityType, reason: string) {
-    for (let quantity of Object.values(quantities)) {
-      if (0 < quantity) {
-        throw new RestockDeletionError();
-      }
-    }
-
-    await this.create({
-      note: reason,
-      quantities: quantities,
-    });
-  }
-
-  /**
    * Also checks if any of the products are deleted or deactivated.
    *
    * @param quantities to be checked
@@ -417,166 +579,5 @@ export default class RestockController extends BaseController<restock> {
     if (Object.keys(quantities).length === 0) {
       throw new EmptyRestockError();
     }
-  }
-
-  /**
-   * @param id of the restocking whose quantities moved
-   *        to the inventory only.
-   */
-  public async transferToInventory(id: string) {
-    const restock = await this.get(id);
-    const quantities = restock.convertDestination(true);
-
-    await this.updateQuantities(id, quantities);
-  }
-
-  /**
-   * @param id of the restocking whose quantities moved
-   *        to the display only.
-   */
-  public async transferFromInventory(id: string) {
-    const restock = await this.get(id);
-    const quantities = restock.convertDestination(false);
-
-    await this.updateQuantities(id, quantities);
-  }
-
-  /**
-   * Quantities not in the inventory are added to the inventory.
-   * Quantities not on display are added to the on display.
-   *
-   * @param id of the restocking whose quantities moved
-   *        to both inventory & display.
-   */
-  public async transferToBoth(id: string) {
-    const restock = await this.get(id);
-    const quantities = restock.duplicateQuantities;
-
-    await this.updateQuantities(id, quantities);
-  }
-
-  /**
-   * @param quantities to be counter
-   * @returns the total number of items
-   * @private
-   */
-  private static countItems(quantities: QuantityType): number {
-    return Math.abs(sum(Object.values(quantities)));
-  }
-
-  /**
-   * @param data basic restock data
-   * @returns restock data suitable for upload
-   * @protected
-   */
-  protected fillDataGaps(data: basicRestock): restock {
-    return super.fixDataGaps({
-      id: data.id,
-      note: data.note,
-      quantities: data.quantities,
-      costs: data.costs,
-      item_count: RestockController.countItems(data.quantities),
-      trail: this.generateInitialTrail()
-    });
-  }
-
-  /**
-   * @param data to be fixed
-   * @returns data suitable for the search engine insertion schema
-   * @protected
-   */
-  protected fixSearchEngineData(data: restock): Generic {
-    return {
-      id: data.id,
-      date: data.id,
-      note: data.note,
-      invoice_linked: data.costs !== undefined,
-      item_count: data.item_count,
-      employee_id: BaseModel.initialEmployee(data[SpecialFields.trail]),
-      quantities: Object.keys(data.quantities)
-    };
-  }
-
-  /**
-   * @param id of the restock to be inserted to statistics
-   * @protected
-   */
-  protected async insertStatistic(id: string): Promise<void> {
-    StatisticsBlock.addRestock(await this.get(id));
-  }
-
-  /**
-   * @param id of the restock to be removed to statistics
-   * @protected
-   */
-  protected async removeStatistic(id: string): Promise<void> {
-    StatisticsBlock.subtractRestock(await this.get(id));
-  }
-
-  /**
-   *
-   * @param data generic data to be verified
-   * @throws an error, whose message is a stringifies json object iff the
-   *         validation fails. Each entry in the json is a field in the data,
-   *         if marked true, indicates that the field failed.
-   *         If no errors occur, no side effects.
-   *         Used on creation.
-   */
-  protected validateCreation(data: restock): Promise<void> | void {
-    /*
-     * validates the id and note.
-     */
-    let errorObj = {
-      id: true,
-      note: data.note !== undefined,
-    };
-
-    /* Iterate over the locales and test */
-    for (const locale of CollectionInfo.locale) {
-      if (errorObj.note && isAlphanumeric(data.note as string,
-        locale as AlphanumericLocale, {
-          ignore: BaseController.alphanumericIgnoreSeq
-        })) {
-        errorObj.note = false;
-      }
-    }
-
-    /* check id, locale-independent */
-    if (errorObj.id && isAlphanumeric(data.id)) {
-      errorObj.id = false;
-    }
-
-    this.checkErrorObject(errorObj);
-  }
-
-  /**
-   *
-   * @param data generic data to be verified
-   * @throws an error, whose message is a stringifies json object iff the
-   *         validation fails. Each entry in the json is a field in the data,
-   *         if marked true, indicates that the field failed.
-   *         If no errors occur, no side effects.
-   *         Used on update.
-   */
-  protected validateUpdate(data: Generic): Promise<void> | void {
-    /*
-     * validates the id and note.
-     */
-    let errorObj = {
-      id: data.id !== undefined,
-      note: data.note !== undefined,
-    };
-
-    /* Iterate over the locales and test */
-    for (const locale of CollectionInfo.locale) {
-      if (errorObj.note && isAlphanumeric(data.note as string,
-        locale as AlphanumericLocale, {
-          ignore: BaseController.alphanumericIgnoreSeq
-        })) {
-        errorObj.note = false;
-      }
-    }
-
-    this.checkErrorObject(errorObj);
   }
 }

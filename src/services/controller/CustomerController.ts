@@ -8,9 +8,9 @@ import { NotStatisticalError } from "./Errors";
 import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
 import validator from "validator";
 import isEmail from "validator/lib/isEmail";
+import { isDate } from "lodash";
 import isMobilePhone = validator.isMobilePhone;
 import isAlpha = validator.isAlpha;
-import { isDate } from "lodash";
 
 
 /**
@@ -62,6 +62,15 @@ export default class CustomerController extends BaseController<customer> {
    */
   public async update(model: Customer) {
     return await this.genericUpdate(model, model.phone_number);
+  }
+
+  /**
+   * @param customer_id to check for if is banned
+   * @returns true if the customer is banned.
+   *          If the customer does not exist, an error is thrown.
+   */
+  public async isBanned(customer_id: string): Promise<boolean> {
+    return (await this.get(customer_id)).is_banned;
   }
 
   /**
@@ -118,15 +127,6 @@ export default class CustomerController extends BaseController<customer> {
    */
   protected removeStatistic(id: string): Promise<void> {
     throw new NotStatisticalError();
-  }
-
-  /**
-   * @param customer_id to check for if is banned
-   * @returns true if the customer is banned.
-   *          If the customer does not exist, an error is thrown.
-   */
-  public async isBanned(customer_id: string): Promise<boolean> {
-    return (await this.get(customer_id)).is_banned;
   }
 
   /**

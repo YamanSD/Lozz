@@ -32,21 +32,21 @@ const ExpensesTop = ({ statistics }: Properties) => {
       {
         borderRadius: 10,
         height: 150,
-        padding: 25,
+        padding: 25
       }
     ]}
-    elevation={4}
+             elevation={4}
     >
       <View style={[
         Layout.row,
-        Layout.justifyContentBetween,
+        Layout.justifyContentBetween
       ]}>
-          <Text style={{
-            fontWeight: "600",
-            fontSize: 30,
-          }}>
-            Total Expenses
-          </Text>
+        <Text style={{
+          fontWeight: "600",
+          fontSize: 30
+        }}>
+          Total Expenses
+        </Text>
       </View>
 
       <View style={[

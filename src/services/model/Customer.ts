@@ -38,6 +38,13 @@ export default class Customer implements BaseModel {
   }
 
   /**
+   * @param value new first name of the customer
+   */
+  public set first_name(value) {
+    this.data.first_name = value;
+  }
+
+  /**
    * @returns the registered middle name of the customer,
    *          if it exists. Otherwise, undefined
    */
@@ -46,10 +53,24 @@ export default class Customer implements BaseModel {
   }
 
   /**
+   * @param value new middle name of the customer
+   */
+  public set middle_name(value) {
+    this.data.middle_name = value;
+  }
+
+  /**
    * @returns the registered last name of the customer
    */
   public get last_name() {
     return this.data.last_name;
+  }
+
+  /**
+   * @param value new last name of the customer
+   */
+  public set last_name(value) {
+    this.data.last_name = value;
   }
 
   /**
@@ -69,6 +90,13 @@ export default class Customer implements BaseModel {
   }
 
   /**
+   * @param value new email of the customer
+   */
+  public set email(value) {
+    this.data.email = value;
+  }
+
+  /**
    * @returns the gender of the customer
    */
   public get gender() {
@@ -76,10 +104,24 @@ export default class Customer implements BaseModel {
   }
 
   /**
+   * @param value new gender of the customer
+   */
+  public set gender(value) {
+    this.data.gender = value;
+  }
+
+  /**
    * @returns the birthday of the customer
    */
   public get birthday() {
     return this.data.birthday;
+  }
+
+  /**
+   * @param value new birthday of the customer
+   */
+  public set birthday(value) {
+    this.data.birthday = value;
   }
 
   /**
@@ -103,9 +145,9 @@ export default class Customer implements BaseModel {
   public get full_name() {
     return [
       this.first_name,
-      this.middle_name ?? '',
+      this.middle_name ?? "",
       this.last_name
-    ].join(' ');
+    ].join(" ");
   }
 
   /**
@@ -113,6 +155,13 @@ export default class Customer implements BaseModel {
    */
   public get is_banned() {
     return this.data.is_banned;
+  }
+
+  /**
+   * @param value user becomes banned or unbanned
+   */
+  public set is_banned(value) {
+    this.data.is_banned = value;
   }
 
   /**
@@ -130,55 +179,6 @@ export default class Customer implements BaseModel {
   }
 
   /**
-   * @param value new first name of the customer
-   */
-  public set first_name(value) {
-    this.data.first_name = value;
-  }
-
-  /**
-   * @param value new middle name of the customer
-   */
-  public set middle_name(value) {
-    this.data.middle_name = value;
-  }
-
-  /**
-   * @param value new last name of the customer
-   */
-  public set last_name(value) {
-    this.data.last_name = value;
-  }
-
-  /**
-   * @param value new email of the customer
-   */
-  public set email(value) {
-    this.data.email = value;
-  }
-
-  /**
-   * @param value new gender of the customer
-   */
-  public set gender(value) {
-    this.data.gender = value;
-  }
-
-  /**
-   * @param value new birthday of the customer
-   */
-  public set birthday(value) {
-    this.data.birthday = value;
-  }
-
-  /**
-   * @param value user becomes banned or unbanned
-   */
-  public set is_banned(value) {
-    this.data.is_banned = value;
-  }
-
-  /**
    * @returns whether the object is deactivated
    */
   public get isDeactivated(): boolean {
@@ -193,13 +193,6 @@ export default class Customer implements BaseModel {
   }
 
   /**
-   * @param nature type of action done by the employee
-   */
-  public stamp(nature: TrailNature): void {
-    BaseModel.stamp(this.trail, nature);
-  }
-
-  /**
    * @returns a deep copy of the raw data
    */
   public get dataCopy() {
@@ -211,5 +204,12 @@ export default class Customer implements BaseModel {
    */
   public get copy() {
     return new Customer(this.dataCopy);
+  }
+
+  /**
+   * @param nature type of action done by the employee
+   */
+  public stamp(nature: TrailNature): void {
+    BaseModel.stamp(this.trail, nature);
   }
 }

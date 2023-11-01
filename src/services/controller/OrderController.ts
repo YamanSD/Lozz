@@ -40,9 +40,9 @@ import CategoryController from "./CategoryController";
 import StatisticsBlock from "../local_model/StatisticsBlock";
 import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
 import validator from "validator";
+import isEmail from "validator/lib/isEmail";
 import isAlphanumeric = validator.isAlphanumeric;
 import isMobilePhone = validator.isMobilePhone;
-import isEmail from "validator/lib/isEmail";
 
 
 /**
@@ -78,30 +78,6 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
-   * Loads the orders into the statistics iff the operation has not been done
-   * @private
-   */
-  private async loadStatistics(): Promise<void> {
-    if (StatisticsBlock.isLoaded(this.collectionName)) {
-      return;
-    }
-
-    let id = 0;
-
-    // Load non-pending orders
-    while (id++ < this.pivot) {
-      StatisticsBlock.addOrder(await this.get(id.toString()));
-    }
-
-    // Load pending orders
-    for (let pendingId of this.pendingIds) {
-      StatisticsBlock.addOrder(await this.get(pendingId));
-    }
-
-    StatisticsBlock.setLoaded(this.collectionName);
-  }
-
-  /**
    * @returns the products controller for the server
    */
   public get productController(): ProductController {
@@ -121,33 +97,6 @@ export default class OrderController extends BaseController<order> {
       CategoryController,
       this.metaServer
     );
-  }
-
-  /**
-   * @returns the pending pivot storage ID name
-   * @private
-   */
-  private get pendingPivotName() {
-    return this.uniqueId(this.collectionName) + "-pending-pivot";
-  }
-
-  /**
-   * @param increment if true, increments the pending pivot by 1
-   * @returns the local pending pivot
-   */
-  public pendingPivot(increment?: boolean) {
-    if (!this.checkCache(this.pendingPivotName)) {
-      this.storage.set(this.pendingPivotName, 0);
-    }
-
-    let pivot = this.storage.getNumber(this.pendingPivotName) as number;
-
-    if (increment) {
-      pivot++;
-      this.storage.set(this.pendingPivotName, pivot);
-    }
-
-    return pivot;
   }
 
   /**
@@ -186,113 +135,26 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
-   * @param id of the order to be fetched
-   * @returns order model
-   * @throws IdDoesNotExistError if the id does not belong to an order
+   * @returns set of IDs of pending orders
    */
-  public async get(id: string): Promise<Order> {
-    if (id === this.pendingPivotName) {
-      throw new IllegalStateError();
+  public get pendingIds(): Set<string> {
+    let result = new Set<string>();
+
+    for (let id of this.storage.getAllKeys()) {
+      if (this.isPending(id)) {
+        result.add(id);
+      }
     }
 
-    if (!this.isPending(id) && await this.isIdAvailable(id)) {
-      throw new IdDoesNotExistError();
-    }
-
-    const orderData = await this.getData(id) as order;
-
-    let courier = undefined;
-    if (orderData.courier_id !== undefined) {
-      courier = await this.courierController.get(orderData.courier_id);
-    }
-
-    const customer = await this.customerController.get(
-      orderData.customer_id
-    );
-
-    let link = undefined;
-    if (orderData.link_id !== undefined && orderData.link_id !== id) {
-      link = await this.get(orderData.link_id);
-    }
-
-    return new Order(orderData, customer, courier, link);
+    return result;
   }
 
   /**
-   * Quantities not in the inventory are added to the inventory.
-   * Quantities not on display are added to the on display.
-   *
-   * @param id of the order whose quantities moved
-   *        to both inventory & display.
-   * @param stamp to add to the product trail
-   * @param status of the order
+   * @returns the pending pivot storage ID name
    * @private
    */
-  private async transferToBoth(id: string,
-                               stamp: TrailNature,
-                               status: OrderStatus) {
-    const order = await this.get(id);
-
-    await this.updateProducts(id, order.duplicateProducts, stamp, status);
-  }
-
-  /**
-   * @param id of the order whose quantities moved
-   *        to the inventory only.
-   * @param stamp to add to the product trail
-   * @param status of the order
-   * @private
-   */
-  private async transferToInventory(id: string,
-                                    stamp: TrailNature,
-                                    status: OrderStatus) {
-    const order = await this.get(id);
-
-    await this.updateProducts(
-      id,
-      order.convertDestination(true),
-      stamp,
-      status
-    );
-  }
-
-  /**
-   * @param id of the order whose quantities moved
-   *        to the display only.
-   * @param stamp to add to the product trail
-   * @param status of the order
-   * @private
-   */
-  public async transferFromInventory(id: string,
-                                     stamp: TrailNature,
-                                     status: OrderStatus) {
-    const order = await this.get(id);
-
-    await this.updateProducts(
-      id,
-      order.convertDestination(false),
-      stamp,
-      status
-    );
-  }
-
-  /**
-   * @param id of the order operation whose effects revoked completely
-   * @param status of the order
-   */
-  private async revoke(id: string, status: OrderStatus) {
-    const order = await this.get(id);
-
-    if (order.isDeactivated) {
-      throw new OrderAlreadyRevokedError();
-    }
-
-    await this.updateProducts(
-      id,
-      order.zeroQuantityProducts,
-      TrailNature.D,
-      status
-    );
+  private get pendingPivotName() {
+    return this.uniqueId(this.collectionName) + "-pending-pivot";
   }
 
   /**
@@ -329,41 +191,108 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
-   * @param id ID of the order to be updated
-   * @param newProducts new products of the order
-   * @param stamp to add to the product trail
-   * @param status of the order to be updated
+   * @param products to be processed
+   * @returns an object containing product IDs list sorted in descending order
+   *          of their USP quantities & product quantities that map product IDs
+   *          to their USP quantities
+   * @private
    */
-  private async updateProducts(
-    id: string,
-    newProducts: orderProducts,
-    stamp: TrailNature,
-    status?: OrderStatus) {
-    const oldOrder = await this.get(id);
+  private static processUsi(products: orderProducts): {
+    productQuantities: OrderProductQuantities,
+    productUsi: string[]
+  } {
+    let result: OrderProductQuantities = {};
 
-    let products = OrderController.combineProducts(
-      newProducts,
-      oldOrder.products
-    );
+    // Can use a Max Heap to speed up (untested idea)
+    let sums: Generic<number> = {};
 
-    let trail = oldOrder.trail;
-
-    this.stamp(trail, stamp);
-
-    let data = {
-      id: oldOrder.id,
-      products: newProducts,
-      total: this.generateTotal(newProducts),
-      item_count: this.getItemCount(newProducts),
-      [SpecialFields.trail]: trail
-    } as order;
-
-    if (status !== undefined) {
-      data.status = status;
+    for (let usi of Object.keys(products)) {
+      result[usi] = Order.extractQuantities(products[usi]);
+      sums[usi] = result[usi].quantity + result[usi].inv_quantity;
     }
 
-    // Also updates order
-    await this.performQuantityTransaction(products, data, false);
+    let productUsi = Object.keys(result);
+
+    productUsi.sort((rusi_0, rusi_1) => {
+      return sums[rusi_1] - sums[rusi_0];
+    });
+
+    return {
+      productQuantities: result,
+      productUsi: productUsi
+    };
+  }
+
+  /**
+   * @param increment if true, increments the pending pivot by 1
+   * @returns the local pending pivot
+   */
+  public pendingPivot(increment?: boolean) {
+    if (!this.checkCache(this.pendingPivotName)) {
+      this.storage.set(this.pendingPivotName, 0);
+    }
+
+    let pivot = this.storage.getNumber(this.pendingPivotName) as number;
+
+    if (increment) {
+      pivot++;
+      this.storage.set(this.pendingPivotName, pivot);
+    }
+
+    return pivot;
+  }
+
+  /**
+   * @param id of the order to be fetched
+   * @returns order model
+   * @throws IdDoesNotExistError if the id does not belong to an order
+   */
+  public async get(id: string): Promise<Order> {
+    if (id === this.pendingPivotName) {
+      throw new IllegalStateError();
+    }
+
+    if (!this.isPending(id) && await this.isIdAvailable(id)) {
+      throw new IdDoesNotExistError();
+    }
+
+    const orderData = await this.getData(id) as order;
+
+    let courier = undefined;
+    if (orderData.courier_id !== undefined) {
+      courier = await this.courierController.get(orderData.courier_id);
+    }
+
+    const customer = await this.customerController.get(
+      orderData.customer_id
+    );
+
+    let link = undefined;
+    if (orderData.link_id !== undefined && orderData.link_id !== id) {
+      link = await this.get(orderData.link_id);
+    }
+
+    return new Order(orderData, customer, courier, link);
+  }
+
+  /**
+   * @param id of the order whose quantities moved
+   *        to the display only.
+   * @param stamp to add to the product trail
+   * @param status of the order
+   * @private
+   */
+  public async transferFromInventory(id: string,
+                                     stamp: TrailNature,
+                                     status: OrderStatus) {
+    const order = await this.get(id);
+
+    await this.updateProducts(
+      id,
+      order.convertDestination(false),
+      stamp,
+      status
+    );
   }
 
   /**
@@ -431,30 +360,6 @@ export default class OrderController extends BaseController<order> {
   }
 
   /**
-   * @param id to be checked
-   * @returns true if the ID is for a pending order
-   * @private
-   */
-  private isPending(id: string): boolean {
-    return id.startsWith(OrderController.PENDING_FLAG);
-  }
-
-  /**
-   * @returns set of IDs of pending orders
-   */
-  public get pendingIds(): Set<string> {
-    let result = new Set<string>();
-
-    for (let id of this.storage.getAllKeys()) {
-      if (this.isPending(id)) {
-        result.add(id);
-      }
-    }
-
-    return result;
-  }
-
-  /**
    * @param id of the order to be confirmed and created.
    */
   public async confirm(id: string) {
@@ -484,7 +389,7 @@ export default class OrderController extends BaseController<order> {
     } else if (order.status === OrderStatus.confirmed) {
       await this.transferToBoth(id, TrailNature.U, OrderStatus.packaged);
     } else {
-      throw new OrderNotConfirmedNorPendingError()
+      throw new OrderNotConfirmedNorPendingError();
     }
   }
 
@@ -528,163 +433,6 @@ export default class OrderController extends BaseController<order> {
     order.payment = payment;
 
     await this.update(order);
-  }
-
-  /**
-   * @param products to be processed
-   * @returns an object containing product IDs list sorted in descending order
-   *          of their USP quantities & product quantities that map product IDs
-   *          to their USP quantities
-   * @private
-   */
-  private static processUsi(products: orderProducts): {
-    productQuantities: OrderProductQuantities,
-    productUsi: string[]
-  } {
-    let result: OrderProductQuantities = {};
-
-    // Can use a Max Heap to speed up (untested idea)
-    let sums: Generic<number> = {};
-
-    for (let usi of Object.keys(products)) {
-      result[usi] = Order.extractQuantities(products[usi]);
-      sums[usi] = result[usi].quantity + result[usi].inv_quantity;
-    }
-
-    let productUsi = Object.keys(result);
-
-    productUsi.sort((rusi_0, rusi_1) => {
-      return sums[rusi_1] - sums[rusi_0];
-    });
-
-    return {
-      productQuantities: result,
-      productUsi: productUsi
-    };
-  }
-
-  /**
-   * Performs product quantities transaction for the order.
-   *
-   * @param quantities of to be transferred
-   * @param order raw order data to perform the transaction for
-   * @param create if true, generate an order ID
-   * @returns the order ID if the transaction succeeds
-   * @throws EvalError if the transaction fails due to quantities
-   * @private
-   */
-  private async performQuantityTransaction(
-    quantities: orderProducts,
-    order: order,
-    create: boolean) {
-    return await this.runTransaction(async (transaction) => {
-      let products: Product[] = [];
-      let references: Generic = {};
-
-      let {
-        productQuantities, productUsi
-      } = OrderController.processUsi(quantities);
-
-      let newPivot;
-
-      if (create) {
-        const idDoc = await this.idSetDocument.get();
-
-        if (idDoc.exists) {
-          newPivot = (
-            await transaction.get(this.idSetDocument)
-          ).data()?.data + 1;
-        } else {
-          newPivot = this.pivot + 1;
-        }
-      }
-
-      const productController = this.productController;
-      const categoryController = this.categoryController;
-
-      let documentRef, product: Product, data;
-      // Default value to suppress error
-      let usi: string = "";
-
-      /* Read all products, check quantities for each */
-      for (usi of productUsi) {
-        const productId = Product.invertUsi(usi).id;
-        const usp = Product.usiToUsp(usi);
-
-        documentRef = productController.collection.doc(productId);
-        const document = await transaction.get(documentRef);
-
-        if (!document.exists) {
-          throw new ProductNotFoundError();
-        }
-
-        data = document.data() as Generic as product;
-        product = Product.generateWrapper(
-          productId,
-          data,
-          await categoryController.get(data.category_id)
-        );
-
-        let quantityValue = productQuantities[usi];
-
-        // Add to display
-        product.addSingle(
-          quantityValue.quantity,
-          usp,
-          false
-        );
-
-        // Add to inventory
-        product.addSingle(
-          quantityValue.inv_quantity,
-          usp,
-          true
-        );
-
-        products.push(product);
-        references[productId] = documentRef;
-      }
-
-      /* Update products */
-      for (product of products) {
-        await transaction.update(
-          references[product.id],
-          product.suitableQuantities()
-        );
-      }
-
-      if (create) {
-        await transaction.set(
-          this.idSetDocument, {
-          data: newPivot
-        });
-
-        order.id = newPivot;
-
-        await transaction.set(
-          this.collection.doc(newPivot.toString()),
-          await this.fillDataGaps(order)
-        );
-
-        return newPivot.toString();
-      }
-
-      let trail = order[SpecialFields.trail];
-
-      // Do not erase old quantities if the order is going to be
-      // Deactivated
-      if (trail !== undefined && BaseModel.isDeactivated(trail)) {
-        // @ts-ignore
-        delete order.products;
-      }
-
-      await transaction.update(
-        this.collection.doc(order.id),
-        this.fixDataGaps(order)
-      );
-
-      return order.id;
-    });
   }
 
   /**
@@ -801,7 +549,7 @@ export default class OrderController extends BaseController<order> {
    */
   public getPrices(data: basicOrder) {
     let prices: Generic<{
-        price: MonetaryType, cost: MonetaryType
+      price: MonetaryType, cost: MonetaryType
     }> = {};
     const products = data.products;
 
@@ -1015,7 +763,7 @@ export default class OrderController extends BaseController<order> {
     /* check if customer exists, locale-independent */
     if (errorObj.customer_id
       && !(await this.customerController.isIdAvailable(data.customer_id)
-      && !(await this.customerController.isBanned(data.customer_id)))) {
+        && !(await this.customerController.isBanned(data.customer_id)))) {
       errorObj.customer_id = false;
     }
 
@@ -1108,5 +856,257 @@ export default class OrderController extends BaseController<order> {
     }
 
     this.checkErrorObject(errorObj);
+  }
+
+  /**
+   * Loads the orders into the statistics iff the operation has not been done
+   * @private
+   */
+  private async loadStatistics(): Promise<void> {
+    if (StatisticsBlock.isLoaded(this.collectionName)) {
+      return;
+    }
+
+    let id = 0;
+
+    // Load non-pending orders
+    while (id++ < this.pivot) {
+      StatisticsBlock.addOrder(await this.get(id.toString()));
+    }
+
+    // Load pending orders
+    for (let pendingId of this.pendingIds) {
+      StatisticsBlock.addOrder(await this.get(pendingId));
+    }
+
+    StatisticsBlock.setLoaded(this.collectionName);
+  }
+
+  /**
+   * Quantities not in the inventory are added to the inventory.
+   * Quantities not on display are added to the on display.
+   *
+   * @param id of the order whose quantities moved
+   *        to both inventory & display.
+   * @param stamp to add to the product trail
+   * @param status of the order
+   * @private
+   */
+  private async transferToBoth(id: string,
+                               stamp: TrailNature,
+                               status: OrderStatus) {
+    const order = await this.get(id);
+
+    await this.updateProducts(id, order.duplicateProducts, stamp, status);
+  }
+
+  /**
+   * @param id of the order whose quantities moved
+   *        to the inventory only.
+   * @param stamp to add to the product trail
+   * @param status of the order
+   * @private
+   */
+  private async transferToInventory(id: string,
+                                    stamp: TrailNature,
+                                    status: OrderStatus) {
+    const order = await this.get(id);
+
+    await this.updateProducts(
+      id,
+      order.convertDestination(true),
+      stamp,
+      status
+    );
+  }
+
+  /**
+   * @param id of the order operation whose effects revoked completely
+   * @param status of the order
+   */
+  private async revoke(id: string, status: OrderStatus) {
+    const order = await this.get(id);
+
+    if (order.isDeactivated) {
+      throw new OrderAlreadyRevokedError();
+    }
+
+    await this.updateProducts(
+      id,
+      order.zeroQuantityProducts,
+      TrailNature.D,
+      status
+    );
+  }
+
+  /**
+   * @param id ID of the order to be updated
+   * @param newProducts new products of the order
+   * @param stamp to add to the product trail
+   * @param status of the order to be updated
+   */
+  private async updateProducts(
+    id: string,
+    newProducts: orderProducts,
+    stamp: TrailNature,
+    status?: OrderStatus) {
+    const oldOrder = await this.get(id);
+
+    let products = OrderController.combineProducts(
+      newProducts,
+      oldOrder.products
+    );
+
+    let trail = oldOrder.trail;
+
+    this.stamp(trail, stamp);
+
+    let data = {
+      id: oldOrder.id,
+      products: newProducts,
+      total: this.generateTotal(newProducts),
+      item_count: this.getItemCount(newProducts),
+      [SpecialFields.trail]: trail
+    } as order;
+
+    if (status !== undefined) {
+      data.status = status;
+    }
+
+    // Also updates order
+    await this.performQuantityTransaction(products, data, false);
+  }
+
+  /**
+   * @param id to be checked
+   * @returns true if the ID is for a pending order
+   * @private
+   */
+  private isPending(id: string): boolean {
+    return id.startsWith(OrderController.PENDING_FLAG);
+  }
+
+  /**
+   * Performs product quantities transaction for the order.
+   *
+   * @param quantities of to be transferred
+   * @param order raw order data to perform the transaction for
+   * @param create if true, generate an order ID
+   * @returns the order ID if the transaction succeeds
+   * @throws EvalError if the transaction fails due to quantities
+   * @private
+   */
+  private async performQuantityTransaction(
+    quantities: orderProducts,
+    order: order,
+    create: boolean) {
+    return await this.runTransaction(async (transaction) => {
+      let products: Product[] = [];
+      let references: Generic = {};
+
+      let {
+        productQuantities, productUsi
+      } = OrderController.processUsi(quantities);
+
+      let newPivot;
+
+      if (create) {
+        const idDoc = await this.idSetDocument.get();
+
+        if (idDoc.exists) {
+          newPivot = (
+            await transaction.get(this.idSetDocument)
+          ).data()?.data + 1;
+        } else {
+          newPivot = this.pivot + 1;
+        }
+      }
+
+      const productController = this.productController;
+      const categoryController = this.categoryController;
+
+      let documentRef, product: Product, data;
+      // Default value to suppress error
+      let usi: string = "";
+
+      /* Read all products, check quantities for each */
+      for (usi of productUsi) {
+        const productId = Product.invertUsi(usi).id;
+        const usp = Product.usiToUsp(usi);
+
+        documentRef = productController.collection.doc(productId);
+        const document = await transaction.get(documentRef);
+
+        if (!document.exists) {
+          throw new ProductNotFoundError();
+        }
+
+        data = document.data() as Generic as product;
+        product = Product.generateWrapper(
+          productId,
+          data,
+          await categoryController.get(data.category_id)
+        );
+
+        let quantityValue = productQuantities[usi];
+
+        // Add to display
+        product.addSingle(
+          quantityValue.quantity,
+          usp,
+          false
+        );
+
+        // Add to inventory
+        product.addSingle(
+          quantityValue.inv_quantity,
+          usp,
+          true
+        );
+
+        products.push(product);
+        references[productId] = documentRef;
+      }
+
+      /* Update products */
+      for (product of products) {
+        await transaction.update(
+          references[product.id],
+          product.suitableQuantities()
+        );
+      }
+
+      if (create) {
+        await transaction.set(
+          this.idSetDocument, {
+            data: newPivot
+          });
+
+        order.id = newPivot;
+
+        await transaction.set(
+          this.collection.doc(newPivot.toString()),
+          await this.fillDataGaps(order)
+        );
+
+        return newPivot.toString();
+      }
+
+      let trail = order[SpecialFields.trail];
+
+      // Do not erase old quantities if the order is going to be
+      // Deactivated
+      if (trail !== undefined && BaseModel.isDeactivated(trail)) {
+        // @ts-ignore
+        delete order.products;
+      }
+
+      await transaction.update(
+        this.collection.doc(order.id),
+        this.fixDataGaps(order)
+      );
+
+      return order.id;
+    });
   }
 }

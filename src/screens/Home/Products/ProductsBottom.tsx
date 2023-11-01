@@ -32,9 +32,11 @@ const topProductCount = 5;
  * @param setPercentage percentage setter for the top component
  * @constructor
  */
-const ProductsBottom = ({ timescale,
-                       setStatistics,
-                       setPercentage }: Properties) => {
+const ProductsBottom = ({
+                          timescale,
+                          setStatistics,
+                          setPercentage
+                        }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
 
@@ -66,15 +68,15 @@ const ProductsBottom = ({ timescale,
     if (timescale === Timescale.H
       || timescale === Timescale.W
       || (position !== 0
-      && position !== n
-      && position !== Math.floor(n / 2))) {
+        && position !== n
+        && position !== Math.floor(n / 2))) {
       switch (timescale) {
         case Timescale.H:
           const hours = date.getHours();
           return (position <= n - 1)
           && (position === n - 1
-          || (position + 1) % 5 === 0
-          || position === 0)
+            || (position + 1) % 5 === 0
+            || position === 0)
             ? `${(hours + 11) % 12 + 1}:00${hours < 12 ? "A" : "P"}M`
             : "";
         case Timescale.W:
@@ -92,7 +94,7 @@ const ProductsBottom = ({ timescale,
       case Timescale.Y:
         return date.getFullYear().toString();
     }
-  }
+  };
 
   /**
    * Generates the statistics data based on the current timescale
@@ -129,7 +131,7 @@ const ProductsBottom = ({ timescale,
 
     return {
       labels: temp.tags,
-      datasets: [{ data: temp.data }],
+      datasets: [{ data: temp.data }]
     };
   };
 
@@ -199,13 +201,13 @@ const ProductsBottom = ({ timescale,
     <>
       <Surface
         style={[
-        Layout.justifyContentAround,
+          Layout.justifyContentAround,
           {
             height: 300,
             borderRadius: 10,
-            marginBottom: 20,
+            marginBottom: 20
           }
-      ]}
+        ]}
         elevation={elevation}
       >
         {/* Net value header */}
@@ -213,11 +215,11 @@ const ProductsBottom = ({ timescale,
           Layout.row,
           Layout.rowHCenter,
           Layout.justifyContentBetween,
-          { padding: 25, paddingTop: 35, paddingBottom: 45}
+          { padding: 25, paddingTop: 35, paddingBottom: 45 }
         ]}>
           <Text style={{
             fontWeight: "600",
-            fontSize: 30,
+            fontSize: 30
           }}>
             Sold Quantities
           </Text>
@@ -230,18 +232,18 @@ const ProductsBottom = ({ timescale,
           fromZero={true}
           withOuterLines={false}
           style={{
-            marginBottom: 20,
+            marginBottom: 20
           }}
           chartConfig={{
 
             decimalPlaces: 0,
             propsForBackgroundLines: {
               strokeDasharray: [],
-              opacity: 0.2,
+              opacity: 0.2
             },
             propsForLabels: {
               fontWeight: "bold",
-              fontSize: 10,
+              fontSize: 10
             },
             backgroundGradientFrom: backgroundColor,
             backgroundGradientTo: backgroundColor,
@@ -264,7 +266,7 @@ const ProductsBottom = ({ timescale,
           {
             height: 300,
             borderRadius: 10,
-            marginBottom: 20,
+            marginBottom: 20
           }
         ]}
         elevation={elevation}
@@ -274,11 +276,11 @@ const ProductsBottom = ({ timescale,
           Layout.row,
           Layout.rowHCenter,
           Layout.justifyContentBetween,
-          { padding: 25, paddingTop: 35, paddingBottom: 45}
+          { padding: 25, paddingTop: 35, paddingBottom: 45 }
         ]}>
           <Text style={{
             fontWeight: "600",
-            fontSize: 30,
+            fontSize: 30
           }}>
             Top Selling Products
           </Text>
@@ -292,22 +294,22 @@ const ProductsBottom = ({ timescale,
           xLabelsOffset={0}
           fromZero={true}
           style={{
-            marginBottom: 20,
+            marginBottom: 20
           }}
           chartConfig={{
             decimalPlaces: 0,
             propsForBackgroundLines: {
               strokeDasharray: [],
-              opacity: 0.2,
+              opacity: 0.2
             },
             propsForLabels: {
               fontWeight: "bold",
-              fontSize: 10,
+              fontSize: 10
             },
             backgroundGradientFrom: backgroundColor,
             backgroundGradientTo: backgroundColor,
             color: colorFunction,
-            labelColor: labelColorFunction,
+            labelColor: labelColorFunction
           }}
         />
       </Surface>

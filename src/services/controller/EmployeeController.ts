@@ -8,9 +8,9 @@ import BaseModel from "../model/BaseModel";
 import { NotStatisticalError } from "./Errors";
 import { AlphanumericLocale } from "validator/lib/isAlphanumeric";
 import validator from "validator";
-import isAlpha = validator.isAlpha;
 import { isDate } from "lodash";
 import isEmail from "validator/lib/isEmail";
+import isAlpha = validator.isAlpha;
 import isMobilePhone = validator.isMobilePhone;
 import isAlphanumeric = validator.isAlphanumeric;
 
@@ -46,20 +46,6 @@ export default class EmployeeController extends BaseController<employee> {
   }
 
   /**
-   * Activates the listener for the employee collection & employee database
-   * online detection.
-   * @protected
-   */
-  protected activateListener() {
-    super.activateListener();
-    database()
-      .ref(`/${CollectionInfo.online_detection}/`)
-      .on('value', snapshot => {
-        EmployeeController.onlineList = snapshot.val();
-    });
-  }
-
-  /**
    * @returns object containing user IDs & their status
    */
   public get onlineList() {
@@ -89,6 +75,20 @@ export default class EmployeeController extends BaseController<employee> {
    */
   public async update(model: Employee) {
     return await this.genericUpdate(model, model.id);
+  }
+
+  /**
+   * Activates the listener for the employee collection & employee database
+   * online detection.
+   * @protected
+   */
+  protected activateListener() {
+    super.activateListener();
+    database()
+      .ref(`/${CollectionInfo.online_detection}/`)
+      .on("value", snapshot => {
+        EmployeeController.onlineList = snapshot.val();
+      });
   }
 
   /**

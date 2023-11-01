@@ -35,13 +35,6 @@ export default class ProvinceInformation implements BaseModel {
   }
 
   /**
-   * @param value new province information
-   */
-  public set information(value: provinceInformation) {
-    this.informationValue = value;
-  }
-
-  /**
    * @returns the province information
    */
   public get information() {
@@ -49,11 +42,10 @@ export default class ProvinceInformation implements BaseModel {
   }
 
   /**
-   * @param province to be checked
-   * @returns true if the province is valid
+   * @param value new province information
    */
-  public isValid(province: string): boolean {
-    return this.provinces.indexOf(province) !== -1;
+  public set information(value: provinceInformation) {
+    this.informationValue = value;
   }
 
   /**
@@ -82,5 +74,13 @@ export default class ProvinceInformation implements BaseModel {
    */
   public get copy(): ProvinceInformation {
     return new ProvinceInformation(this.dataCopy);
+  }
+
+  /**
+   * @param province to be checked
+   * @returns true if the province is valid
+   */
+  public isValid(province: string): boolean {
+    return this.provinces.indexOf(province) !== -1;
   }
 }

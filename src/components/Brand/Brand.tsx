@@ -1,20 +1,20 @@
-import React from 'react';
-import { View, Image, DimensionValue } from 'react-native';
-import { useTheme } from '../../hooks';
+import React from "react";
+import { DimensionValue, Image, View } from "react-native";
+import { useTheme } from "../../hooks";
 
 type Props = {
   height?: DimensionValue;
   width?: DimensionValue;
-  mode?: 'contain' | 'cover' | 'stretch' | 'repeat' | 'center';
+  mode?: "contain" | "cover" | "stretch" | "repeat" | "center";
 };
 
 const Brand = ({ height, width, mode }: Props) => {
   const { Layout, Images } = useTheme();
 
   return (
-    <View testID={'brand-img-wrapper'} style={{ height, width }}>
+    <View testID={"brand-img-wrapper"} style={{ height, width }}>
       <Image
-        testID={'brand-img'}
+        testID={"brand-img"}
         style={Layout.fullSize}
         source={Images.logo}
         resizeMode={mode}
@@ -26,7 +26,7 @@ const Brand = ({ height, width, mode }: Props) => {
 Brand.defaultProps = {
   height: 200,
   width: 200,
-  mode: 'contain',
+  mode: "contain"
 };
 
 export default Brand;

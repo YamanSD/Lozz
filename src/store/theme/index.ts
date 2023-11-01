@@ -1,32 +1,32 @@
-import { createSlice } from '@reduxjs/toolkit';
-import themes from '../../theme/themes';
+import { createSlice } from "@reduxjs/toolkit";
+import themes from "../../theme/themes";
 
 const slice = createSlice({
-  name: 'theme',
-  initialState: { theme: 'default', darkMode: null } as ThemeState,
+  name: "theme",
+  initialState: { theme: "default", darkMode: null } as ThemeState,
   reducers: {
     changeTheme: (state, { payload: { theme, darkMode } }: ThemePayload) => {
-      if (typeof theme !== 'undefined') {
+      if (typeof theme !== "undefined") {
         state.theme = theme;
       }
-      if (typeof darkMode !== 'undefined') {
+      if (typeof darkMode !== "undefined") {
         state.darkMode = darkMode;
       }
     },
     setDefaultTheme: (
       state,
-      { payload: { theme, darkMode } }: ThemePayload,
+      { payload: { theme, darkMode } }: ThemePayload
     ) => {
       if (!state.theme) {
-        if (typeof theme !== 'undefined') {
+        if (typeof theme !== "undefined") {
           state.theme = theme;
         }
-        if (typeof darkMode !== 'undefined') {
+        if (typeof darkMode !== "undefined") {
           state.darkMode = darkMode;
         }
       }
-    },
-  },
+    }
+  }
 });
 
 export const { changeTheme, setDefaultTheme } = slice.actions;
@@ -41,7 +41,7 @@ type DarkProps<T> = {
 type PropsWithoutDark<T> = Omit<T, DarkProps<T>>;
 
 export type ThemeState = {
-  theme: 'default' | keyof PropsWithoutDark<typeof themes>;
+  theme: "default" | keyof PropsWithoutDark<typeof themes>;
   darkMode: boolean | null;
 };
 

@@ -34,46 +34,6 @@ export default class Expense implements BaseModel {
   }
 
   /**
-   * @param data raw expense data
-   * @param associate potential associate
-   * @throws Error instance if the data and the associate are incompatible
-   * @private
-   */
-  private static checkAssociate(data: expense,
-                                associate?: Associate): void {
-    /*
-     * Each checks whether the data has a reference
-     * to a vendor, employee, and a courier
-     */
-    const to_vendor = data.vendor_id !== undefined,
-          to_employee = data.employee_id !== undefined,
-          to_courier = data.courier_id !== undefined;
-
-    // True means the expense is associated with an instance
-    const is_associated = to_courier || to_employee || to_vendor;
-
-    /*
-     * Each checks whether the data has a reference exclusively to
-     * a vendor, an employee, or a courier
-     */
-    const valid_vendor = to_vendor && !(to_employee || to_courier),
-          valid_employee = to_employee && !(to_vendor || to_courier),
-          valid_courier = to_courier && !(to_employee || to_vendor);
-
-    if ((associate === undefined && is_associated)
-      || (associate instanceof Employee && !valid_employee)
-      || (associate instanceof Vendor && !valid_vendor)
-      || (associate instanceof Courier && !valid_courier)) {
-      throw new Error(
-        `Invalid expense instance linkage, 
-        typeof associate: ${typeof associate}, 
-        validity (E, V, C): (${valid_employee}, ${valid_vendor}, ${valid_courier}), 
-        data: ${data}`
-      );
-    }
-  }
-
-  /**
    * @returns the stored raw data
    */
   public get data(): expense {
@@ -102,66 +62,17 @@ export default class Expense implements BaseModel {
   }
 
   /**
-   * @returns the value of the expense
-   */
-  public get value() {
-    return new Monetary(this.data.value);
-  }
-
-  /**
-   * @returns the date of the expense
-   */
-  public get date() {
-    return BaseModel.convertTimestamp(this.data.date);
-  }
-
-  /**
-   * @returns the employee related with the expense if linked,
-   *          otherwise undefined
-   */
-  public get employee(): Employee | undefined {
-    return this.is_employee ? this.associate as Employee : undefined;
-  }
-
-  /**
-   * @returns the courier related with the expense if linked,
-   *          otherwise undefined
-   */
-  public get courier(): Courier | undefined {
-    return this.is_courier ? this.associate as Courier : undefined;
-  }
-
-  /**
-   * @returns the vendor related with the vendor if linked,
-   *          otherwise undefined
-   */
-  public get vendor(): Vendor | undefined {
-    return this.is_vendor ? this.associate as Vendor : undefined;
-  }
-
-  public get restock(): Restock | undefined {
-    return this.is_invoice ? this.associate as Restock : undefined;
-  }
-
-  /**
-   * @returns the trail
-   */
-  public get trail(): TrailType {
-    return this.data.trail;
-  }
-
-  /**
-   * @param value new value of the trail
-   */
-  public set trail(value: TrailType) {
-    this.data.trail = value;
-  }
-
-  /**
    * @param value new description of the expense
    */
   public set description(value) {
     this.data.description = value;
+  }
+
+  /**
+   * @returns the value of the expense
+   */
+  public get value() {
+    return new Monetary(this.data.value);
   }
 
   /**
@@ -180,10 +91,25 @@ export default class Expense implements BaseModel {
   }
 
   /**
+   * @returns the date of the expense
+   */
+  public get date() {
+    return BaseModel.convertTimestamp(this.data.date);
+  }
+
+  /**
    * @param value new date of the expense
    */
   public set date(value) {
     this.data.date = value;
+  }
+
+  /**
+   * @returns the employee related with the expense if linked,
+   *          otherwise undefined
+   */
+  public get employee(): Employee | undefined {
+    return this.is_employee ? this.associate as Employee : undefined;
   }
 
   /**
@@ -203,6 +129,14 @@ export default class Expense implements BaseModel {
   }
 
   /**
+   * @returns the courier related with the expense if linked,
+   *          otherwise undefined
+   */
+  public get courier(): Courier | undefined {
+    return this.is_courier ? this.associate as Courier : undefined;
+  }
+
+  /**
    * @param value new courier of the expense
    * @throws EvalError if the expense is not courier linked
    * @throws EvalError if the value is undefined
@@ -218,6 +152,14 @@ export default class Expense implements BaseModel {
   }
 
   /**
+   * @returns the vendor related with the vendor if linked,
+   *          otherwise undefined
+   */
+  public get vendor(): Vendor | undefined {
+    return this.is_vendor ? this.associate as Vendor : undefined;
+  }
+
+  /**
    * @param value new vendor of the expense
    * @throws EvalError if the expense is not vendor linked
    * @throws EvalError if the value is undefined
@@ -230,6 +172,24 @@ export default class Expense implements BaseModel {
     } else {
       throw new EvalError("Associate is not vendor");
     }
+  }
+
+  public get restock(): Restock | undefined {
+    return this.is_invoice ? this.associate as Restock : undefined;
+  }
+
+  /**
+   * @returns the trail
+   */
+  public get trail(): TrailType {
+    return this.data.trail;
+  }
+
+  /**
+   * @param value new value of the trail
+   */
+  public set trail(value: TrailType) {
+    this.data.trail = value;
   }
 
   /**
@@ -275,13 +235,6 @@ export default class Expense implements BaseModel {
   }
 
   /**
-   * @param nature type of action done by the employee
-   */
-  public stamp(nature: TrailNature): void {
-    BaseModel.stamp(this.trail, nature);
-  }
-
-  /**
    * @returns a deep copy of the raw data
    */
   public get dataCopy() {
@@ -293,6 +246,53 @@ export default class Expense implements BaseModel {
    */
   public get copy() {
     return new Expense(this.dataCopy, this.associate);
+  }
+
+  /**
+   * @param data raw expense data
+   * @param associate potential associate
+   * @throws Error instance if the data and the associate are incompatible
+   * @private
+   */
+  private static checkAssociate(data: expense,
+                                associate?: Associate): void {
+    /*
+     * Each checks whether the data has a reference
+     * to a vendor, employee, and a courier
+     */
+    const to_vendor = data.vendor_id !== undefined,
+      to_employee = data.employee_id !== undefined,
+      to_courier = data.courier_id !== undefined;
+
+    // True means the expense is associated with an instance
+    const is_associated = to_courier || to_employee || to_vendor;
+
+    /*
+     * Each checks whether the data has a reference exclusively to
+     * a vendor, an employee, or a courier
+     */
+    const valid_vendor = to_vendor && !(to_employee || to_courier),
+      valid_employee = to_employee && !(to_vendor || to_courier),
+      valid_courier = to_courier && !(to_employee || to_vendor);
+
+    if ((associate === undefined && is_associated)
+      || (associate instanceof Employee && !valid_employee)
+      || (associate instanceof Vendor && !valid_vendor)
+      || (associate instanceof Courier && !valid_courier)) {
+      throw new Error(
+        `Invalid expense instance linkage, 
+        typeof associate: ${typeof associate}, 
+        validity (E, V, C): (${valid_employee}, ${valid_vendor}, ${valid_courier}), 
+        data: ${data}`
+      );
+    }
+  }
+
+  /**
+   * @param nature type of action done by the employee
+   */
+  public stamp(nature: TrailNature): void {
+    BaseModel.stamp(this.trail, nature);
   }
 }
 

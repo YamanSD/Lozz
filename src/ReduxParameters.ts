@@ -4,5 +4,5 @@ export default {
   isConnected: "NetworkConnection",
   connectionDetails: "ConnectionDetails",
   connectionType: "NetworkConnectionType",
-  currentEmployee: "currentEmployeeData",
-}
+  currentEmployee: "currentEmployeeData"
+};

@@ -1,11 +1,11 @@
- import 'react-native-gesture-handler';
+import "react-native-gesture-handler";
 import React, { useEffect, useState } from "react";
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/lib/integration/react';
-import { store, persistor, reduxStorage } from "./store";
-import database from '@react-native-firebase/database';
-import ApplicationNavigator from './navigators/Application';
-import './translations';
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/lib/integration/react";
+import { persistor, reduxStorage, store } from "./store";
+import database from "@react-native-firebase/database";
+import ApplicationNavigator from "./navigators/Application";
+import "./translations";
 import auth from "@react-native-firebase/auth";
 import ReduxParameters from "./ReduxParameters";
 import { NotAuthorizedError } from "./services/controller/Errors";
@@ -13,7 +13,8 @@ import CollectionNames from "./CollectionInfo";
 import DependencyTree from "./services/controller/DependencyTree";
 
 /* better performance, uses native views */
-import { enableScreens } from 'react-native-screens';
+import { enableScreens } from "react-native-screens";
+
 enableScreens();
 
 

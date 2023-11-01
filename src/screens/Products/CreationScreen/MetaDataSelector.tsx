@@ -1,8 +1,7 @@
-import { Surface, Text } from "react-native-paper";
+import { Surface, Text, useTheme as usePaperTheme } from "react-native-paper";
 import React, { useState } from "react";
 import { useTheme as useBoilerTheme } from "../../../hooks";
 import { Dropdown } from "react-native-element-dropdown";
-import { useTheme as usePaperTheme } from "react-native-paper";
 import { StyleProp, TextStyle } from "react-native";
 import { DependencyTree } from "../../../services";
 import VendorListItem from "./VendorCategory/VendorListItem";
@@ -14,9 +13,9 @@ import CategoryOptions from "./VendorCategory/CategoryOptions";
  */
 type Properties = {
   vendorId: string,
-  setVendorId:  React.Dispatch<React.SetStateAction<string>>,
+  setVendorId: React.Dispatch<React.SetStateAction<string>>,
   categoryId: string,
-  setCategoryId:  React.Dispatch<React.SetStateAction<string>>,
+  setCategoryId: React.Dispatch<React.SetStateAction<string>>,
 };
 
 /**
@@ -26,8 +25,10 @@ type Properties = {
  * @param setCategoryId modifies the categoryId
  * @constructor
  */
-const MetaDataSelector = ({vendorId, setVendorId,
-                            categoryId, setCategoryId}: Properties) => {
+const MetaDataSelector = ({
+                            vendorId, setVendorId,
+                            categoryId, setCategoryId
+                          }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
 
@@ -60,14 +61,14 @@ const MetaDataSelector = ({vendorId, setVendorId,
         width: "95%",
         marginTop: 20,
         borderRadius: 10,
-        padding: 25,
+        padding: 25
       }
     ]} elevation={4}>
       {/* vendor selection */}
       <Text style={{
         fontWeight: "600",
         fontSize: 21,
-        marginBottom: 7,
+        marginBottom: 7
       }}>
         Vendor
       </Text>
@@ -79,7 +80,7 @@ const MetaDataSelector = ({vendorId, setVendorId,
           };
         })}
         renderItem={({ vendorId }) => {
-          return <VendorListItem vendorId={vendorId} />
+          return <VendorListItem vendorId={vendorId} />;
         }}
         placeholder={vendorPlaceholder}
         placeholderStyle={textStyle}
@@ -90,7 +91,7 @@ const MetaDataSelector = ({vendorId, setVendorId,
             backgroundColor: theme.colors.secondary,
             paddingLeft: 10,
             paddingRight: 5,
-            borderRadius: 5,
+            borderRadius: 5
           }
         ]}
         labelField={"vendorId"}
@@ -112,7 +113,7 @@ const MetaDataSelector = ({vendorId, setVendorId,
         fontWeight: "600",
         fontSize: 21,
         marginBottom: 7,
-        marginTop: 15,
+        marginTop: 15
       }}>
         Category
       </Text>
@@ -125,7 +126,7 @@ const MetaDataSelector = ({vendorId, setVendorId,
         })}
         renderItem={({ categoryId }) => {
           return <CategoryListItem categoryId={categoryId}
-                                   setIsValid={setIsValid} />
+                                   setIsValid={setIsValid} />;
         }}
         placeholder={categoryPlaceholder}
         placeholderStyle={textStyle}
@@ -136,7 +137,7 @@ const MetaDataSelector = ({vendorId, setVendorId,
             backgroundColor: theme.colors.secondary,
             paddingLeft: 10,
             paddingRight: 5,
-            borderRadius: 5,
+            borderRadius: 5
           }
         ]}
         labelField={"categoryId"}
@@ -160,7 +161,7 @@ const MetaDataSelector = ({vendorId, setVendorId,
         fontWeight: "600",
         fontSize: 21,
         marginBottom: 7,
-        marginTop: 15,
+        marginTop: 15
       }}>
         Category options
       </Text>

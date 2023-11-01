@@ -22,8 +22,10 @@ type Properties = {
  * @param setQuantities modifies the quantities
  * @constructor
  */
-const QuantityInputCol = ({ usp, quantities,
-                       setQuantities }: Properties) => {
+const QuantityInputCol = ({
+                            usp, quantities,
+                            setQuantities
+                          }: Properties) => {
   const { Layout } = useBoilerTheme();
   const theme = usePaperTheme();
 
@@ -53,7 +55,7 @@ const QuantityInputCol = ({ usp, quantities,
                           const actualValue = Math.max(counter - 1, 0);
                           setCounter(actualValue);
                           quantities[usp] = actualValue;
-                          setQuantities({...quantities});
+                          setQuantities({ ...quantities });
                         }}>
         <Icon name={"minus"}
               size={24}
@@ -85,25 +87,25 @@ const QuantityInputCol = ({ usp, quantities,
 
                     setCounter(actualValue);
                     quantities[usp] = actualValue;
-                    setQuantities({...quantities});
+                    setQuantities({ ...quantities });
                   }}
                   outlineStyle={[
                     {
                       backgroundColor: textFieldBackgroundColor,
                       borderRadius: 50,
-                      borderWidth: 0,
+                      borderWidth: 0
                     }
                   ]}
                   contentStyle={{
                     fontWeight: "500",
-                    fontSize: 18,
+                    fontSize: 18
                   }}
                   style={[
                     Layout.center,
                     {
                       marginBottom: 6,
                       width: 120,
-                      height: 40,
+                      height: 40
                     }
                   ]}
       />
@@ -111,7 +113,7 @@ const QuantityInputCol = ({ usp, quantities,
         const actualValue = Math.min(counter + 1, MaxValue);
         setCounter(actualValue);
         quantities[usp] = actualValue;
-        setQuantities({...quantities});
+        setQuantities({ ...quantities });
       }}>
         <Icon name={"plus"}
               size={24}
@@ -119,6 +121,6 @@ const QuantityInputCol = ({ usp, quantities,
       </TouchableOpacity>
     </View>
   );
-}
+};
 
 export default QuantityInputCol;

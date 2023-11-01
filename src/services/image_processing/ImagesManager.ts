@@ -1,11 +1,6 @@
-import RNFS from 'react-native-fs';
-import {
-  CheckDirError,
-  ImageDownloadError,
-  ImageNameExistsError,
-  NoConnectionError
-} from "../controller/Errors";
-import { firebase } from '@react-native-firebase/storage';
+import RNFS from "react-native-fs";
+import { CheckDirError, ImageDownloadError, ImageNameExistsError, NoConnectionError } from "../controller/Errors";
+import { firebase } from "@react-native-firebase/storage";
 import CollectionInfo from "../../CollectionInfo";
 import BaseController from "../controller/BaseController";
 
@@ -16,73 +11,6 @@ export default class ImagesManager {
   /* path for the directory */
   private static directory =
     `${RNFS.DocumentDirectoryPath}/${CollectionInfo.app_name}/images/`;
-
-  /**
-   * Check the cache directory, if it exists do nothing.
-   * Otherwise, create it.
-   */
-  private static async checkDirectory() {
-    try {
-      if (await RNFS.exists(this.directory)) {
-        return;
-      }
-
-      await RNFS.mkdir(this.directory);
-    } catch (error) {
-      throw new CheckDirError();
-    }
-  }
-
-  /**
-   * @param url to generate the local path for
-   * @returns local path for the URL
-   */
-  private static getPath(url: string): string {
-    return `${this.directory}${url.split('/').pop()}`;
-  }
-
-  /**
-   * Downloads an image from the provided URL and stores it in cache.
-   * @param imageUrl - The URL of the image to download.
-   * @returns Promise that resolves to the local path of the downloaded image.
-   */
-  private static async downloadImage(imageUrl: string): Promise<string | undefined> {
-    if (!BaseController.isConnected) {
-      throw new ImageDownloadError();
-    }
-
-    /* check the images directory */
-    await this.checkDirectory();
-
-    const imagePath = this.getPath(imageUrl);
-    const response = await RNFS.downloadFile({
-      fromUrl: imageUrl,
-      toFile: imagePath,
-    }).promise;
-
-    if (response.statusCode === 200) {
-      return imagePath;
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Copies the image from "dest" to "src".
-   *
-   * @param src source path for the image
-   * @param dest destination path for the image
-   * @private
-   */
-  private static async setCache(src: string, dest: string) {
-    const imagePath = this.getPath(dest);
-
-    if (await RNFS.exists(imagePath)) {
-      throw new ImageNameExistsError();
-    }
-
-    await RNFS.copyFile(src, imagePath);
-  }
 
   /**
    * @returns the firebase storage
@@ -152,5 +80,72 @@ export default class ImagesManager {
     if (await RNFS.exists(this.directory)) {
       await RNFS.unlink(this.directory);
     }
+  }
+
+  /**
+   * Check the cache directory, if it exists do nothing.
+   * Otherwise, create it.
+   */
+  private static async checkDirectory() {
+    try {
+      if (await RNFS.exists(this.directory)) {
+        return;
+      }
+
+      await RNFS.mkdir(this.directory);
+    } catch (error) {
+      throw new CheckDirError();
+    }
+  }
+
+  /**
+   * @param url to generate the local path for
+   * @returns local path for the URL
+   */
+  private static getPath(url: string): string {
+    return `${this.directory}${url.split("/").pop()}`;
+  }
+
+  /**
+   * Downloads an image from the provided URL and stores it in cache.
+   * @param imageUrl - The URL of the image to download.
+   * @returns Promise that resolves to the local path of the downloaded image.
+   */
+  private static async downloadImage(imageUrl: string): Promise<string | undefined> {
+    if (!BaseController.isConnected) {
+      throw new ImageDownloadError();
+    }
+
+    /* check the images directory */
+    await this.checkDirectory();
+
+    const imagePath = this.getPath(imageUrl);
+    const response = await RNFS.downloadFile({
+      fromUrl: imageUrl,
+      toFile: imagePath
+    }).promise;
+
+    if (response.statusCode === 200) {
+      return imagePath;
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Copies the image from "dest" to "src".
+   *
+   * @param src source path for the image
+   * @param dest destination path for the image
+   * @private
+   */
+  private static async setCache(src: string, dest: string) {
+    const imagePath = this.getPath(dest);
+
+    if (await RNFS.exists(imagePath)) {
+      throw new ImageNameExistsError();
+    }
+
+    await RNFS.copyFile(src, imagePath);
   }
 }

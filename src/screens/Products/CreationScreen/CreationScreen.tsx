@@ -1,17 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { SafeAreaView, ScrollView, StyleProp, TextStyle } from "react-native";
-import { Appbar, Text, Button } from "react-native-paper";
+import { Appbar, Button, Text, useTheme as usePaperTheme } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTheme as useBoilerTheme } from "../../../hooks";
-import { useTheme as usePaperTheme } from "react-native-paper";
 import GeneralInfoSelector from "./GeneralInfoSelector";
-import {
-  DependencyTree,
-  emptyQuantities,
-  Generic,
-  MonetaryType,
-  QuantityType
-} from "../../../services";
+import { DependencyTree, emptyQuantities, Generic, MonetaryType, QuantityType } from "../../../services";
 import InstructionSelector from "./InstructionSelector";
 import MetaDataSelector from "./MetaDataSelector";
 import QuantitiesSelector from "./QuantitiesSelector";
@@ -96,17 +89,17 @@ const CreationScreen = () => {
   const textStyle: StyleProp<TextStyle> = {
     color: theme.colors.secondary,
     fontWeight: "500",
-    fontSize: 16,
+    fontSize: 16
   };
 
   return (
     <SafeAreaView style={[
-      Layout.fullSize,
+      Layout.fullSize
     ]}>
       <Appbar.Header mode={"center-aligned"} style={
         [Layout.justifyContentBetween,
           {
-            backgroundColor: theme.colors.primary,
+            backgroundColor: theme.colors.primary
           }
         ]}>
         <Button onPress={navigation.goBack} mode={"text"}>
@@ -115,7 +108,7 @@ const CreationScreen = () => {
           </Text>
         </Button>
 
-        <Text style={{...textStyle, fontSize: 18}}>New Product</Text>
+        <Text style={{ ...textStyle, fontSize: 18 }}>New Product</Text>
 
         <Button onPress={navigation.goBack} mode={"text"}>
           <Text style={textStyle}>

@@ -30,13 +30,13 @@ const CategoryOptions = ({ categoryId }: Properties) => {
     });
   }, [categoryId]);
 
-  const keys = category?.option_keys
+  const keys = category?.option_keys;
 
   return (
     <View>
       {keys !== undefined ?
         (
-            keys.map((key) => {
+          keys.map((key) => {
             const optionValues = category?.option_sets;
 
             if (optionValues === undefined) {
@@ -46,7 +46,7 @@ const CategoryOptions = ({ categoryId }: Properties) => {
             return <CategoryOptionRow key={key}
                                       optionKey={key}
                                       optionValues={optionValues[key]}
-            />
+            />;
           })
         ) : null
       }

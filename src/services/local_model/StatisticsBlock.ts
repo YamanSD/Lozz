@@ -1,8 +1,4 @@
-import {
-  dissectedTimestamp,
-  OrderStatus,
-  statisticsBlock,
-  TrailType } from "../model/types";
+import { dissectedTimestamp, OrderStatus, statisticsBlock, TrailType } from "../model/types";
 import { MMKV } from "react-native-mmkv";
 import CollectionInfo from "../../CollectionInfo";
 import Monetary from "./Monetary";
@@ -92,9 +88,6 @@ type DateMappingFunction = (d: Date, p: number, n: number)
  * Responsible for loading & saving statistical data
  */
 export default class StatisticsBlock {
-  /* raw statistics data */
-  private dataValue: statisticsBlock;
-
   /* end border indexes for timescales */
   private static IndexBorders = {
     [TimeUnit.year]: [0, 4],
@@ -102,25 +95,21 @@ export default class StatisticsBlock {
     [TimeUnit.day]: [6, 8],
     [TimeUnit.hour]: [8, 10]
   };
-
   /* timestamp used for the combined instance */
   private static combinedTag = "combined";
-
   /* key of the Total StatisticsBlock */
   private static totalKey: string = "total";
-
   /* persistence instance to store the statistics data */
   private static storage: MMKV = new MMKV({
     id: `${CollectionInfo.app_name}-${CollectionInfo.statistics.name}-mmkv`,
     encryptionKey: CollectionInfo.statistics.name
   });
-
   /* date accuracy of the timestamps */
   private static accuracy: number = 10;
-
   /* ID for the is loaded flag */
   private static isLoadedId: string = "isloaded-flag-mmkv";
-
+  /* raw statistics data */
+  private dataValue: statisticsBlock;
   /* dissected timestamp object */
   private dissected_timestamp: dissectedTimestamp;
 
@@ -134,18 +123,32 @@ export default class StatisticsBlock {
   }
 
   /**
-   * Resets all statistics
+   * @returns the current timestamp
    */
-  public static clear(): void {
-    this.storage.clearAll();
+  public static get currentTimestamp(): string {
+    return this.invertDate(new Date());
   }
 
   /**
-   * @returns the MMKV storage instance for the statistics
+   * @returns default zeroed order counts
    * @private
    */
-  protected get storage() {
-    return StatisticsBlock.storage;
+  protected static get zeroOrderCounts() {
+    const zero = {
+      actual: 0,
+      aggregate: 0
+    };
+
+    return {
+      [OrderStatus.pending]: BaseModel.deepCopy(zero),
+      [OrderStatus.confirmed]: BaseModel.deepCopy(zero),
+      [OrderStatus.packaged]: BaseModel.deepCopy(zero),
+      [OrderStatus.sent_to_courier]: BaseModel.deepCopy(zero),
+      [OrderStatus.paid]: BaseModel.deepCopy(zero),
+      [OrderStatus.canceled]: BaseModel.deepCopy(zero),
+      [OrderStatus.canceled_at_courier]: BaseModel.deepCopy(zero),
+      [OrderStatus.received_from_courier]: BaseModel.deepCopy(zero)
+    };
   }
 
   /**
@@ -156,10 +159,26 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @param value new value of the timestamp in the block
+   * @protected
+   */
+  protected set timestamp(value) {
+    this.data.timestamp = value;
+  }
+
+  /**
    * @returns the sales in the block
    */
   public get sales() {
     return new Monetary(this.data.sales);
+  }
+
+  /**
+   * @param value new value of the sales in the block
+   * @protected
+   */
+  protected set sales(value) {
+    this.data.sales = value.data;
   }
 
   /**
@@ -170,17 +189,26 @@ export default class StatisticsBlock {
   }
 
   /**
-   * @param status to get count for
-   * @returns the actual status count
+   * @param value new value of the sold_products in the block
+   * @protected
    */
-  public getActualOrderCount(status: OrderStatus): number {
-    return this.status_counts[status].actual;
+  protected set sold_products(value) {
+    this.data.sold_products = value;
   }
+
   /**
    * @returns the actual number of sold products
    */
   public get actual_sold() {
     return this.data.actual_sold_products;
+  }
+
+  /**
+   * @param value new value of the actual_sold_products in the block
+   * @protected
+   */
+  protected set actual_sold(value) {
+    this.data.actual_sold_products = value;
   }
 
   /**
@@ -191,10 +219,26 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @param value new value of the sold_quantities in the block
+   * @protected
+   */
+  protected set sold_quantities(value) {
+    this.data.sold_quantities = value;
+  }
+
+  /**
    * @returns the order_counts in the block
    */
   public get order_counts() {
     return this.data.order_counts;
+  }
+
+  /**
+   * @param value new value of the order_counts in the block
+   * @protected
+   */
+  protected set order_counts(value) {
+    this.data.order_counts = value;
   }
 
   /**
@@ -205,10 +249,26 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @param value new value of the profit in the block
+   * @protected
+   */
+  protected set profit(value) {
+    this.data.profit = value.data;
+  }
+
+  /**
    * @returns the total_expenses in the block
    */
   public get total_expenses() {
     return new Monetary(this.data.total_expenses);
+  }
+
+  /**
+   * @param value new value of the total_expenses in the block
+   * @protected
+   */
+  protected set total_expenses(value) {
+    this.data.total_expenses = value.data;
   }
 
   /**
@@ -219,10 +279,26 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @param value new value of the shipping_fees in the block
+   * @protected
+   */
+  protected set shipping_fees(value) {
+    this.data.shipping_fees = value.data;
+  }
+
+  /**
    * @returns the employee_payments in the block
    */
   public get employee_payments() {
     return new Monetary(this.data.employee_payments);
+  }
+
+  /**
+   * @param value new value of the employee_payments in the block
+   * @protected
+   */
+  protected set employee_payments(value) {
+    this.data.employee_payments = value.data;
   }
 
   /**
@@ -233,10 +309,26 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @param value new value of the vendor_payments in the block
+   * @protected
+   */
+  protected set vendor_payments(value) {
+    this.data.vendor_payments = value.data;
+  }
+
+  /**
    * @returns the sales_avg in the block
    */
   public get sales_avg() {
     return new Monetary(this.data.sales_avg);
+  }
+
+  /**
+   * @param value new value of the sales_avg in the block
+   * @protected
+   */
+  protected set sales_avg(value) {
+    this.data.sales_avg = value.data;
   }
 
   /**
@@ -252,182 +344,6 @@ export default class StatisticsBlock {
    */
   protected set status_counts(value) {
     this.data.status_counts = value;
-  }
-
-  /**
-   * @param value new value of the actual_sold_products in the block
-   * @protected
-   */
-  protected set actual_sold(value) {
-    this.data.actual_sold_products = value;
-  }
-
-  /**
-   * @param value new value of the timestamp in the block
-   * @protected
-   */
-  protected set timestamp(value) {
-    this.data.timestamp = value;
-  }
-
-  /**
-   * @param value new value of the restocks in the block
-   * @protected
-   */
-  protected set restocks(value) {
-    this.data.restocks = value;
-  }
-
-  /**
-   * @param value new value of the orders in the block
-   * @protected
-   */
-  protected set orders(value) {
-    this.data.orders = value;
-  }
-
-  /**
-   * @param value new value of the expenses in the block
-   * @protected
-   */
-  protected set expenses(value) {
-    this.data.expenses = value;
-  }
-
-  /**
-   * @param value new value of the sales in the block
-   * @protected
-   */
-  protected set sales(value) {
-    this.data.sales = value.data;
-  }
-
-  /**
-   * @param value new value of the sold_products in the block
-   * @protected
-   */
-  protected set sold_products(value) {
-    this.data.sold_products = value;
-  }
-
-  /**
-   * @param value new value of the sold_quantities in the block
-   * @protected
-   */
-  protected set sold_quantities(value) {
-    this.data.sold_quantities = value;
-  }
-
-  /**
-   * @param value new value of the order_counts in the block
-   * @protected
-   */
-  protected set order_counts(value) {
-    this.data.order_counts = value;
-  }
-
-  /**
-   * @param value new value of the profit in the block
-   * @protected
-   */
-  protected set profit(value) {
-    this.data.profit = value.data;
-  }
-
-  /**
-   * @param value new value of the total_expenses in the block
-   * @protected
-   */
-  protected set total_expenses(value) {
-    this.data.total_expenses = value.data;
-  }
-
-  /**
-   * @param value new value of the shipping_fees in the block
-   * @protected
-   */
-  protected set shipping_fees(value) {
-    this.data.shipping_fees = value.data;
-  }
-
-  /**
-   * @param value new value of the employee_payments in the block
-   * @protected
-   */
-  protected set employee_payments(value) {
-    this.data.employee_payments = value.data;
-  }
-
-  /**
-   * @param value new value of the vendor_payments in the block
-   * @protected
-   */
-  protected set vendor_payments(value) {
-    this.data.vendor_payments = value.data;
-  }
-
-  /**
-   * @param value new value of the sales_avg in the block
-   * @protected
-   */
-  protected set sales_avg(value) {
-    this.data.sales_avg = value.data;
-  }
-
-  /**
-   * @param order to be considered into the average
-   * @param remove if true, the order is removed rather than added
-   * @protected
-   */
-  protected recalibrateAverage(order: Order, remove?: boolean): void {
-    let temp = this.sales_avg;
-
-    temp.multiply(this.order_counts);
-
-    if (remove) {
-      temp.subtract(order.total ?? Monetary.noValue());
-      temp.divide(this.order_counts - 1);
-    } else {
-      temp.add(order.total ?? Monetary.noValue());
-      temp.divide(this.order_counts + 1);
-    }
-
-    this.sales_avg = temp;
-  }
-
-  /**
-   * @param trail to extract the timestamp from
-   * @returns the first timestamp of the trail
-   * @protected
-   */
-  protected static extractTimestamp(trail: TrailType): string {
-    return this.trimmedTimestamp(BaseModel.initialTimestamp(trail));
-  }
-
-  /**
-   * @param timestamp to be trimmed
-   * @returns a timestamp trimmed according to the accuracy
-   * @protected
-   */
-  protected static trimmedTimestamp(timestamp: string): string {
-    return timestamp.slice(0, this.accuracy);
-  }
-
-  /**
-   * @param timestamp to be checked
-   * @returns true if the timestamp is complete (yyyymmddhh)
-   * @protected
-   */
-  protected static isCompleteTimestamp(timestamp: string): boolean {
-    return timestamp.length === this.accuracy;
-  }
-
-  /**
-   * @returns true if the instance of this timestamp is complete
-   * @protected
-   */
-  protected get isAtomic(): boolean {
-    return !this.isTotal && StatisticsBlock.isCompleteTimestamp(this.timestamp);
   }
 
   /**
@@ -458,477 +374,6 @@ export default class StatisticsBlock {
    */
   protected set moved_products(value) {
     this.data.moved_products = value;
-  }
-
-  /**
-   * @param restock to be added to this block
-   * @private
-   */
-  protected addRestock(restock: Restock): void {
-    if (this.restocks.indexOf(restock.id) === -1) {
-      this.restocks.push(restock.id);
-    }
-
-    if (restock.isDeactivated) {
-      return this.subtractRestock(restock);
-    }
-
-    const quantities = restock.quantities;
-
-    for (let id of Object.keys(quantities)) {
-      if (!(id in this.moved_quantities)) {
-        this.moved_quantities[id] = 0;
-      }
-
-      this.moved_products += quantities[id];
-      this.moved_quantities[id] += quantities[id];
-    }
-
-    if (this.isAtomic) {
-      StatisticsBlock.addRestockToTimeline(restock);
-    }
-
-    this.save();
-  }
-
-  /**
-   * @param order to be added to this block
-   * @private
-   */
-  protected addOrder(order: Order): void {
-    if (this.orders.indexOf(order.id) === -1) {
-      this.orders.push(order.id);
-    }
-
-    const status = order.status;
-    let notSkipDelivery = true;
-
-    switch (status) {
-      case OrderStatus.received_from_courier:
-      case OrderStatus.pending:
-        notSkipDelivery = !notSkipDelivery;
-        break;
-      case OrderStatus.confirmed:
-      case OrderStatus.packaged:
-      case OrderStatus.paid:
-        this.sales = this.sales.addCopy(order.total ?? Monetary.noValue());
-        this.profit = this.profit.addCopy(order.profit);
-        this.recalibrateAverage(order);
-
-        for (let usi of order.usiSet) {
-          const id = Product.invertUsi(usi).id;
-
-          if (!(id in this.sold_quantities)) {
-            this.sold_quantities[id] = {
-              aggregate: 0,
-              actual: 0
-            };
-          }
-
-          this.sold_quantities[id].aggregate += order.getQuantity(usi);
-          this.sold_products += order.item_count;
-          this.sold_quantities[id].actual += order.getQuantity(usi);
-          this.actual_sold += order.item_count;
-        }
-        break;
-      case OrderStatus.canceled_at_courier:
-      case OrderStatus.canceled:
-        this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
-        this.profit = this.profit.subtractCopy(order.profit);
-
-        for (let usi of order.usiSet) {
-          const id = Product.invertUsi(usi).id;
-
-          if (!(id in this.sold_quantities)) {
-            this.sold_quantities[id] = {
-              aggregate: 0,
-              actual: 0
-            };
-          }
-
-          this.sold_quantities[id].actual -= order.getQuantity(usi);
-        }
-
-        this.actual_sold -= order.item_count;
-        break;
-      default:
-        throw new Error("Missing order status in statistics block");
-    }
-
-    if (notSkipDelivery) {
-      const delivery = order.delivery?.copy() ?? Monetary.noValue();
-
-      if (delivery.isNegative) {
-        delivery.multiply(-1);
-        this.shipping_fees = this.shipping_fees.addCopy(delivery);
-        this.total_expenses = this.total_expenses.addCopy(delivery);
-      }
-    }
-
-    this.status_counts[order.status].actual++;
-    this.status_counts[order.status].aggregate++;
-    this.order_counts++;
-
-    if (this.isAtomic) {
-      StatisticsBlock.addOrderToTimeline(order);
-    }
-
-    this.save();
-  }
-
-  /**
-   * @param expense to be added to this block
-   * @private
-   */
-  protected addExpense(expense: Expense): void {
-    if (this.expenses.indexOf(expense.id) === -1) {
-      this.expenses.push(expense.id);
-    }
-
-    if (expense.is_vendor || expense.is_invoice) {
-      this.vendor_payments = this.vendor_payments.addCopy(expense.value);
-    } else if (expense.is_employee) {
-      this.employee_payments = this.employee_payments.addCopy(expense.value);
-    } else if (expense.is_courier) {
-      this.shipping_fees = this.shipping_fees.addCopy(expense.value);
-    }
-
-    this.total_expenses = this.total_expenses.addCopy(expense.value);
-
-    if (this.isAtomic) {
-      StatisticsBlock.addExpenseToTimeline(expense);
-    }
-
-    this.save();
-  }
-
-  /**
-   * @param restock to be added into the statistics
-   */
-  public static addRestock(restock: Restock): void {
-    this.getInstance(
-      this.extractTimestamp(restock.trail)
-    ).addRestock(restock);
-  }
-
-  /**
-   * @param order to be added to the statistics
-   */
-  public static addOrder(order: Order): void {
-    this.getInstance(
-      this.extractTimestamp(order.trail)
-    ).addOrder(order);
-  }
-
-  /**
-   * @param expense to be added to the statistics
-   */
-  public static addExpense(expense: Expense): void {
-    this.getInstance(
-      this.invertDate(expense.date)
-    ).addExpense(expense);
-  }
-
-  /**
-   * @param restock to be subtracted from this statistics block
-   * @private
-   */
-  protected subtractRestock(restock: Restock): void {
-    const quantities = restock.quantities;
-
-    for (let id of Object.keys(quantities)) {
-      if (!(id in this.moved_quantities)) {
-        this.moved_quantities[id] = 0;
-      }
-
-      this.moved_products -= quantities[id];
-      this.moved_quantities[id] -= quantities[id];
-    }
-
-    if (this.isAtomic) {
-      StatisticsBlock.subtractRestockFromTimeline(restock);
-    }
-
-    this.save()
-  }
-
-  /**
-   * @param order to be subtracted from this statistics block
-   * @private
-   */
-  protected subtractOrder(order: Order): void {
-    const status = order.status;
-    let notSkipDelivery = true;
-
-    switch (status) {
-      case OrderStatus.received_from_courier:
-      case OrderStatus.pending:
-        notSkipDelivery = !notSkipDelivery;
-        break;
-      case OrderStatus.confirmed:
-      case OrderStatus.packaged:
-      case OrderStatus.paid:
-        this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
-        this.profit = this.profit.subtractCopy(order.profit);
-        this.recalibrateAverage(order, true);
-
-        for (let usi of order.usiSet) {
-          const id = Product.invertUsi(usi).id;
-
-          if (!(id in this.sold_quantities)) {
-            this.sold_quantities[id] = {
-              aggregate: 0,
-              actual: 0
-            };
-          }
-
-          this.sold_quantities[id].actual -= order.getQuantity(usi);
-          this.actual_sold -= order.item_count;
-        }
-        break;
-      case OrderStatus.canceled_at_courier:
-      case OrderStatus.canceled:
-        this.sales = this.sales.addCopy(order.total ?? Monetary.noValue());
-        this.profit = this.profit.addCopy(order.profit);
-
-        for (let usi of order.usiSet) {
-          const id = Product.invertUsi(usi).id;
-          this.sold_quantities[id].actual += order.getQuantity(usi);
-        }
-
-        this.actual_sold += order.item_count;
-        break;
-      default:
-        throw new Error("Missing order status in statistics block");
-    }
-
-    if (notSkipDelivery) {
-      const delivery = order.delivery?.copy() ?? Monetary.noValue();
-
-      if (delivery.isNegative) {
-        delivery.multiply(-1);
-        this.shipping_fees = this.shipping_fees.subtractCopy(delivery);
-        this.total_expenses = this.total_expenses.subtractCopy(delivery);
-      }
-    }
-
-    this.status_counts[order.status].actual--;
-    this.order_counts--;
-
-    if (this.isAtomic) {
-      StatisticsBlock.subtractOrderFromTimeline(order);
-    }
-
-    this.save();
-  }
-
-  /**
-   * @param expense to be subtracted from this statistics block
-   * @private
-   */
-  protected subtractExpense(expense: Expense): void {
-    if (expense.is_vendor || expense.is_invoice) {
-      this.vendor_payments = this.vendor_payments.subtractCopy(expense.value);
-    } else if (expense.is_employee) {
-      this.employee_payments = this.employee_payments.subtractCopy(expense.value);
-    } else if (expense.is_courier) {
-      this.shipping_fees = this.shipping_fees.subtractCopy(expense.value);
-    }
-
-    this.total_expenses = this.total_expenses.subtractCopy(expense.value);
-
-    if (this.isAtomic) {
-      StatisticsBlock.subtractExpenseFromTimeline(expense);
-    }
-
-    this.save();
-  }
-
-  /**
-   * @param restock to be subtracted from the current statistic block
-   */
-  public static subtractRestock(restock: Restock): void {
-    this.getInstance(this.currentTimestamp).subtractRestock(restock);
-  }
-
-  /**
-   * @param order to be subtracted from the current statistic block
-   */
-  public static subtractOrder(order: Order): void {
-    this.getInstance(this.currentTimestamp).subtractOrder(order);
-  }
-
-  /**
-   * @param expense to be subtracted from the current statistic block
-   */
-  public static subtractExpense(expense: Expense): void {
-    this.getInstance(this.invertDate(expense.date)).subtractExpense(expense);
-  }
-
-  /**
-   * @param other statistic block to be combined into the current instance
-   */
-  public combine(other: StatisticsBlock): void {
-    if (this === other) {
-      return;
-    }
-
-    this.sales = this.sales.addCopy(other.sales);
-    this.sold_products += other.sold_products;
-    this.actual_sold += other.actual_sold;
-    this.restocks.push(...other.restocks);
-    this.orders.push(...other.orders);
-    this.expenses.push(...other.expenses);
-    this.profit = this.profit.addCopy(other.profit);
-    this.total_expenses = this.total_expenses.addCopy(other.total_expenses);
-    this.shipping_fees = this.shipping_fees.addCopy(other.shipping_fees);
-    this.employee_payments = this.employee_payments.addCopy(other.employee_payments);
-    this.vendor_payments = this.vendor_payments.addCopy(other.vendor_payments);
-
-    let tempThisAvg = this.sales_avg;
-    tempThisAvg.multiply(this.sold_products);
-    const tempAvg = other.sales_avg.multiplyCopy(other.sold_products);
-    tempThisAvg.add(tempAvg);
-    tempThisAvg.divide(this.sold_products + other.sold_products);
-    this.sales_avg = tempThisAvg;
-
-    this.order_counts += other.order_counts;
-
-    // Handle quantities
-    for (let productId of Object.keys(other.sold_quantities)) {
-      if (!(productId in this.sold_quantities)) {
-        this.sold_quantities[productId] = {
-          aggregate: 0,
-          actual: 0
-        };
-      }
-
-      if (!(productId in this.moved_quantities)) {
-        this.moved_quantities[productId] = 0;
-      }
-
-      this.sold_quantities[productId].actual +=
-        other.sold_quantities[productId].actual;
-      this.sold_quantities[productId].aggregate +=
-        other.sold_quantities[productId].aggregate;
-      this.moved_products += other.moved_products;
-    }
-
-    for (let status of Object.keys(this.status_counts)) {
-      // @ts-ignore
-      this.status_counts[status].actual += other.status_counts[status].actual;
-      // @ts-ignore
-      this.status_counts[status].aggregate += other.status_counts[status].aggregate;
-    }
-  }
-
-  /**
-   * @param restock to be added to the timeline
-   *        (i.e. to the year, month, & day).
-   * @protected
-   */
-  protected static addRestockToTimeline(restock: Restock): void {
-    const timestamp = this.extractTimestamp(restock.trail);
-    const year = timestamp.slice(0, 4);
-    const month = timestamp.slice(0, 6);
-    const day = timestamp.slice(0, 8);
-
-    this.getInstance(year).addRestock(restock);
-    this.getInstance(month).addRestock(restock);
-    this.getInstance(day).addRestock(restock);
-    this.getTotal().addRestock(restock);
-  }
-
-  /**
-   * @param order to be added to the timeline
-   *        (i.e. to the year, month, & day).
-   * @protected
-   */
-  protected static addOrderToTimeline(order: Order): void {
-    const timestamp = this.extractTimestamp(order.trail);
-    const year = timestamp.slice(0, 4);
-    const month = timestamp.slice(0, 6);
-    const day = timestamp.slice(0, 8);
-
-    this.getInstance(year).addOrder(order);
-    this.getInstance(month).addOrder(order);
-    this.getInstance(day).addOrder(order);
-    this.getTotal().addOrder(order);
-  }
-
-  /**
-   * @param expense to be added to the timeline
-   *        (i.e. to the year, month, & day).
-   * @protected
-   */
-  protected static addExpenseToTimeline(expense: Expense): void {
-    const timestamp = this.invertDate(expense.date);
-    const year = timestamp.slice(0, 4);
-    const month = timestamp.slice(0, 6);
-    const day = timestamp.slice(0, 8);
-
-    this.getInstance(year).addExpense(expense);
-    this.getInstance(month).addExpense(expense);
-    this.getInstance(day).addExpense(expense);
-    this.getTotal().addExpense(expense);
-  }
-
-  /**
-   * @param restock to be subtracted from the timeline
-   *        (i.e. to the year, month, & day).
-   * @protected
-   */
-  protected static subtractRestockFromTimeline(restock: Restock): void {
-    const timestamp = this.extractTimestamp(restock.trail);
-    const year = timestamp.slice(0, 4);
-    const month = timestamp.slice(0, 6);
-    const day = timestamp.slice(0, 8);
-
-    this.getInstance(year).subtractRestock(restock);
-    this.getInstance(month).subtractRestock(restock);
-    this.getInstance(day).subtractRestock(restock);
-    this.getTotal().subtractRestock(restock);
-  }
-
-  /**
-   * @param order to be subtracted from the timeline
-   *        (i.e. to the year, month, & day).
-   * @protected
-   */
-  protected static subtractOrderFromTimeline(order: Order): void {
-    const timestamp = this.extractTimestamp(order.trail);
-    const year = timestamp.slice(0, 4);
-    const month = timestamp.slice(0, 6);
-    const day = timestamp.slice(0, 8);
-
-    this.getInstance(year).subtractOrder(order);
-    this.getInstance(month).subtractOrder(order);
-    this.getInstance(day).subtractOrder(order);
-    this.getTotal().subtractOrder(order);
-  }
-
-  /**
-   * @param expense to be subtracted from the timeline
-   *        (i.e. to the year, month, & day).
-   * @protected
-   */
-  protected static subtractExpenseFromTimeline(expense: Expense): void {
-    const timestamp = this.invertDate(expense.date);
-    const year = timestamp.slice(0, 4);
-    const month = timestamp.slice(0, 6);
-    const day = timestamp.slice(0, 8);
-
-    this.getInstance(year).subtractExpense(expense);
-    this.getInstance(month).subtractExpense(expense);
-    this.getInstance(day).subtractExpense(expense);
-    this.getTotal().subtractExpense(expense);
-  }
-
-  /**
-   * @returns the current timestamp
-   */
-  public static get currentTimestamp(): string {
-    return this.invertDate(new Date());
   }
 
   /**
@@ -980,20 +425,85 @@ export default class StatisticsBlock {
   }
 
   /**
-   * Saves the block data into cache
+   * @returns true if the current block is the same as no value
    */
-  public save(): void {
-    if (!this.isTotal && this.empty) {
-      this.delete();
-      return;
-    }
+  public get empty(): boolean {
+    return isEqual(StatisticsBlock.noValue(this.timestamp), this.data);
+  }
 
-    StatisticsBlock.setValue(
-      this.isTotal
-        ? StatisticsBlock.totalKey
-        : this.timestamp,
-      this.data
-    );
+  /**
+   * @returns the orders object in the data
+   */
+  public get orders() {
+    return this.data.orders;
+  }
+
+  /**
+   * @param value new value of the orders in the block
+   * @protected
+   */
+  protected set orders(value) {
+    this.data.orders = value;
+  }
+
+  /**
+   * @returns the restocks object in the data
+   */
+  public get restocks() {
+    return this.data.restocks;
+  }
+
+  /**
+   * @param value new value of the restocks in the block
+   * @protected
+   */
+  protected set restocks(value) {
+    this.data.restocks = value;
+  }
+
+  /**
+   * @returns the expenses object in the data
+   */
+  public get expenses() {
+    return this.data.expenses;
+  }
+
+  /**
+   * @param value new value of the expenses in the block
+   * @protected
+   */
+  protected set expenses(value) {
+    this.data.expenses = value;
+  }
+
+  /**
+   * @returns the data value
+   */
+  public get data(): statisticsBlock {
+    return this.dataValue;
+  }
+
+  /**
+   * @param value new value of the raw data
+   */
+  public set data(value) {
+    this.dataValue = value;
+  }
+
+  /**
+   * @returns the MMKV storage instance for the statistics
+   * @private
+   */
+  protected get storage() {
+    return StatisticsBlock.storage;
+  }
+
+  /**
+   * @returns true if the instance of this timestamp is complete
+   * @protected
+   */
+  protected get isAtomic(): boolean {
+    return !this.isTotal && StatisticsBlock.isCompleteTimestamp(this.timestamp);
   }
 
   /**
@@ -1005,52 +515,58 @@ export default class StatisticsBlock {
   }
 
   /**
-   * Deletes the block data from cache
+   * Resets all statistics
    */
-  public delete(): void {
-    this.storage.delete(this.timestamp);
+  public static clear(): void {
+    this.storage.clearAll();
   }
 
   /**
-   * @returns true if the current block is the same as no value
+   * @param restock to be added into the statistics
    */
-  public get empty(): boolean {
-    return isEqual(StatisticsBlock.noValue(this.timestamp), this.data);
+  public static addRestock(restock: Restock): void {
+    this.getInstance(
+      this.extractTimestamp(restock.trail)
+    ).addRestock(restock);
   }
 
   /**
-   * @param key to be inserted
-   * @param data represented by the key
-   * @private
+   * @param order to be added to the statistics
    */
-  protected static setValue(key: string, data: statisticsBlock): void {
-    this.storage.set(key, JSON.stringify(data));
+  public static addOrder(order: Order): void {
+    this.getInstance(
+      this.extractTimestamp(order.trail)
+    ).addOrder(order);
   }
 
   /**
-   * @param key to be fetched from cache
-   * @returns the raw data of the statistics block represented by the key
-   * @private
+   * @param expense to be added to the statistics
    */
-  protected static getValue(key: string): statisticsBlock {
-    return JSON.parse(
-      this.storage.getString(key) as string
-    ) as statisticsBlock;
+  public static addExpense(expense: Expense): void {
+    this.getInstance(
+      this.invertDate(expense.date)
+    ).addExpense(expense);
   }
 
   /**
-   * @param key to be fetched from cache
-   * @returns the raw data wrapped in a StatisticsBlock
-   * @private
+   * @param restock to be subtracted from the current statistic block
    */
-  protected static getInstance(key: string): StatisticsBlock {
-    key = this.trimmedTimestamp(key);
+  public static subtractRestock(restock: Restock): void {
+    this.getInstance(this.currentTimestamp).subtractRestock(restock);
+  }
 
-    if (!this.checkCache(key)) {
-      return this.noValue(key);
-    }
+  /**
+   * @param order to be subtracted from the current statistic block
+   */
+  public static subtractOrder(order: Order): void {
+    this.getInstance(this.currentTimestamp).subtractOrder(order);
+  }
 
-    return new StatisticsBlock(this.getValue(key));
+  /**
+   * @param expense to be subtracted from the current statistic block
+   */
+  public static subtractExpense(expense: Expense): void {
+    this.getInstance(this.invertDate(expense.date)).subtractExpense(expense);
   }
 
   /**
@@ -1114,28 +630,6 @@ export default class StatisticsBlock {
   }
 
   /**
-   * @returns default zeroed order counts
-   * @private
-   */
-  protected static get zeroOrderCounts() {
-    const zero = {
-      actual: 0,
-      aggregate: 0
-    };
-
-    return {
-      [OrderStatus.pending]: BaseModel.deepCopy(zero),
-      [OrderStatus.confirmed]: BaseModel.deepCopy(zero),
-      [OrderStatus.packaged]: BaseModel.deepCopy(zero),
-      [OrderStatus.sent_to_courier]: BaseModel.deepCopy(zero),
-      [OrderStatus.paid]: BaseModel.deepCopy(zero),
-      [OrderStatus.canceled]: BaseModel.deepCopy(zero),
-      [OrderStatus.canceled_at_courier]: BaseModel.deepCopy(zero),
-      [OrderStatus.received_from_courier]: BaseModel.deepCopy(zero)
-    }
-  }
-
-  /**
    * @param timestamp to represent the block
    * @returns a zero value statistics block
    */
@@ -1158,32 +652,8 @@ export default class StatisticsBlock {
       order_counts: 0,
       actual_sold_products: 0,
       moved_products: 0,
-      sold_products: 0,
+      sold_products: 0
     });
-  }
-
-  /**
-   * @param t0 first timestamp
-   * @param t1 second timestamp
-   * @param unit time unit
-   * @returns combined statisticsBlocks from [t0, t1] under step 'unit'.
-   * @private
-   */
-  protected static combineFromTo(
-    t0: string,
-    t1: string,
-    unit: TimeUnit): StatisticsBlock {
-    t0 = this.formatTimestamp(t0, unit);
-    t1 = this.formatTimestamp(t1, unit);
-
-    let result: StatisticsBlock = this.noValue(`${t0}->${t1}`) ;
-
-    while (t0 < t1) {
-      result.combine(this.getInstance(t0));
-      t0 = this.incrementTimestamp(t0, unit);
-    }
-
-    return result;
   }
 
   /**
@@ -1232,94 +702,6 @@ export default class StatisticsBlock {
    */
   public static combineFromHourTo(h0: string, h1: string): StatisticsBlock {
     return this.combineFromTo(h0, h1, TimeUnit.hour);
-  }
-
-  /**
-   * @param timestamp to get the relevant information from
-   * @param unit to get the relevant information for
-   * @returns the relative information from the timestamp, based on the unit
-   * @protected
-   */
-  protected static formatTimestamp(timestamp: string, unit: TimeUnit): string {
-    return timestamp.slice(0, this.IndexBorders[unit][1]);
-  }
-
-  /**
-   * @param t0 first timestamp
-   * @param t1 second timestamp
-   * @param unit time unit
-   * @param map applied to each block in the timeframe.
-   *        If it returns undefined, the element is not included.
-   *        The above logic works only when the density is 1 or less.
-   * @param combine if true, an additional combined block is added at the end
-   * @param density number of blocks combined per array index, default is 1.
-   * @returns List of statisticsBlocks information from [t0, t1] under step 'unit'.
-   * @private
-   */
-  protected static getFromTo(
-    t0: string,
-    t1: string,
-    unit: TimeUnit,
-    map?: MappingFunction, // Do not use `= defaultMapping` IDE can't handle
-    combine: boolean = false,
-    density: number = 1): any[] {
-    t0 = this.formatTimestamp(t0, unit);
-    t1 = this.formatTimestamp(t1, unit);
-
-    let combined: StatisticsBlock;
-
-    if (map === undefined) {
-      map = defaultMapping;
-    }
-
-    if (combine) {
-      combined = this.noValue(this.combinedTag);
-
-      const mapping = map;
-
-      map = (b) => {
-        combined.combine(b);
-        return mapping(b);
-      }
-    }
-
-    let result: any[] = [];
-    let counter: number = density;
-    let n = -1; // Number of blocks
-
-    while (t0 < t1) {
-      if (density <= 1) {
-        const temp = map(this.getInstance(t0));
-        if (temp !== undefined) {
-          result.push(temp);
-        }
-      } else {
-        if (counter <= 0) {
-          result[n] = map(result[n]);
-          counter = density;
-        } else if (counter === density) {
-          n++;
-          result.push(this.getInstance(t0));
-          counter--;
-        } else {
-          result[n].combine(this.getInstance(t0));
-          counter--;
-        }
-      }
-
-      t0 = this.incrementTimestamp(t0, unit);
-    }
-
-    while (result[n] instanceof StatisticsBlock) {
-      result[n] = map(result[n]);
-    }
-
-    if (combine) {
-      // @ts-ignore
-      result.push(combined);
-    }
-
-    return result;
   }
 
   /**
@@ -1498,7 +880,7 @@ export default class StatisticsBlock {
 
     return {
       tags: tags,
-      data: data,
+      data: data
     };
   }
 
@@ -1517,6 +899,303 @@ export default class StatisticsBlock {
   }
 
   /**
+   * @returns true if the statistics have been loaded previously
+   */
+  public static isLoaded(collection_name: string): boolean {
+    const id = this.formId(collection_name);
+    let result = this.storage.getBoolean(id);
+
+    if (result === undefined) {
+      return false;
+    }
+
+    return result;
+  }
+
+  /**
+   * Sets the loaded flag
+   */
+  public static setLoaded(collection_name: string): void {
+    this.storage.set(this.formId(collection_name), true);
+  }
+
+  /**
+   * @param trail to extract the timestamp from
+   * @returns the first timestamp of the trail
+   * @protected
+   */
+  protected static extractTimestamp(trail: TrailType): string {
+    return this.trimmedTimestamp(BaseModel.initialTimestamp(trail));
+  }
+
+  /**
+   * @param timestamp to be trimmed
+   * @returns a timestamp trimmed according to the accuracy
+   * @protected
+   */
+  protected static trimmedTimestamp(timestamp: string): string {
+    return timestamp.slice(0, this.accuracy);
+  }
+
+  /**
+   * @param timestamp to be checked
+   * @returns true if the timestamp is complete (yyyymmddhh)
+   * @protected
+   */
+  protected static isCompleteTimestamp(timestamp: string): boolean {
+    return timestamp.length === this.accuracy;
+  }
+
+  /**
+   * @param restock to be added to the timeline
+   *        (i.e. to the year, month, & day).
+   * @protected
+   */
+  protected static addRestockToTimeline(restock: Restock): void {
+    const timestamp = this.extractTimestamp(restock.trail);
+    const year = timestamp.slice(0, 4);
+    const month = timestamp.slice(0, 6);
+    const day = timestamp.slice(0, 8);
+
+    this.getInstance(year).addRestock(restock);
+    this.getInstance(month).addRestock(restock);
+    this.getInstance(day).addRestock(restock);
+    this.getTotal().addRestock(restock);
+  }
+
+  /**
+   * @param order to be added to the timeline
+   *        (i.e. to the year, month, & day).
+   * @protected
+   */
+  protected static addOrderToTimeline(order: Order): void {
+    const timestamp = this.extractTimestamp(order.trail);
+    const year = timestamp.slice(0, 4);
+    const month = timestamp.slice(0, 6);
+    const day = timestamp.slice(0, 8);
+
+    this.getInstance(year).addOrder(order);
+    this.getInstance(month).addOrder(order);
+    this.getInstance(day).addOrder(order);
+    this.getTotal().addOrder(order);
+  }
+
+  /**
+   * @param expense to be added to the timeline
+   *        (i.e. to the year, month, & day).
+   * @protected
+   */
+  protected static addExpenseToTimeline(expense: Expense): void {
+    const timestamp = this.invertDate(expense.date);
+    const year = timestamp.slice(0, 4);
+    const month = timestamp.slice(0, 6);
+    const day = timestamp.slice(0, 8);
+
+    this.getInstance(year).addExpense(expense);
+    this.getInstance(month).addExpense(expense);
+    this.getInstance(day).addExpense(expense);
+    this.getTotal().addExpense(expense);
+  }
+
+  /**
+   * @param restock to be subtracted from the timeline
+   *        (i.e. to the year, month, & day).
+   * @protected
+   */
+  protected static subtractRestockFromTimeline(restock: Restock): void {
+    const timestamp = this.extractTimestamp(restock.trail);
+    const year = timestamp.slice(0, 4);
+    const month = timestamp.slice(0, 6);
+    const day = timestamp.slice(0, 8);
+
+    this.getInstance(year).subtractRestock(restock);
+    this.getInstance(month).subtractRestock(restock);
+    this.getInstance(day).subtractRestock(restock);
+    this.getTotal().subtractRestock(restock);
+  }
+
+  /**
+   * @param order to be subtracted from the timeline
+   *        (i.e. to the year, month, & day).
+   * @protected
+   */
+  protected static subtractOrderFromTimeline(order: Order): void {
+    const timestamp = this.extractTimestamp(order.trail);
+    const year = timestamp.slice(0, 4);
+    const month = timestamp.slice(0, 6);
+    const day = timestamp.slice(0, 8);
+
+    this.getInstance(year).subtractOrder(order);
+    this.getInstance(month).subtractOrder(order);
+    this.getInstance(day).subtractOrder(order);
+    this.getTotal().subtractOrder(order);
+  }
+
+  /**
+   * @param expense to be subtracted from the timeline
+   *        (i.e. to the year, month, & day).
+   * @protected
+   */
+  protected static subtractExpenseFromTimeline(expense: Expense): void {
+    const timestamp = this.invertDate(expense.date);
+    const year = timestamp.slice(0, 4);
+    const month = timestamp.slice(0, 6);
+    const day = timestamp.slice(0, 8);
+
+    this.getInstance(year).subtractExpense(expense);
+    this.getInstance(month).subtractExpense(expense);
+    this.getInstance(day).subtractExpense(expense);
+    this.getTotal().subtractExpense(expense);
+  }
+
+  /**
+   * @param key to be inserted
+   * @param data represented by the key
+   * @private
+   */
+  protected static setValue(key: string, data: statisticsBlock): void {
+    this.storage.set(key, JSON.stringify(data));
+  }
+
+  /**
+   * @param key to be fetched from cache
+   * @returns the raw data of the statistics block represented by the key
+   * @private
+   */
+  protected static getValue(key: string): statisticsBlock {
+    return JSON.parse(
+      this.storage.getString(key) as string
+    ) as statisticsBlock;
+  }
+
+  /**
+   * @param key to be fetched from cache
+   * @returns the raw data wrapped in a StatisticsBlock
+   * @private
+   */
+  protected static getInstance(key: string): StatisticsBlock {
+    key = this.trimmedTimestamp(key);
+
+    if (!this.checkCache(key)) {
+      return this.noValue(key);
+    }
+
+    return new StatisticsBlock(this.getValue(key));
+  }
+
+  /**
+   * @param t0 first timestamp
+   * @param t1 second timestamp
+   * @param unit time unit
+   * @returns combined statisticsBlocks from [t0, t1] under step 'unit'.
+   * @private
+   */
+  protected static combineFromTo(
+    t0: string,
+    t1: string,
+    unit: TimeUnit): StatisticsBlock {
+    t0 = this.formatTimestamp(t0, unit);
+    t1 = this.formatTimestamp(t1, unit);
+
+    let result: StatisticsBlock = this.noValue(`${t0}->${t1}`);
+
+    while (t0 < t1) {
+      result.combine(this.getInstance(t0));
+      t0 = this.incrementTimestamp(t0, unit);
+    }
+
+    return result;
+  }
+
+  /**
+   * @param timestamp to get the relevant information from
+   * @param unit to get the relevant information for
+   * @returns the relative information from the timestamp, based on the unit
+   * @protected
+   */
+  protected static formatTimestamp(timestamp: string, unit: TimeUnit): string {
+    return timestamp.slice(0, this.IndexBorders[unit][1]);
+  }
+
+  /**
+   * @param t0 first timestamp
+   * @param t1 second timestamp
+   * @param unit time unit
+   * @param map applied to each block in the timeframe.
+   *        If it returns undefined, the element is not included.
+   *        The above logic works only when the density is 1 or less.
+   * @param combine if true, an additional combined block is added at the end
+   * @param density number of blocks combined per array index, default is 1.
+   * @returns List of statisticsBlocks information from [t0, t1] under step 'unit'.
+   * @private
+   */
+  protected static getFromTo(
+    t0: string,
+    t1: string,
+    unit: TimeUnit,
+    map?: MappingFunction, // Do not use `= defaultMapping` IDE can't handle
+    combine: boolean = false,
+    density: number = 1): any[] {
+    t0 = this.formatTimestamp(t0, unit);
+    t1 = this.formatTimestamp(t1, unit);
+
+    let combined: StatisticsBlock;
+
+    if (map === undefined) {
+      map = defaultMapping;
+    }
+
+    if (combine) {
+      combined = this.noValue(this.combinedTag);
+
+      const mapping = map;
+
+      map = (b) => {
+        combined.combine(b);
+        return mapping(b);
+      };
+    }
+
+    let result: any[] = [];
+    let counter: number = density;
+    let n = -1; // Number of blocks
+
+    while (t0 < t1) {
+      if (density <= 1) {
+        const temp = map(this.getInstance(t0));
+        if (temp !== undefined) {
+          result.push(temp);
+        }
+      } else {
+        if (counter <= 0) {
+          result[n] = map(result[n]);
+          counter = density;
+        } else if (counter === density) {
+          n++;
+          result.push(this.getInstance(t0));
+          counter--;
+        } else {
+          result[n].combine(this.getInstance(t0));
+          counter--;
+        }
+      }
+
+      t0 = this.incrementTimestamp(t0, unit);
+    }
+
+    while (result[n] instanceof StatisticsBlock) {
+      result[n] = map(result[n]);
+    }
+
+    if (combine) {
+      // @ts-ignore
+      result.push(combined);
+    }
+
+    return result;
+  }
+
+  /**
    * @param timestamp to be dissected
    * @returns a dissected timestamp object of the timestamp info
    * @protected
@@ -1528,13 +1207,13 @@ export default class StatisticsBlock {
       ),
       month: timestamp.slice(
         ...this.IndexBorders[TimeUnit.month]
-      ).padStart(2, '0'),
+      ).padStart(2, "0"),
       day: timestamp.slice(
         ...this.IndexBorders[TimeUnit.day]
-      ).padStart(2, '0'),
+      ).padStart(2, "0"),
       hour: timestamp.slice(
         ...this.IndexBorders[TimeUnit.hour]
-      ).padStart(2, '0')
+      ).padStart(2, "0")
     };
   }
 
@@ -1572,10 +1251,10 @@ export default class StatisticsBlock {
   protected static invertDate(date: Date): string {
     return [
       date.getFullYear(),
-      date.getMonth().toString().padStart(2, '0'),
-      date.getDate().toString().padStart(2, '0'),
-      date.getHours().toString().padStart(2, '0'),
-    ].join('');
+      date.getMonth().toString().padStart(2, "0"),
+      date.getDate().toString().padStart(2, "0"),
+      date.getHours().toString().padStart(2, "0")
+    ].join("");
   }
 
   /**
@@ -1588,58 +1267,369 @@ export default class StatisticsBlock {
   }
 
   /**
-   * @returns true if the statistics have been loaded previously
+   * @param status to get count for
+   * @returns the actual status count
    */
-  public static isLoaded(collection_name: string): boolean {
-    const id = this.formId(collection_name);
-    let result = this.storage.getBoolean(id);
+  public getActualOrderCount(status: OrderStatus): number {
+    return this.status_counts[status].actual;
+  }
 
-    if (result === undefined) {
-      return false;
+  /**
+   * @param other statistic block to be combined into the current instance
+   */
+  public combine(other: StatisticsBlock): void {
+    if (this === other) {
+      return;
     }
 
-    return result;
+    this.sales = this.sales.addCopy(other.sales);
+    this.sold_products += other.sold_products;
+    this.actual_sold += other.actual_sold;
+    this.restocks.push(...other.restocks);
+    this.orders.push(...other.orders);
+    this.expenses.push(...other.expenses);
+    this.profit = this.profit.addCopy(other.profit);
+    this.total_expenses = this.total_expenses.addCopy(other.total_expenses);
+    this.shipping_fees = this.shipping_fees.addCopy(other.shipping_fees);
+    this.employee_payments = this.employee_payments.addCopy(other.employee_payments);
+    this.vendor_payments = this.vendor_payments.addCopy(other.vendor_payments);
+
+    let tempThisAvg = this.sales_avg;
+    tempThisAvg.multiply(this.sold_products);
+    const tempAvg = other.sales_avg.multiplyCopy(other.sold_products);
+    tempThisAvg.add(tempAvg);
+    tempThisAvg.divide(this.sold_products + other.sold_products);
+    this.sales_avg = tempThisAvg;
+
+    this.order_counts += other.order_counts;
+
+    // Handle quantities
+    for (let productId of Object.keys(other.sold_quantities)) {
+      if (!(productId in this.sold_quantities)) {
+        this.sold_quantities[productId] = {
+          aggregate: 0,
+          actual: 0
+        };
+      }
+
+      if (!(productId in this.moved_quantities)) {
+        this.moved_quantities[productId] = 0;
+      }
+
+      this.sold_quantities[productId].actual +=
+        other.sold_quantities[productId].actual;
+      this.sold_quantities[productId].aggregate +=
+        other.sold_quantities[productId].aggregate;
+      this.moved_products += other.moved_products;
+    }
+
+    for (let status of Object.keys(this.status_counts)) {
+      // @ts-ignore
+      this.status_counts[status].actual += other.status_counts[status].actual;
+      // @ts-ignore
+      this.status_counts[status].aggregate += other.status_counts[status].aggregate;
+    }
   }
 
   /**
-   * Sets the loaded flag
+   * Saves the block data into cache
    */
-  public static setLoaded(collection_name: string): void {
-    this.storage.set(this.formId(collection_name), true);
+  public save(): void {
+    if (!this.isTotal && this.empty) {
+      this.delete();
+      return;
+    }
+
+    StatisticsBlock.setValue(
+      this.isTotal
+        ? StatisticsBlock.totalKey
+        : this.timestamp,
+      this.data
+    );
   }
 
   /**
-   * @returns the orders object in the data
+   * Deletes the block data from cache
    */
-  public get orders() {
-    return this.data.orders;
+  public delete(): void {
+    this.storage.delete(this.timestamp);
   }
 
   /**
-   * @returns the restocks object in the data
+   * @param order to be considered into the average
+   * @param remove if true, the order is removed rather than added
+   * @protected
    */
-  public get restocks() {
-    return this.data.restocks;
+  protected recalibrateAverage(order: Order, remove?: boolean): void {
+    let temp = this.sales_avg;
+
+    temp.multiply(this.order_counts);
+
+    if (remove) {
+      temp.subtract(order.total ?? Monetary.noValue());
+      temp.divide(this.order_counts - 1);
+    } else {
+      temp.add(order.total ?? Monetary.noValue());
+      temp.divide(this.order_counts + 1);
+    }
+
+    this.sales_avg = temp;
   }
 
   /**
-   * @returns the expenses object in the data
+   * @param restock to be added to this block
+   * @private
    */
-  public get expenses() {
-    return this.data.expenses;
+  protected addRestock(restock: Restock): void {
+    if (this.restocks.indexOf(restock.id) === -1) {
+      this.restocks.push(restock.id);
+    }
+
+    if (restock.isDeactivated) {
+      return this.subtractRestock(restock);
+    }
+
+    const quantities = restock.quantities;
+
+    for (let id of Object.keys(quantities)) {
+      if (!(id in this.moved_quantities)) {
+        this.moved_quantities[id] = 0;
+      }
+
+      this.moved_products += quantities[id];
+      this.moved_quantities[id] += quantities[id];
+    }
+
+    if (this.isAtomic) {
+      StatisticsBlock.addRestockToTimeline(restock);
+    }
+
+    this.save();
   }
 
   /**
-   * @returns the data value
+   * @param order to be added to this block
+   * @private
    */
-  public get data(): statisticsBlock {
-    return this.dataValue;
+  protected addOrder(order: Order): void {
+    if (this.orders.indexOf(order.id) === -1) {
+      this.orders.push(order.id);
+    }
+
+    const status = order.status;
+    let notSkipDelivery = true;
+
+    switch (status) {
+      case OrderStatus.received_from_courier:
+      case OrderStatus.pending:
+        notSkipDelivery = !notSkipDelivery;
+        break;
+      case OrderStatus.confirmed:
+      case OrderStatus.packaged:
+      case OrderStatus.paid:
+        this.sales = this.sales.addCopy(order.total ?? Monetary.noValue());
+        this.profit = this.profit.addCopy(order.profit);
+        this.recalibrateAverage(order);
+
+        for (let usi of order.usiSet) {
+          const id = Product.invertUsi(usi).id;
+
+          if (!(id in this.sold_quantities)) {
+            this.sold_quantities[id] = {
+              aggregate: 0,
+              actual: 0
+            };
+          }
+
+          this.sold_quantities[id].aggregate += order.getQuantity(usi);
+          this.sold_products += order.item_count;
+          this.sold_quantities[id].actual += order.getQuantity(usi);
+          this.actual_sold += order.item_count;
+        }
+        break;
+      case OrderStatus.canceled_at_courier:
+      case OrderStatus.canceled:
+        this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
+        this.profit = this.profit.subtractCopy(order.profit);
+
+        for (let usi of order.usiSet) {
+          const id = Product.invertUsi(usi).id;
+
+          if (!(id in this.sold_quantities)) {
+            this.sold_quantities[id] = {
+              aggregate: 0,
+              actual: 0
+            };
+          }
+
+          this.sold_quantities[id].actual -= order.getQuantity(usi);
+        }
+
+        this.actual_sold -= order.item_count;
+        break;
+      default:
+        throw new Error("Missing order status in statistics block");
+    }
+
+    if (notSkipDelivery) {
+      const delivery = order.delivery?.copy() ?? Monetary.noValue();
+
+      if (delivery.isNegative) {
+        delivery.multiply(-1);
+        this.shipping_fees = this.shipping_fees.addCopy(delivery);
+        this.total_expenses = this.total_expenses.addCopy(delivery);
+      }
+    }
+
+    this.status_counts[order.status].actual++;
+    this.status_counts[order.status].aggregate++;
+    this.order_counts++;
+
+    if (this.isAtomic) {
+      StatisticsBlock.addOrderToTimeline(order);
+    }
+
+    this.save();
   }
 
   /**
-   * @param value new value of the raw data
+   * @param expense to be added to this block
+   * @private
    */
-  public set data(value) {
-    this.dataValue = value;
+  protected addExpense(expense: Expense): void {
+    if (this.expenses.indexOf(expense.id) === -1) {
+      this.expenses.push(expense.id);
+    }
+
+    if (expense.is_vendor || expense.is_invoice) {
+      this.vendor_payments = this.vendor_payments.addCopy(expense.value);
+    } else if (expense.is_employee) {
+      this.employee_payments = this.employee_payments.addCopy(expense.value);
+    } else if (expense.is_courier) {
+      this.shipping_fees = this.shipping_fees.addCopy(expense.value);
+    }
+
+    this.total_expenses = this.total_expenses.addCopy(expense.value);
+
+    if (this.isAtomic) {
+      StatisticsBlock.addExpenseToTimeline(expense);
+    }
+
+    this.save();
+  }
+
+  /**
+   * @param restock to be subtracted from this statistics block
+   * @private
+   */
+  protected subtractRestock(restock: Restock): void {
+    const quantities = restock.quantities;
+
+    for (let id of Object.keys(quantities)) {
+      if (!(id in this.moved_quantities)) {
+        this.moved_quantities[id] = 0;
+      }
+
+      this.moved_products -= quantities[id];
+      this.moved_quantities[id] -= quantities[id];
+    }
+
+    if (this.isAtomic) {
+      StatisticsBlock.subtractRestockFromTimeline(restock);
+    }
+
+    this.save();
+  }
+
+  /**
+   * @param order to be subtracted from this statistics block
+   * @private
+   */
+  protected subtractOrder(order: Order): void {
+    const status = order.status;
+    let notSkipDelivery = true;
+
+    switch (status) {
+      case OrderStatus.received_from_courier:
+      case OrderStatus.pending:
+        notSkipDelivery = !notSkipDelivery;
+        break;
+      case OrderStatus.confirmed:
+      case OrderStatus.packaged:
+      case OrderStatus.paid:
+        this.sales = this.sales.subtractCopy(order.total ?? Monetary.noValue());
+        this.profit = this.profit.subtractCopy(order.profit);
+        this.recalibrateAverage(order, true);
+
+        for (let usi of order.usiSet) {
+          const id = Product.invertUsi(usi).id;
+
+          if (!(id in this.sold_quantities)) {
+            this.sold_quantities[id] = {
+              aggregate: 0,
+              actual: 0
+            };
+          }
+
+          this.sold_quantities[id].actual -= order.getQuantity(usi);
+          this.actual_sold -= order.item_count;
+        }
+        break;
+      case OrderStatus.canceled_at_courier:
+      case OrderStatus.canceled:
+        this.sales = this.sales.addCopy(order.total ?? Monetary.noValue());
+        this.profit = this.profit.addCopy(order.profit);
+
+        for (let usi of order.usiSet) {
+          const id = Product.invertUsi(usi).id;
+          this.sold_quantities[id].actual += order.getQuantity(usi);
+        }
+
+        this.actual_sold += order.item_count;
+        break;
+      default:
+        throw new Error("Missing order status in statistics block");
+    }
+
+    if (notSkipDelivery) {
+      const delivery = order.delivery?.copy() ?? Monetary.noValue();
+
+      if (delivery.isNegative) {
+        delivery.multiply(-1);
+        this.shipping_fees = this.shipping_fees.subtractCopy(delivery);
+        this.total_expenses = this.total_expenses.subtractCopy(delivery);
+      }
+    }
+
+    this.status_counts[order.status].actual--;
+    this.order_counts--;
+
+    if (this.isAtomic) {
+      StatisticsBlock.subtractOrderFromTimeline(order);
+    }
+
+    this.save();
+  }
+
+  /**
+   * @param expense to be subtracted from this statistics block
+   * @private
+   */
+  protected subtractExpense(expense: Expense): void {
+    if (expense.is_vendor || expense.is_invoice) {
+      this.vendor_payments = this.vendor_payments.subtractCopy(expense.value);
+    } else if (expense.is_employee) {
+      this.employee_payments = this.employee_payments.subtractCopy(expense.value);
+    } else if (expense.is_courier) {
+      this.shipping_fees = this.shipping_fees.subtractCopy(expense.value);
+    }
+
+    this.total_expenses = this.total_expenses.subtractCopy(expense.value);
+
+    if (this.isAtomic) {
+      StatisticsBlock.subtractExpenseFromTimeline(expense);
+    }
+
+    this.save();
   }
 }

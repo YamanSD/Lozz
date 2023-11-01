@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Animated from "react-native-reanimated";
-import { Appbar, Button, TextInput } from "react-native-paper";
-import { useTheme as usePaperTheme } from "react-native-paper";
+import { Appbar, Button, TextInput, useTheme as usePaperTheme } from "react-native-paper";
 import { View } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import NavigationNames from "../NavigationNames";
@@ -30,7 +29,7 @@ const DescriptionEditor = () => {
 
   const edited = () => {
     return desc.length !== 0 || desc !== description;
-  }
+  };
 
   return (
     <Animated.View>
@@ -71,10 +70,10 @@ const DescriptionEditor = () => {
       <View style={{ paddingTop: 0, padding: 20 }}>
         <TextInput multiline={true}
                    style={{
-                     backgroundColor: theme.colors.primary,
+                     backgroundColor: theme.colors.primary
                    }}
                    underlineStyle={{
-                     borderWidth: 2,
+                     borderWidth: 2
                    }}
                    underlineColor={theme.colors.secondary}
                    selectionColor={theme.colors.secondary}
@@ -83,7 +82,7 @@ const DescriptionEditor = () => {
                    textColor={theme.colors.secondary} />
       </View>
     </Animated.View>
-  )
+  );
 };
 
 export default DescriptionEditor;

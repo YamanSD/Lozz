@@ -74,6 +74,19 @@ export default class CartProduct {
   }
 
   /**
+   * @param value new quantity of the product
+   *
+   * If the new value exceeds the maximum, maximum is set.
+   * If the new value is negative and negatives are not allowed,
+   * zero is set.
+   */
+  public set quantity(value) {
+    this.data.quantity = value < 0 && !this.allow_negatives
+      ? 0
+      : (value <= this.maxQuantity ? value : this.maxQuantity);
+  }
+
+  /**
    * @returns the total unit price of the cart product
    */
   public get total_price() {
@@ -128,20 +141,6 @@ export default class CartProduct {
    */
   public get cost(): Monetary {
     return new Monetary(this.data.total_cost).divideCopy(this.quantity);
-  }
-
-
-  /**
-   * @param value new quantity of the product
-   *
-   * If the new value exceeds the maximum, maximum is set.
-   * If the new value is negative and negatives are not allowed,
-   * zero is set.
-   */
-  public set quantity(value) {
-    this.data.quantity = value < 0 && !this.allow_negatives
-      ? 0
-      : (value <= this.maxQuantity ? value : this.maxQuantity);
   }
 
   /**

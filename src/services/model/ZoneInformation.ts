@@ -1,5 +1,5 @@
 import BaseModel from "./BaseModel";
-import { information, zoneInformation, TrailType, MonetaryDiscountType, MonetaryType, Generic } from "./types";
+import { Generic, information, MonetaryDiscountType, MonetaryType, TrailType, zoneInformation } from "./types";
 import Monetary from "../local_model/Monetary";
 
 
@@ -33,6 +33,62 @@ export default class ZoneInformation implements BaseModel {
    */
   public set zones(value) {
     this.information.data = value;
+  }
+
+  /**
+   * @returns the zone information
+   */
+  public get information() {
+    return this.informationValue;
+  }
+
+  /**
+   * @param value new zone information
+   */
+  public set information(value: zoneInformation) {
+    this.informationValue = value;
+  }
+
+  /**
+   * @returns the trail
+   */
+  public get trail(): TrailType {
+    return this.information.trail;
+  }
+
+  /**
+   * @param value new value of the trail
+   */
+  public set trail(value: TrailType) {
+    this.information.trail = value;
+  }
+
+  /**
+   * @returns the stored raw data
+   */
+  public get data(): information {
+    return this.dataValue;
+  }
+
+  /**
+   * @returns a deep copy of the raw data
+   */
+  public get dataCopy() {
+    return BaseModel.copy(this.data);
+  }
+
+  /**
+   * @returns the type of the information
+   */
+  public get type() {
+    return this.data.type;
+  }
+
+  /**
+   * @returns a copy of the object
+   */
+  public get copy(): ZoneInformation {
+    return new ZoneInformation(this.dataCopy);
   }
 
   /**
@@ -98,66 +154,10 @@ export default class ZoneInformation implements BaseModel {
   }
 
   /**
-   * @param value new zone information
-   */
-  public set information(value: zoneInformation) {
-    this.informationValue = value;
-  }
-
-  /**
-   * @returns the zone information
-   */
-  public get information() {
-    return this.informationValue;
-  }
-
-  /**
    * @param zone to be checked
    * @returns true if the zone is valid
    */
   public isValid(zone: string): boolean {
     return zone in this.zones;
-  }
-
-  /**
-   * @returns the trail
-   */
-  public get trail(): TrailType {
-    return this.information.trail;
-  }
-
-  /**
-   * @param value new value of the trail
-   */
-  public set trail(value: TrailType) {
-    this.information.trail = value;
-  }
-
-  /**
-   * @returns the stored raw data
-   */
-  public get data(): information {
-    return this.dataValue;
-  }
-
-  /**
-   * @returns a deep copy of the raw data
-   */
-  public get dataCopy() {
-    return BaseModel.copy(this.data);
-  }
-
-  /**
-   * @returns the type of the information
-   */
-  public get type() {
-    return this.data.type;
-  }
-
-  /**
-   * @returns a copy of the object
-   */
-  public get copy(): ZoneInformation {
-    return new ZoneInformation(this.dataCopy);
   }
 }

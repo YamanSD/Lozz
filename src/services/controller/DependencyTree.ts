@@ -17,23 +17,6 @@ import VendorController from "./VendorController";
  */
 export default class DependencyTree {
   /**
-   * Constructs all controllers.
-   * Note that will not initialize all controllers immediately.
-   */
-  public static async loadControllers(): Promise<void> {
-    new VendorController(CollectionInfo.server);
-    new CategoryController(CollectionInfo.server);
-    new ProductController(CollectionInfo.server);
-    new CourierController(CollectionInfo.server);
-    new CustomerController(CollectionInfo.server);
-    new EmployeeController(CollectionInfo.server);
-    new ExpenseController(CollectionInfo.server);
-    new InformationController(CollectionInfo.server);
-    new RestockController(CollectionInfo.server);
-    new OrderController(CollectionInfo.server);
-  }
-
-  /**
    * @returns the vendors controller instance
    */
   public static get Vendors(): VendorController {
@@ -141,5 +124,22 @@ export default class DependencyTree {
       RestockController,
       CollectionInfo.server
     );
+  }
+
+  /**
+   * Constructs all controllers.
+   * Note that will not initialize all controllers immediately.
+   */
+  public static async loadControllers(): Promise<void> {
+    new VendorController(CollectionInfo.server);
+    new CategoryController(CollectionInfo.server);
+    new ProductController(CollectionInfo.server);
+    new CourierController(CollectionInfo.server);
+    new CustomerController(CollectionInfo.server);
+    new EmployeeController(CollectionInfo.server);
+    new ExpenseController(CollectionInfo.server);
+    new InformationController(CollectionInfo.server);
+    new RestockController(CollectionInfo.server);
+    new OrderController(CollectionInfo.server);
   }
 }

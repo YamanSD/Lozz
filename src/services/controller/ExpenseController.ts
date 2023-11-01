@@ -1,12 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import {
-  basicExpense,
-  expense,
-  ExpenseSearchSchema,
-  Generic,
-  QuantityType,
-  SpecialFields
-} from "../model/types";
+import { basicExpense, expense, ExpenseSearchSchema, Generic, QuantityType, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../CollectionInfo";
 import Expense, { Associate } from "../model/Expense";
@@ -55,59 +48,6 @@ export default class ExpenseController extends BaseController<expense> {
       this.injectDependency();
       await this.loadStatistics();
     });
-  }
-
-  /**
-   * Loads the expenses into the statistics iff the operation has not been done
-   * @private
-   */
-  private async loadStatistics(): Promise<void> {
-    if (StatisticsBlock.isLoaded(this.collectionName)) {
-      return;
-    }
-
-    for (let id of this.idSet) {
-      StatisticsBlock.addExpense(await this.get(id));
-    }
-
-    StatisticsBlock.setLoaded(this.collectionName);
-  }
-
-  /**
-   * @param id of the expense to be fetched
-   * @returns expense data
-   * @throws IdDoesNotExistError if the id does not belong to an expense
-   */
-  public async get(id: string) {
-    const data = await this.getData(id);
-
-    if (data === undefined) {
-      throw new IdDoesNotExistError();
-    }
-
-    let associate: Associate | undefined = undefined;
-
-    if (data.vendor_id !== undefined) {
-      associate = await this.vendorController.get(data.vendor_id);
-    } else if (data.employee_id !== undefined) {
-      associate = await this.employeeController.get(data.employee_id);
-    } else if (data.courier_id !== undefined) {
-      associate = await this.courierController.get(data.courier_id);
-    } else if (data.restock_id !== undefined) {
-      associate = await this.restockController.get(data.restock_id);
-    }
-
-    return new Expense(data, associate);
-  }
-
-  /**
-   * @param data basic raw data to create an expense
-   * @throws IdAlreadyExistsError if the name of the expense is taken
-   */
-  public async create(data: basicExpense) {
-    const id = BaseModel.getRandomTimestamp(2);
-    await this.genericCreate(data, id);
-    return id;
   }
 
   /**
@@ -182,6 +122,43 @@ export default class ExpenseController extends BaseController<expense> {
     }
 
     return true;
+  }
+
+  /**
+   * @param id of the expense to be fetched
+   * @returns expense data
+   * @throws IdDoesNotExistError if the id does not belong to an expense
+   */
+  public async get(id: string) {
+    const data = await this.getData(id);
+
+    if (data === undefined) {
+      throw new IdDoesNotExistError();
+    }
+
+    let associate: Associate | undefined = undefined;
+
+    if (data.vendor_id !== undefined) {
+      associate = await this.vendorController.get(data.vendor_id);
+    } else if (data.employee_id !== undefined) {
+      associate = await this.employeeController.get(data.employee_id);
+    } else if (data.courier_id !== undefined) {
+      associate = await this.courierController.get(data.courier_id);
+    } else if (data.restock_id !== undefined) {
+      associate = await this.restockController.get(data.restock_id);
+    }
+
+    return new Expense(data, associate);
+  }
+
+  /**
+   * @param data basic raw data to create an expense
+   * @throws IdAlreadyExistsError if the name of the expense is taken
+   */
+  public async create(data: basicExpense) {
+    const id = BaseModel.getRandomTimestamp(2);
+    await this.genericCreate(data, id);
+    return id;
   }
 
   /**
@@ -305,7 +282,7 @@ export default class ExpenseController extends BaseController<expense> {
       if (errorObj.description && isAlphanumeric(data.description,
         locale as AlphanumericLocale, {
           ignore: BaseController.alphanumericIgnoreSeq
-      })) {
+        })) {
         errorObj.description = false;
       }
     }
@@ -383,5 +360,21 @@ export default class ExpenseController extends BaseController<expense> {
     }
 
     this.checkErrorObject(errorObj);
+  }
+
+  /**
+   * Loads the expenses into the statistics iff the operation has not been done
+   * @private
+   */
+  private async loadStatistics(): Promise<void> {
+    if (StatisticsBlock.isLoaded(this.collectionName)) {
+      return;
+    }
+
+    for (let id of this.idSet) {
+      StatisticsBlock.addExpense(await this.get(id));
+    }
+
+    StatisticsBlock.setLoaded(this.collectionName);
   }
 }

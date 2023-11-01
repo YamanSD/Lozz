@@ -17,7 +17,7 @@ import { MMKV } from "react-native-mmkv";
 import theme from "./theme";
 
 const reducers = combineReducers({
-  theme,
+  theme
   // [api.reducerPath]: api.reducer,
 });
 
@@ -34,13 +34,13 @@ export const reduxStorage: Storage = {
   removeItem: key => {
     storage.delete(key);
     return Promise.resolve();
-  },
+  }
 };
 
 const persistConfig = {
-  key: 'root',
+  key: "root",
   storage: reduxStorage,
-  whitelist: ['theme', 'auth'],
+  whitelist: ["theme", "auth"]
 };
 
 const persistedReducer = persistReducer(persistConfig, reducers);
@@ -55,11 +55,11 @@ const store = configureStore({
 
     return getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      },
-    })
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER]
+      }
+    });
     // }).concat(api.middleware);
-  },
+  }
 });
 
 const persistor = persistStore(store);

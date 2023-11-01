@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { StyleProp, TextStyle, View, ViewStyle } from "react-native";
 import { DependencyTree, Vendor } from "../../../../services";
-import { Surface, Text } from "react-native-paper";
+import { Surface, Text, useTheme as usePaperTheme } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../../../hooks";
-import { useTheme as usePaperTheme } from "react-native-paper";
 
 /**
  * Prop-type for the VendorListItems
@@ -41,7 +40,7 @@ const VendorListItem = ({ vendorId }: Properties) => {
     {
       fontWeight: "700",
       color: theme.colors.primary,
-      marginVertical: 3,
+      marginVertical: 3
     }
   ];
 
@@ -52,7 +51,7 @@ const VendorListItem = ({ vendorId }: Properties) => {
     Layout.rowHCenter,
     Layout.justifyContentBetween,
     {
-      paddingVertical: 4,
+      paddingVertical: 4
     }
   ];
 
@@ -95,6 +94,6 @@ const VendorListItem = ({ vendorId }: Properties) => {
       </View>
     </Surface>
   );
-}
+};
 
 export default VendorListItem;

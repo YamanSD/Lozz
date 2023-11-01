@@ -1,1 +1,1 @@
-export { default as Products } from './Navigator';
+export { default as Products } from "./Navigator";

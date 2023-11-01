@@ -9,7 +9,7 @@ import InstructionsForm from "./Instructions/InstructionsForm";
  */
 type Properties = {
   instructions: Generic<string>,
-  setInstructions:  React.Dispatch<React.SetStateAction<Generic<string>>>
+  setInstructions: React.Dispatch<React.SetStateAction<Generic<string>>>
 };
 
 /**
@@ -27,7 +27,8 @@ type InstructionsList = {
  * @constructor
  */
 const InstructionSelector = ({ instructions,
-                               setInstructions }: Properties) => {
+                               setInstructions
+                             }: Properties) => {
   const { Layout } = useBoilerTheme();
 
   /* instructions array data */
@@ -38,7 +39,7 @@ const InstructionSelector = ({ instructions,
     let result: Generic<string> = {};
 
     data.forEach((item) => {
-      result[item.title] = item.description
+      result[item.title] = item.description;
     });
 
     setInstructions(result);
@@ -51,13 +52,13 @@ const InstructionSelector = ({ instructions,
         width: "95%",
         marginTop: 20,
         borderRadius: 10,
-        padding: 25,
+        padding: 25
       }
     ]} elevation={4}>
       <Text style={{
         fontWeight: "600",
         fontSize: 22,
-        marginBottom: 10,
+        marginBottom: 10
       }}>
         Instructions
       </Text>

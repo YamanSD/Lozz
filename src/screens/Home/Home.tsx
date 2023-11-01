@@ -1,19 +1,13 @@
 import React, { useState } from "react";
 import { SafeAreaView, ScrollView, View } from "react-native";
-import { Text } from "react-native-paper";
+import { Text, useTheme as usePaperTheme } from "react-native-paper";
 import { useTheme as useBoilerTheme } from "../../hooks";
-import { useTheme as usePaperTheme } from 'react-native-paper';
-import { CarouselProps } from "./HomeCarousel";
+import HomeCarousel, { CarouselProps } from "./HomeCarousel";
 import LinearGradient from "react-native-linear-gradient";
-import Animated, {
-  useSharedValue,
-  withTiming,
-  Easing
-} from "react-native-reanimated";
+import Animated, { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import { CacheImage } from "../../components";
 import CollectionInfo from "../../CollectionInfo";
 import { addAlpha, Statistics, Timescale } from "../../services";
-import HomeCarousel from "./HomeCarousel";
 import SalesTop from "./Sales/SalesTop";
 import SalesBottom from "./Sales/SalesBottom";
 import OrdersTop from "./Orders/OrdersTop";
@@ -22,7 +16,7 @@ import ExpensesBottom from "./Expenses/ExpensesBottom";
 import ExpensesTop from "./Expenses/ExpensesTop";
 import ProductsTop from "./Products/ProductsTop";
 import ProductsBottom from "./Products/ProductsBottom";
-import { Dropdown } from 'react-native-element-dropdown';
+import { Dropdown } from "react-native-element-dropdown";
 
 /**
  * Home screen component.
@@ -68,7 +62,7 @@ const Home = () => {
       setBottomIndex(index);
       animationOpacity.value = withTiming(1);
     }, 150);
-  }
+  };
 
   const components: CarouselProps[] = [
     {
@@ -88,20 +82,20 @@ const Home = () => {
     {
       top: <ExpensesTop statistics={combinedStatistics} />,
       bottom: <ExpensesBottom timescale={timescale}
-                            setStatistics={setCombinedStatistics} />
+                              setStatistics={setCombinedStatistics} />
     },
     {
       top: <ProductsTop statistics={combinedStatistics}
-                     percentage={percentageChange} />,
+                        percentage={percentageChange} />,
       bottom: <ProductsBottom timescale={timescale}
-                           setStatistics={setCombinedStatistics}
-                           setPercentage={setPercentageChange} />
-    },
+                              setStatistics={setCombinedStatistics}
+                              setPercentage={setPercentageChange} />
+    }
   ];
 
   return (
     <SafeAreaView style={[
-      Layout.fullSize,
+      Layout.fullSize
     ]}>
       <ScrollView
         contentContainerStyle={{
@@ -118,12 +112,12 @@ const Home = () => {
           Layout.fullWidth,
           Layout.rowHCenter,
           {
-          padding: 20,
-          height: 90,
-          backgroundColor: theme.colors.primary
-        }]}>
+            padding: 20,
+            height: 90,
+            backgroundColor: theme.colors.primary
+          }]}>
           <CacheImage
-            source={{uri: "https://www.research-andme.com/wp-content/uploads/2018/03/3840x2160-dark-red-solid-color-background.jpg"}}
+            source={{ uri: "https://www.research-andme.com/wp-content/uploads/2018/03/3840x2160-dark-red-solid-color-background.jpg" }}
             style={{
               height: 45,
               width: 45,
@@ -144,10 +138,10 @@ const Home = () => {
           Layout.fullWidth,
           { height: 5 }
         ]}
-        colors={[
-          addAlpha(theme.colors.secondary, 0.7),
-          addAlpha(theme.colors.secondary, 0),
-        ]}
+                        colors={[
+                          addAlpha(theme.colors.secondary, 0.7),
+                          addAlpha(theme.colors.secondary, 0)
+                        ]}
         />
 
         {/* dashboard header */}
@@ -158,7 +152,7 @@ const Home = () => {
           Layout.justifyContentBetween,
           {
             paddingVertical: 2 * horizontalPadding,
-            paddingHorizontal: horizontalPadding,
+            paddingHorizontal: horizontalPadding
           }
         ]}>
           <Text style={[{
@@ -174,7 +168,7 @@ const Home = () => {
               { value: Timescale.D },
               { value: Timescale.W },
               { value: Timescale.M },
-              { value: Timescale.Y },
+              { value: Timescale.Y }
             ]}
             placeholder={Timescale.H}
             showsVerticalScrollIndicator={false}
@@ -219,7 +213,7 @@ const Home = () => {
         <Animated.View
           style={{
             ...Layout.fullWidth,
-            opacity: animationOpacity,
+            opacity: animationOpacity
             // paddingHorizontal: horizontalPadding,
           }}
         >

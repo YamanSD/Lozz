@@ -3,10 +3,7 @@ import CartProduct from "../local_model/CartProduct";
 import Category from "./Category";
 import Monetary from "../local_model/Monetary";
 import Vendor from "./Vendor";
-import {
-  cartProduct, category, product, QuantityType,
-  TrailNature, TrailType, vendor
-} from "./types";
+import { cartProduct, category, product, QuantityType, TrailNature, TrailType, vendor } from "./types";
 import { IllegalStateError } from "../controller/Errors";
 
 
@@ -14,24 +11,19 @@ import { IllegalStateError } from "../controller/Errors";
  * Class encapsulating the product data.
  */
 export default class Product implements BaseModel {
-  /* raw data of the product */
-  private dataValue: product;
-
-  /* represents the vendor of the product */
-  private vendorInstance: Vendor;
-
-  /* represents the category of the product */
-  private readonly categoryInstance: Category;
-
   /* used to represent the lack of option values */
-  private static readonly NO_OPTIONS_MARK = '_';
-
+  private static readonly NO_OPTIONS_MARK = "_";
   /* separator used in USPs & USIs */
-  private static readonly SEPARATOR = '_';
-
+  private static readonly SEPARATOR = "_";
   /* name that can be used for properties */
   public static readonly exclusiveName =
     `${Product.SEPARATOR}${Product.SEPARATOR}$DATA_PROPERTIES`;
+  /* raw data of the product */
+  private dataValue: product;
+  /* represents the vendor of the product */
+  private vendorInstance: Vendor;
+  /* represents the category of the product */
+  private readonly categoryInstance: Category;
 
   /**
    * @param data raw data of the product
@@ -44,29 +36,6 @@ export default class Product implements BaseModel {
     this.dataValue = data;
     this.vendorInstance = new Vendor(vendorData);
     this.categoryInstance = new Category(categoryData);
-  }
-
-  /**
-   * @param id ID of the product, not present in data
-   * @param data raw data of the product
-   * @param category model of the product
-   * @returns a wrapper instance used by the restocks manager
-   */
-  public static generateWrapper(id: string,
-                                data: product,
-                                category: Category): Product {
-    data.id = id;
-    return new Product(data, {} as vendor, category.data);
-  }
-
-  /**
-   * @returns an object containing both quantities
-   */
-  public suitableQuantities() {
-    return {
-      inventory_quantities: this.inventory_quantities,
-      quantities: this.quantities
-    };
   }
 
   /**
@@ -98,6 +67,13 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param value new name of the product
+   */
+  public set name(value) {
+    this.data.name = value;
+  }
+
+  /**
    * @returns the vendor ID of the product
    */
   public get vendor_id() {
@@ -105,10 +81,26 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param value new value of the vendor ID
+   * @private
+   */
+  private set vendor_id(value) {
+    this.data.vendor_id = value;
+  }
+
+  /**
    * @returns the Vendor instance of the product
    */
   public get vendor() {
     return this.vendorInstance;
+  }
+
+  /**
+   * @param value new vendor of the product
+   */
+  public set vendor(value) {
+    this.vendorInstance = value;
+    this.vendor_id = value.name;
   }
 
   /**
@@ -133,35 +125,10 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param usp to check
-   * @param property to check for in the USP
-   * @returns true if the property is in the usp
-   * @private
+   * @param value new images object
    */
-  private static hasProperty(usp: string, property: string): boolean {
-    return this.invertUsp(usp).indexOf(property) !== -1;
-  }
-
-  /**
-   * @param usp to get the images for
-   * @returns a set of image URLs
-   */
-  public getImages(usp: string): Set<string> {
-    if (this.images === undefined) {
-      return new Set<string>();
-    }
-
-    let result = new Set<string>();
-
-    for (let property of Object.keys(this.images)) {
-      if (Product.hasProperty(usp, property)) {
-        this.images[property].forEach(image => {
-          result.add(image);
-        });
-      }
-    }
-
-    return result;
+  public set images(value) {
+    this.data.images = value;
   }
 
   /**
@@ -191,6 +158,13 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param value new quantities object
+   */
+  public set quantities(value) {
+    this.data.quantities = value;
+  }
+
+  /**
    * @returns the increment for the product
    */
   public get increment() {
@@ -205,10 +179,24 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param value new minimum sale quantities
+   */
+  public set minimum_quantity(value) {
+    this.data.minimum_quantity = value;
+  }
+
+  /**
    * @returns the base price of the product
    */
   public get price() {
     return new Monetary(this.data.price);
+  }
+
+  /**
+   * @param value new price of the product
+   */
+  public set price(value) {
+    this.data.price = value.data;
   }
 
   /**
@@ -219,10 +207,24 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param value new added price object
+   */
+  public set added_price(value) {
+    this.data.added_price = value;
+  }
+
+  /**
    * @returns the inventory quantities object of the product
    */
   public get inventory_quantities() {
     return this.data.inventory_quantities;
+  }
+
+  /**
+   * @param value new inventory quantities object
+   */
+  public set inventory_quantities(value) {
+    this.data.inventory_quantities = value;
   }
 
   /**
@@ -233,10 +235,24 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param value new instructions
+   */
+  public set instructions(value) {
+    this.data.instructions = value;
+  }
+
+  /**
    * @returns the base cost of the product
    */
   public get cost() {
     return new Monetary(this.data.cost);
+  }
+
+  /**
+   * @param value new base cost of the product
+   */
+  public set cost(value: Monetary) {
+    this.data.cost = value.data;
   }
 
   /**
@@ -247,6 +263,13 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param value new added costs object of the product
+   */
+  public set added_costs(value) {
+    this.data.added_costs = value;
+  }
+
+  /**
    * @returns the discount object of the product
    */
   public get discount() {
@@ -254,10 +277,198 @@ export default class Product implements BaseModel {
   }
 
   /**
+   * @param value new discount object of the product
+   */
+  public set discount(value) {
+    this.data.discount = value;
+  }
+
+  /**
    * @returns the description of the product
    */
   public get description() {
     return this.data.description;
+  }
+
+  /**
+   * @param value new description of the product
+   */
+  public set description(value) {
+    this.data.description = value;
+  }
+
+  /**
+   * @returns the total quantity of the product
+   */
+  public get totalQuantity(): number {
+    let result: number = 0;
+
+    for (let usp of Object.keys(this.quantities)) {
+      result += this.getQuantity(usp);
+    }
+
+    return result;
+  }
+
+  /**
+   * @returns the trail
+   */
+  public get trail(): TrailType {
+    return this.data.trail;
+  }
+
+  /**
+   * @param value new value of the trail
+   */
+  public set trail(value: TrailType) {
+    this.data.trail = value;
+  }
+
+  /**
+   * @returns whether the object is deactivated
+   */
+  public get isDeactivated(): boolean {
+    return BaseModel.isDeactivated(this.trail);
+  }
+
+  /**
+   * @returns whether the object is deleted
+   */
+  public get isDeleted(): boolean {
+    return BaseModel.isDeleted(this.trail);
+  }
+
+  /**
+   * @returns a deep copy of the raw data
+   */
+  public get dataCopy() {
+    return BaseModel.copy(this.data);
+  }
+
+  /**
+   * @returns a copy of the object
+   */
+  public get copy() {
+    return new Product(this.dataCopy, this.vendor, this.category);
+  }
+
+  /**
+   * @param id ID of the product, not present in data
+   * @param data raw data of the product
+   * @param category model of the product
+   * @returns a wrapper instance used by the restocks manager
+   */
+  public static generateWrapper(id: string,
+                                data: product,
+                                category: Category): Product {
+    data.id = id;
+    return new Product(data, {} as vendor, category.data);
+  }
+
+  /**
+   * @param category to get the quantities for
+   * @returns empty quantities of the given category
+   */
+  public static emptyQuantities(category: Category): QuantityType {
+    let result: QuantityType = {};
+
+    category.optionValues.forEach((p: string[]) => {
+      result[this.createUsp(p)] = 0;
+    });
+
+    return result;
+  }
+
+  /**
+   * @param usi to be converted
+   * @returns the USP in the USI
+   */
+  public static usiToUsp(usi: string): string {
+    return usi.substring(usi.indexOf(Product.SEPARATOR) + 1);
+  }
+
+  /**
+   * @param option_values to create the USP string
+   * @returns the generated USP
+   */
+  public static createUsp(option_values: [...string[]]): string {
+    return option_values.join(Product.SEPARATOR);
+  }
+
+  /**
+   * @param id ID of the product
+   * @param option_values option values chosen to create the USI
+   * @returns the generated USI
+   */
+  public static createUsi(id: string,
+                          option_values?: [...any[]]): string {
+    let temp = [id];
+    temp.push(...option_values ?? []);
+
+    return temp.join(Product.SEPARATOR);
+  }
+
+  /**
+   * @param usp of a product
+   * @returns option values array of the USP
+   */
+  public static invertUsp(usp: string) {
+    return usp.split(Product.SEPARATOR);
+  }
+
+  /**
+   * @param usi of a product
+   * @returns object containing product ID & option_values array
+   */
+  public static invertUsi(usi: string) {
+    const temp = usi.split(Product.SEPARATOR);
+
+    return {
+      id: temp[0],
+      option_values: temp.splice(1)
+    };
+  }
+
+  /**
+   * @param usp to check
+   * @param property to check for in the USP
+   * @returns true if the property is in the usp
+   * @private
+   */
+  private static hasProperty(usp: string, property: string): boolean {
+    return this.invertUsp(usp).indexOf(property) !== -1;
+  }
+
+  /**
+   * @returns an object containing both quantities
+   */
+  public suitableQuantities() {
+    return {
+      inventory_quantities: this.inventory_quantities,
+      quantities: this.quantities
+    };
+  }
+
+  /**
+   * @param usp to get the images for
+   * @returns a set of image URLs
+   */
+  public getImages(usp: string): Set<string> {
+    if (this.images === undefined) {
+      return new Set<string>();
+    }
+
+    let result = new Set<string>();
+
+    for (let property of Object.keys(this.images)) {
+      if (Product.hasProperty(usp, property)) {
+        this.images[property].forEach(image => {
+          result.add(image);
+        });
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -305,38 +516,11 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param category to get the quantities for
-   * @returns empty quantities of the given category
-   */
-  public static emptyQuantities(category: Category): QuantityType {
-    let result: QuantityType = {};
-
-    category.optionValues.forEach((p: string[]) => {
-      result[this.createUsp(p)] = 0;
-    });
-
-    return result;
-  }
-
-  /**
    * @param usp USP to get the display quantity for
    * @returns the quantity for the given USP
    */
   public getQuantity(usp?: string): number {
     return this.quantities[usp ?? Product.NO_OPTIONS_MARK] ?? 0;
-  }
-
-  /**
-   * @returns the total quantity of the product
-   */
-  public get totalQuantity(): number {
-    let result: number = 0;
-
-    for (let usp of Object.keys(this.quantities)) {
-      result += this.getQuantity(usp);
-    }
-
-    return result;
   }
 
   /**
@@ -373,7 +557,7 @@ export default class Product implements BaseModel {
     return this.price.addCopy(this.getAddedPrice(usp))
       .addCopy(this.category.addedPrice(usp))
       .subtractCopy(this.getDiscount(usp)
-    );
+      );
   }
 
   /**
@@ -477,7 +661,7 @@ export default class Product implements BaseModel {
           `Invalid removal of quantities for USI: ${this.uspToUsi(usp)}
           , given: ${added} 
           , available: ${current}`
-        )
+        );
       } else if (to_inventory === undefined
         && added < 0
         && currentInventory < -added) {
@@ -485,7 +669,7 @@ export default class Product implements BaseModel {
           `Invalid removal of (inv) quantities for USI: ${this.uspToUsi(usp)}
           , given: ${added} 
           , available: ${current}`
-        )
+        );
       }
     }
   }
@@ -518,14 +702,6 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param usi to be converted
-   * @returns the USP in the USI
-   */
-  public static usiToUsp(usi: string): string {
-    return usi.substring(usi.indexOf(Product.SEPARATOR) + 1);
-  }
-
-  /**
    * Alias for adding a single USP to the quantities
    *
    * @param usi to be added
@@ -554,48 +730,6 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param option_values to create the USP string
-   * @returns the generated USP
-   */
-  public static createUsp(option_values: [...string[]]): string {
-    return option_values.join(Product.SEPARATOR);
-  }
-
-  /**
-   * @param id ID of the product
-   * @param option_values option values chosen to create the USI
-   * @returns the generated USI
-   */
-  public static createUsi(id: string,
-                          option_values?: [...any[]]): string {
-    let temp = [id];
-    temp.push(...option_values ?? []);
-
-    return temp.join(Product.SEPARATOR);
-  }
-
-  /**
-   * @param usp of a product
-   * @returns option values array of the USP
-   */
-  public static invertUsp(usp: string) {
-    return usp.split(Product.SEPARATOR);
-  }
-
-  /**
-   * @param usi of a product
-   * @returns object containing product ID & option_values array
-   */
-  public static invertUsi(usi: string) {
-    const temp = usi.split(Product.SEPARATOR);
-
-    return {
-      id: temp[0],
-      option_values: temp.splice(1)
-    };
-  }
-
-  /**
    * @param option_values to generate the USI for
    * @returns the generated USI for this product according to the option values
    */
@@ -612,77 +746,6 @@ export default class Product implements BaseModel {
     temp.push(usp);
 
     return temp.join(Product.SEPARATOR);
-  }
-
-  /**
-   * @returns the trail
-   */
-  public get trail(): TrailType {
-    return this.data.trail;
-  }
-
-  /**
-   * @param value new value of the trail
-   */
-  public set trail(value: TrailType) {
-    this.data.trail = value;
-  }
-
-  /**
-   * @param value new name of the product
-   */
-  public set name(value) {
-    this.data.name = value;
-  }
-
-  /**
-   * @param value new vendor of the product
-   */
-  public set vendor(value) {
-    this.vendorInstance = value;
-    this.vendor_id = value.name;
-  }
-
-  /**
-   * @param value new images object
-   */
-  public set images(value) {
-    this.data.images = value;
-  }
-
-  /**
-   * @param value new quantities object
-   */
-  public set quantities(value) {
-    this.data.quantities = value;
-  }
-
-  /**
-   * @param value new price of the product
-   */
-  public set price(value) {
-    this.data.price = value.data;
-  }
-
-  /**
-   * @param value new added price object
-   */
-  public set added_price(value) {
-    this.data.added_price = value;
-  }
-
-  /**
-   * @param value new inventory quantities object
-   */
-  public set inventory_quantities(value) {
-    this.data.inventory_quantities = value;
-  }
-
-  /**
-   * @param value new instructions
-   */
-  public set instructions(value) {
-    this.data.instructions = value;
   }
 
   /**
@@ -706,41 +769,6 @@ export default class Product implements BaseModel {
     }
 
     delete this.instructions[title];
-  }
-
-  /**
-   * @param value new base cost of the product
-   */
-  public set cost(value: Monetary) {
-    this.data.cost = value.data;
-  }
-
-  /**
-   * @param value new added costs object of the product
-   */
-  public set added_costs(value) {
-    this.data.added_costs = value;
-  }
-
-  /**
-   * @param value new discount object of the product
-   */
-  public set discount(value) {
-    this.data.discount = value;
-  }
-
-  /**
-   * @param value new description of the product
-   */
-  public set description(value) {
-    this.data.description = value;
-  }
-
-  /**
-   * @param value new minimum sale quantities
-   */
-  public set minimum_quantity(value) {
-    this.data.minimum_quantity = value;
   }
 
   /**
@@ -857,7 +885,7 @@ export default class Product implements BaseModel {
    */
   public detachSelection(
     option_values: [...string[]],
-    quantity: number,
+    quantity: number
   ) {
     const usp = Product.createUsp(option_values);
     let data: cartProduct = {
@@ -883,45 +911,9 @@ export default class Product implements BaseModel {
   }
 
   /**
-   * @param value new value of the vendor ID
-   * @private
-   */
-  private set vendor_id(value) {
-    this.data.vendor_id = value;
-  }
-
-  /**
-   * @returns whether the object is deactivated
-   */
-  public get isDeactivated(): boolean {
-    return BaseModel.isDeactivated(this.trail);
-  }
-
-  /**
-   * @returns whether the object is deleted
-   */
-  public get isDeleted(): boolean {
-    return BaseModel.isDeleted(this.trail);
-  }
-
-  /**
    * @param nature type of action done by the employee
    */
   public stamp(nature: TrailNature): void {
     BaseModel.stamp(this.trail, nature);
-  }
-
-  /**
-   * @returns a deep copy of the raw data
-   */
-  public get dataCopy() {
-    return BaseModel.copy(this.data);
-  }
-
-  /**
-   * @returns a copy of the object
-   */
-  public get copy() {
-    return new Product(this.dataCopy, this.vendor, this.category);
   }
 }

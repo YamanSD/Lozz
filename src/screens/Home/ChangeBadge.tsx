@@ -27,8 +27,8 @@ const ChangeBadge = ({ percentage }: Properties) => {
   const backgroundColor = percentage > 0
     ? "#228B22"
     : (percentage < 0
-      ? "#8B0000"
-      : "#777777"
+        ? "#8B0000"
+        : "#777777"
     );
 
   const textColor = percentage === 0 ? "black" : "white";
@@ -39,18 +39,18 @@ const ChangeBadge = ({ percentage }: Properties) => {
       Layout.row,
       Layout.rowHCenter,
       {
-      paddingHorizontal: 5,
-      borderRadius: 10,
-      height: 28,
-      width: 100,
-      backgroundColor: backgroundColor
-    }]}>
+        paddingHorizontal: 5,
+        borderRadius: 10,
+        height: 28,
+        width: 100,
+        backgroundColor: backgroundColor
+      }]}>
       <Text style={{
         fontWeight: "800",
         fontSize: 13,
-        color: textColor,
+        color: textColor
       }}>
-        % {percentage < 0 ? '-' : '+'}
+        % {percentage < 0 ? "-" : "+"}
         {(100 * Math.abs(percentage)).toFixed(2)}
       </Text>
       <Icon name={percentage < 0

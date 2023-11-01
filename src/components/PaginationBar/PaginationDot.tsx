@@ -1,11 +1,7 @@
 import * as React from "react";
 import { View } from "react-native";
-import Animated, {
-  Extrapolate,
-  interpolate,
-  useAnimatedStyle
-} from "react-native-reanimated";
-import { useTheme as usePaperTheme } from 'react-native-paper';
+import Animated, { Extrapolate, interpolate, useAnimatedStyle } from "react-native-reanimated";
+import { useTheme as usePaperTheme } from "react-native-paper";
 
 
 /**
@@ -45,9 +41,11 @@ type Properties = {
  * @param props for the dot.
  * @constructor
  */
-const PaginationDot = ({ animationValue, index, length,
+const PaginationDot = ({
+                         animationValue, index, length,
                          activeColor, inactiveColor,
-                         radius, isRotate }: Properties) => {
+                         radius, isRotate
+                       }: Properties) => {
   /* application theme */
   const theme = usePaperTheme();
   const borderRadius = radius / 2;
@@ -71,13 +69,13 @@ const PaginationDot = ({ animationValue, index, length,
 
     return {
       transform: [{
-          translateX: interpolate(
-            animationValue?.value,
-            inputRange,
-            outputRange,
-            Extrapolate.CLAMP,
-          ),
-        }],
+        translateX: interpolate(
+          animationValue?.value,
+          inputRange,
+          outputRange,
+          Extrapolate.CLAMP
+        )
+      }]
     };
   }, [animationValue, index, length]);
 
@@ -90,16 +88,16 @@ const PaginationDot = ({ animationValue, index, length,
         borderRadius: borderRadius,
         overflow: "hidden",
         transform: [{
-            rotateZ: isRotate ? "90deg" : "0deg",
-        }],
+          rotateZ: isRotate ? "90deg" : "0deg"
+        }]
       }}
     >
       <Animated.View
         style={[{
-            borderRadius: borderRadius,
-            backgroundColor: activeColor,
-            flex: 1,
-          }, animationStyle]}
+          borderRadius: borderRadius,
+          backgroundColor: activeColor,
+          flex: 1
+        }, animationStyle]}
       />
     </View>
   );

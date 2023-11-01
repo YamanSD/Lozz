@@ -49,10 +49,10 @@ export enum SpecialFields {
  * - nature: enum representing the nature of the action.
  */
 export type TrailType = {
-    [timestamp: string]: {
-      employee_id: string,
-      nature: TrailNature
-    }
+  [timestamp: string]: {
+    employee_id: string,
+    nature: TrailNature
+  }
 };
 
 /**
@@ -214,7 +214,7 @@ export type basicVendor = {
   name: string,
   phone_numbers?: [string, ...string[]],
   emails?: [string, ...string[]],
-}
+};
 
 /**
  * - name (Doc ID): string representing the name of the category.
@@ -1009,124 +1009,124 @@ export type information = {
  * Defines the search schema for the Vendor collection
  */
 export const VendorSearchSchema: Schema = {
-  id: 'string', // Required for search engine
-  name: 'string',
-  phone_numbers: 'string[]',
-  emails: 'string[]'
+  id: "string", // Required for search engine
+  name: "string",
+  phone_numbers: "string[]",
+  emails: "string[]"
 };
 
 /**
  * Defines the search schema for the Category collection
  */
 export const CategorySearchSchema: Schema = {
-  id: 'string', // Required for search engine
-  name: 'string',
-  option_keys: 'string[]'
+  id: "string", // Required for search engine
+  name: "string",
+  option_keys: "string[]"
 };
 
 /**
  * Defines the search schema for the Expense collection
  */
 export const ExpenseSearchSchema: Schema = {
-  id: 'string', // Required for search engine
-  description: 'string',
-  value: 'number[]',
-  date: 'string',  // (yyyymmdd) format
-  vendor_id: 'string', // Can be empty
-  employee_id: 'string', // Can be empty
-  courier_id: 'string' // Can be empty
+  id: "string", // Required for search engine
+  description: "string",
+  value: "number[]",
+  date: "string",  // (yyyymmdd) format
+  vendor_id: "string", // Can be empty
+  employee_id: "string", // Can be empty
+  courier_id: "string" // Can be empty
 };
 
 /**
  * Defines the search schema for the Courier collection
  */
 export const CourierSearchSchema: Schema = {
-  id: 'string', // Required for search engine
-  name: 'string',
-  provinces: 'string[]'
+  id: "string", // Required for search engine
+  name: "string",
+  provinces: "string[]"
 };
 
 /**
  * Defines the search schema for the Restocks collection
  */
 export const RestockSearchSchema: Schema = {
-  id: 'string', // Required for search engine
-  date: 'string', // restock ID
-  note: 'string', // Can be empty
-  item_count: 'number',
-  invoice_linked: 'boolean',
-  employee_id: 'string',
-  quantities: 'string[]' // Only USIs
+  id: "string", // Required for search engine
+  date: "string", // restock ID
+  note: "string", // Can be empty
+  item_count: "number",
+  invoice_linked: "boolean",
+  employee_id: "string",
+  quantities: "string[]" // Only USIs
 };
 
 /**
  * Defines the search schema for the Employee collection
  */
 export const EmployeeSearchSchema: Schema = {
-  id: 'string', // Required for search engine
-  first_name: 'string',
-  middle_name: 'string', // Can be empty
-  last_name: 'string',
-  phone_number: 'string', // Can be empty
-  email: 'string', // Can be empty
-  role: 'number',
-  commission_percent: 'number', // Can be empty
-  salary: 'number[]',
-  gender: 'boolean', // Can be empty
-  birthday: 'string', // Can be empty, (yyyymmdd)
-  left: 'boolean',
-  join_date: 'string' // (yyyymmdd), same as ID
+  id: "string", // Required for search engine
+  first_name: "string",
+  middle_name: "string", // Can be empty
+  last_name: "string",
+  phone_number: "string", // Can be empty
+  email: "string", // Can be empty
+  role: "number",
+  commission_percent: "number", // Can be empty
+  salary: "number[]",
+  gender: "boolean", // Can be empty
+  birthday: "string", // Can be empty, (yyyymmdd)
+  left: "boolean",
+  join_date: "string" // (yyyymmdd), same as ID
 };
 
 /**
  * Defines the search schema for the Customer collection
  */
 export const CustomerSearchSchema: Schema = {
-  id: 'string', // Required for search engine
-  first_name: 'string',
-  middle_name: 'string', // Can be empty
-  last_name: 'string',
-  phone_number: 'string', // Can be empty
-  email: 'string', // Can be empty
-  gender: 'boolean', // Can be empty
-  birthday: 'string', // Can be empty, (yyyymmdd)
-  is_banned: 'boolean'
+  id: "string", // Required for search engine
+  first_name: "string",
+  middle_name: "string", // Can be empty
+  last_name: "string",
+  phone_number: "string", // Can be empty
+  email: "string", // Can be empty
+  gender: "boolean", // Can be empty
+  birthday: "string", // Can be empty, (yyyymmdd)
+  is_banned: "boolean"
 };
 
 /**
  * Defines the search schema for the Product collection
  */
 export const ProductSearchSchema: Schema = {
-  id: 'string', // Required for search engine
-  name: 'string',
-  vendor_id: 'string',
-  category_id: 'string',
-  price: 'number[]',
-  cost: 'number[]',
-  discounted: 'boolean',
-  description: 'string',
-  available_values: 'string[]'
+  id: "string", // Required for search engine
+  name: "string",
+  vendor_id: "string",
+  category_id: "string",
+  price: "number[]",
+  cost: "number[]",
+  discounted: "boolean",
+  description: "string",
+  available_values: "string[]"
 };
 
 /**
  * Defines the search schema for the Order collection
  */
 export const OrderSearchSchema: Schema = {
-  id: 'string', // Required for search engine
-  date: 'string',
-  note: 'string', // Can be empty
-  discounted: 'boolean',
-  status: 'number',
-  total: 'number[]',
-  zone: 'string',
-  province: 'number', // Can be empty
-  address: 'string', // Can be empty
-  courier_id: 'string', // Can be empty
-  customer_id: 'string',
-  commission_percent: 'number', // Can be empty
-  phone_number: 'string',
-  email: 'string',
-  link_id: 'string' // Can be empty
+  id: "string", // Required for search engine
+  date: "string",
+  note: "string", // Can be empty
+  discounted: "boolean",
+  status: "number",
+  total: "number[]",
+  zone: "string",
+  province: "number", // Can be empty
+  address: "string", // Can be empty
+  courier_id: "string", // Can be empty
+  customer_id: "string",
+  commission_percent: "number", // Can be empty
+  phone_number: "string",
+  email: "string",
+  link_id: "string" // Can be empty
 };
 
 /**

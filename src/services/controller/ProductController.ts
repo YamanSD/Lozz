@@ -1,11 +1,5 @@
 import BaseController, { ControllerFlag } from "./BaseController";
-import {
-  basicProduct,
-  Generic,
-  product,
-  ProductSearchSchema,
-  SpecialFields
-} from "../model/types";
+import { basicProduct, Generic, product, ProductSearchSchema, SpecialFields } from "../model/types";
 import firestore from "@react-native-firebase/firestore";
 import CollectionInfo from "../../CollectionInfo";
 import Product from "../model/Product";
@@ -37,7 +31,7 @@ export default class ProductController extends BaseController<product> {
       server ?? firestore,
       ProductController.flag,
       ProductSearchSchema
-    )
+    );
 
     this.loadSearchData().then(() => {
       this.activateListener();
@@ -229,7 +223,7 @@ export default class ProductController extends BaseController<product> {
       name: true,
       description: data.description !== undefined,
       category_id: true,
-      vendor_id: true,
+      vendor_id: true
     };
 
     /* Iterate over the locales and test */
@@ -282,7 +276,7 @@ export default class ProductController extends BaseController<product> {
       name: true,
       description: data.description !== undefined,
       category_id: true,
-      vendor_id: true,
+      vendor_id: true
     };
 
     /* Iterate over the locales and test */

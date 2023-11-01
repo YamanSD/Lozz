@@ -23,6 +23,20 @@ type RawTimestamp = {
  */
 export default abstract class BaseModel {
   /**
+   * @returns the current datetime in the following format (yyyymmddhhMMssnnn)
+   */
+  public static get currentTimestamp(): string {
+    return BaseModel.revertDate(new Date());
+  }
+
+  /**
+   * @returns the ID of the current employee if logged in, otherwise undefined
+   */
+  public static get currentEmployee() {
+    return auth().currentUser?.uid;
+  }
+
+  /**
    * @returns the raw data
    */
   public abstract get data(): any;
@@ -31,6 +45,11 @@ export default abstract class BaseModel {
    * @param value new value of the raw data
    */
   public abstract set data(value: any);
+
+  /**
+   * @returns a copy of the raw data
+   */
+  public abstract get dataCopy(): any;
 
   /**
    * @param trail to check if it is deactivated
@@ -67,13 +86,6 @@ export default abstract class BaseModel {
   }
 
   /**
-   * @returns the current datetime in the following format (yyyymmddhhMMssnnn)
-   */
-  public static get currentTimestamp(): string {
-    return BaseModel.revertDate(new Date());
-  }
-
-  /**
    * @param trail to be processed
    * @returns the ID of the employee that created the trail.
    *          If the creation tag does not exist, return null.
@@ -104,13 +116,6 @@ export default abstract class BaseModel {
   }
 
   /**
-   * @returns the ID of the current employee if logged in, otherwise undefined
-   */
-  public static get currentEmployee() {
-    return auth().currentUser?.uid
-  }
-
-  /**
    * @param trail trail to be stamped
    * @param nature nature of the action
    * @param randomDigits number of random digits to be appended
@@ -133,7 +138,7 @@ export default abstract class BaseModel {
     trail[BaseModel.getRandomTimestamp(randomDigits)] = {
       nature: nature,
       employee_id: id
-    }
+    };
   }
 
   /**
@@ -190,13 +195,13 @@ export default abstract class BaseModel {
 
     return [
       date.getFullYear(),
-      date.getMonth().toString().padStart(2, '0'),
-      date.getDate().toString().padStart(2, '0'),
-      date.getHours().toString().padStart(2, '0'),
-      date.getMinutes().toString().padStart(2, '0'),
-      date.getSeconds().toString().padStart(2, '0'),
-      date.getMilliseconds().toString().padStart(3, '0')
-    ].join('');
+      date.getMonth().toString().padStart(2, "0"),
+      date.getDate().toString().padStart(2, "0"),
+      date.getHours().toString().padStart(2, "0"),
+      date.getMinutes().toString().padStart(2, "0"),
+      date.getSeconds().toString().padStart(2, "0"),
+      date.getMilliseconds().toString().padStart(3, "0")
+    ].join("");
   }
 
   /**
@@ -224,9 +229,4 @@ export default abstract class BaseModel {
       (a, b) => a > b ? a : b
     );
   }
-
-  /**
-   * @returns a copy of the raw data
-   */
-  public abstract get dataCopy(): any;
 }

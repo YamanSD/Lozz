@@ -45,11 +45,13 @@ type Properties = {
 };
 
 
-const PaginationBar = ({ animationValue, count,
+const PaginationBar = ({
+                         animationValue, count,
                          activeColors, inactiveColors,
                          isVertical, radius, style,
                          defaultActiveColor, gap,
-                         defaultInactiveColor}: Properties) => {
+                         defaultInactiveColor
+                       }: Properties) => {
   let colors = inactiveColors !== undefined ? inactiveColors : activeColors;
 
   if (colors === undefined) {
@@ -65,11 +67,11 @@ const PaginationBar = ({ animationValue, count,
   }
 
   style = {
-      gap: gap,
-      ...(style as Object),
-      flexDirection: isVertical ? "column" : "row",
-      justifyContent: "space-between",
-      alignSelf: "center",
+    gap: gap,
+    ...(style as Object),
+    flexDirection: isVertical ? "column" : "row",
+    justifyContent: "space-between",
+    alignSelf: "center"
   };
 
   return (
@@ -90,7 +92,7 @@ const PaginationBar = ({ animationValue, count,
       })}
     </View>
   );
-}
+};
 
 /**
  * Function that modifies the progressValue using the absolute progress.
@@ -100,7 +102,7 @@ const PaginationBar = ({ animationValue, count,
  * @returns the new progress value
  */
 export function modifyProgress(progressValue: Animated.SharedValue<number>,
-                                 absoluteProgress: number): number {
+                               absoluteProgress: number): number {
   return progressValue.value = absoluteProgress;
 }
 

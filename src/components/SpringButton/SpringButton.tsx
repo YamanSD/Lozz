@@ -1,12 +1,13 @@
 import React from "react";
 import Animated, {
-  withSpring,
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
+  withDelay,
   withSequence,
-  withDelay, WithSpringConfig
+  withSpring,
+  WithSpringConfig
 } from "react-native-reanimated";
-import { ButtonProps, Button } from "react-native-paper";
+import { Button, ButtonProps } from "react-native-paper";
 
 /**
  * Prop-type for the spring button.
@@ -31,7 +32,7 @@ const SpringButton = (props: Properties) => {
   // Animated style for the button
   const animationStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: scaleValue.value }],
+      transform: [{ scale: scaleValue.value }]
     };
   });
 
@@ -44,17 +45,17 @@ const SpringButton = (props: Properties) => {
   };
 
   return (
-      <Animated.View style={[animationStyle]}>
-        <Button {...props} onPress={(e) => {
-          handlePress();
+    <Animated.View style={[animationStyle]}>
+      <Button {...props} onPress={(e) => {
+        handlePress();
 
-          const temp = props.onPress;
+        const temp = props.onPress;
 
-          if (temp !== undefined) {
-            return temp(e);
-          }
-        }} />
-      </Animated.View>
+        if (temp !== undefined) {
+          return temp(e);
+        }
+      }} />
+    </Animated.View>
   );
 };
 

@@ -1,13 +1,10 @@
-import React, {
-  JSXElementConstructor,
-  ReactElement,
-  useRef } from "react";
+import React, { JSXElementConstructor, ReactElement, useRef } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import { ScreenDimensions } from "../../theme/Variables";
 import { PaginationBar } from "../../components";
 import { modifyProgress } from "../../components/PaginationBar/PaginationBar";
-import { useTheme as usePaperTheme } from 'react-native-paper';
+import { useTheme as usePaperTheme } from "react-native-paper";
 import { View } from "react-native";
 
 /**
@@ -47,8 +44,10 @@ type Properties = {
  * Carousel used in the home screen to display components.
  * @constructor
  */
-const HomeCarousel = ({ components, topHeight,
-                        setBottom, padHTop }: Properties) => {
+const HomeCarousel = ({
+                        components, topHeight,
+                        setBottom, padHTop
+                      }: Properties) => {
   const theme = usePaperTheme();
 
   // Create refs for both carousels
@@ -76,7 +75,7 @@ const HomeCarousel = ({ components, topHeight,
           }
         }}
         panGestureHandlerProps={{
-          activeOffsetX: [-10, 10],
+          activeOffsetX: [-10, 10]
         }}
         width={width}
         height={topHeight}
@@ -89,17 +88,17 @@ const HomeCarousel = ({ components, topHeight,
         mode="horizontal-stack"
         modeConfig={{
           stackInterval: (padHTop ?? 0) * 50,
-          rotateZDeg: 0,
+          rotateZDeg: 0
         }}
         data={components}
-        renderItem={({item}) => {
+        renderItem={({ item }) => {
           return (
             <View style={{
               paddingHorizontal: padHTop ?? 0,
               marginTop: 5
             }}>
               {item.top}
-          </View>
+            </View>
           );
         }}
       />

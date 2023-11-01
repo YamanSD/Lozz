@@ -45,6 +45,13 @@ export default class Employee implements BaseModel {
   }
 
   /**
+   * @param value new first name of the employee
+   */
+  public set first_name(value) {
+    this.data.first_name = value;
+  }
+
+  /**
    * @returns the registered middle name of the employee,
    *          if it exists. Otherwise, undefined
    */
@@ -53,10 +60,24 @@ export default class Employee implements BaseModel {
   }
 
   /**
+   * @param value new middle name of the employee
+   */
+  public set middle_name(value) {
+    this.data.middle_name = value;
+  }
+
+  /**
    * @returns the registered last name of the employee
    */
   public get last_name() {
     return this.data.last_name;
+  }
+
+  /**
+   * @param value new last name of the employee
+   */
+  public set last_name(value) {
+    this.data.last_name = value;
   }
 
   /**
@@ -68,11 +89,25 @@ export default class Employee implements BaseModel {
   }
 
   /**
+   * @param value new phone number of the employee
+   */
+  public set phone_number(value) {
+    this.data.phone_number = value;
+  }
+
+  /**
    * @returns the registered email of the employee, if exists.
    *          Otherwise, undefined
    */
   public get email() {
     return this.data.email;
+  }
+
+  /**
+   * @param value new email of the employee
+   */
+  public set email(value) {
+    this.data.email = value;
   }
 
   /**
@@ -83,10 +118,28 @@ export default class Employee implements BaseModel {
   }
 
   /**
+   * @param value new role of the employee
+   */
+  public set role(value) {
+    this.data.role = value;
+  }
+
+  /**
    * @returns the commission percentage of the employee
    */
   public get commission_percent() {
     return this.data.commission_percent;
+  }
+
+  /**
+   * @param value new commission percent of the employee
+   */
+  public set commission_percent(value) {
+    if (value === undefined || value < 0 || 1 < value) {
+      throw new RangeError(`Invalid commission ${value}`);
+    }
+
+    this.data.commission_percent = value;
   }
 
   /**
@@ -97,6 +150,13 @@ export default class Employee implements BaseModel {
   }
 
   /**
+   * @param value new salary of the employee
+   */
+  public set salary(value) {
+    this.data.salary = value;
+  }
+
+  /**
    * @returns the gender of the employee
    */
   public get gender() {
@@ -104,10 +164,24 @@ export default class Employee implements BaseModel {
   }
 
   /**
+   * @param value new gender of the employee
+   */
+  public set gender(value) {
+    this.data.gender = value;
+  }
+
+  /**
    * @returns the birthday of the employee
    */
   public get birthday() {
     return this.data.birthday;
+  }
+
+  /**
+   * @param value new birthday of the employee
+   */
+  public set birthday(value) {
+    this.data.birthday = value;
   }
 
   /**
@@ -142,9 +216,9 @@ export default class Employee implements BaseModel {
   public get full_name() {
     return [
       this.first_name,
-      this.middle_name ?? '',
+      this.middle_name ?? "",
       this.last_name
-    ].join(' ');
+    ].join(" ");
   }
 
   /**
@@ -162,90 +236,6 @@ export default class Employee implements BaseModel {
   }
 
   /**
-   * @param value new first name of the employee
-   */
-  public set first_name(value) {
-    this.data.first_name = value;
-  }
-
-  /**
-   * @param value new middle name of the employee
-   */
-  public set middle_name(value) {
-    this.data.middle_name = value;
-  }
-
-  /**
-   * @param value new last name of the employee
-   */
-  public set last_name(value) {
-    this.data.last_name = value;
-  }
-
-  /**
-   * @param value new phone number of the employee
-   */
-  public set phone_number(value) {
-    this.data.phone_number = value;
-  }
-
-  /**
-   * @param value new email of the employee
-   */
-  public set email(value) {
-    this.data.email = value;
-  }
-
-  /**
-   * @param value new role of the employee
-   */
-  public set role(value) {
-    this.data.role = value;
-  }
-
-  /**
-   * @param value new commission percent of the employee
-   */
-  public set commission_percent(value) {
-    if (value === undefined || value < 0 || 1 < value) {
-      throw new RangeError(`Invalid commission ${value}`);
-    }
-
-    this.data.commission_percent = value;
-  }
-
-  /**
-   * @param value new salary of the employee
-   */
-  public set salary(value) {
-    this.data.salary = value;
-  }
-
-  /**
-   * @param value new gender of the employee
-   */
-  public set gender(value) {
-    this.data.gender = value;
-  }
-
-  /**
-   * @param value new birthday of the employee
-   */
-  public set birthday(value) {
-    this.data.birthday = value;
-  }
-
-  /**
-   * Fires the employee from the company.
-   * Role becomes past.
-   * Trail stamped with deactivated.
-   */
-  public fire(): void {
-    this.stamp(TrailNature.D);
-    this.role = EmployeeRole.past;
-  }
-
-  /**
    * @returns whether the object is deactivated
    */
   public get isDeactivated(): boolean {
@@ -260,13 +250,6 @@ export default class Employee implements BaseModel {
   }
 
   /**
-   * @param nature type of action done by the employee
-   */
-  public stamp(nature: TrailNature): void {
-    BaseModel.stamp(this.trail, nature);
-  }
-
-  /**
    * @returns a deep copy of the raw data
    */
   public get dataCopy() {
@@ -278,5 +261,22 @@ export default class Employee implements BaseModel {
    */
   public get copy() {
     return new Employee(this.dataCopy);
+  }
+
+  /**
+   * Fires the employee from the company.
+   * Role becomes past.
+   * Trail stamped with deactivated.
+   */
+  public fire(): void {
+    this.stamp(TrailNature.D);
+    this.role = EmployeeRole.past;
+  }
+
+  /**
+   * @param nature type of action done by the employee
+   */
+  public stamp(nature: TrailNature): void {
+    BaseModel.stamp(this.trail, nature);
   }
 }

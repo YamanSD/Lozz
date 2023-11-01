@@ -1,7 +1,6 @@
 import React from "react";
 import { InputModeOptions, StyleProp, TextStyle, View, ViewStyle } from "react-native";
-import { HelperText, TextInput } from "react-native-paper";
-import { useTheme as usePaperTheme } from "react-native-paper";
+import { HelperText, TextInput, useTheme as usePaperTheme } from "react-native-paper";
 
 /**
  * Prop-type for the InputField component
@@ -48,17 +47,19 @@ type Properties = {
  * @param contentStyle for the InputField
  * @constructor
  */
-const InputField = ({ autoCapitalize, onChangeText, contentStyle,
+const InputField = ({
+                      autoCapitalize, onChangeText, contentStyle,
                       label, value, errorChecker,
                       errorMessage, style, viewStyle,
                       inputMode, formatValue, unpackValue,
-                      outline, multiline, outlineStyle}: Properties) => {
+                      outline, multiline, outlineStyle
+                    }: Properties) => {
   const theme = usePaperTheme();
 
   if (formatValue === undefined) {
     formatValue = (value: any) => {
       return value;
-    }
+    };
   } else if (unpackValue === undefined) {
     throw new Error("Invalid formatting of InputField, must add unpacking");
   }

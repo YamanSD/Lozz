@@ -29,34 +29,27 @@ export default class Monetary {
     this.applyRounding();
   }
 
+  //
   /**
-   * Factory method for zero value instances.
-   *
-   * @returns a Monetary representing zero value.
+   * @returns the nearest rounding number for USD.
    */
-  public static noValue(): Monetary {
-    return new Monetary(0);
+  public static get roundUsdNumber(): number {
+    // return Monetary.rates.roundingUsd;
+    return 0.01;
   }
 
   /**
-   * Factory method for zero value discount instances.
-   *
-   * @returns a Monetary discount of zero.
+   * @returns the USD portion of the value.
    */
-  public static noDiscount(): MonetaryDiscountType {
-    return {
-      usd: 0,
-      // lbp: 0
-    };
+  public get usd(): number {
+    return this.usdValue;
   }
 
   /**
-   * @param value discount object to be applied
+   * @param value new USD value.
    */
-  public applyDiscount(value: MonetaryDiscountType) {
-    this.usd *= 1 - value.usd;
-    // this.lbp *= 1 - value.lbp;
-    this.applyRounding();
+  public set usd(value: number) {
+    this.usdValue = value;
   }
 
   // /**
@@ -79,14 +72,14 @@ export default class Monetary {
   // public static get roundLbpNumber(): number {
   //   return Monetary.rates.roundingLbp;
   // }
-  //
+
   /**
-   * @returns the nearest rounding number for USD.
+   * @returns the USD value as a string.
    */
-  public static get roundUsdNumber(): number {
-    // return Monetary.rates.roundingUsd;
-    return 0.01;
+  public get usdString(): string {
+    return this.usd.toString();
   }
+
   //
   // /**
   //  * @returns the selling rate for USD.
@@ -101,6 +94,57 @@ export default class Monetary {
   // public static get buyUsdRate(): number {
   //   return Monetary.rates.buyRate;
   // }
+
+  /**
+   * @returns true if the USD is negative or the LBP is negative
+   */
+  public get isNegative(): boolean {
+    // return this.usd < 0 || this.lbp < 0;
+    return this.usd < 0;
+  }
+
+  /**
+   * @returns the MonetaryType data of the class.
+   */
+  public get data(): MonetaryType {
+    // return [this.usd, this.lbp];
+    return this.usd;
+  }
+
+  // /**
+  //  * @returns the LBP portion of the value.
+  //  */
+  // public get lbp(): number {
+  //   return this.lbpValue;
+  // }
+
+  /**
+   * Factory method for zero value instances.
+   *
+   * @returns a Monetary representing zero value.
+   */
+  public static noValue(): Monetary {
+    return new Monetary(0);
+  }
+
+  // /**
+  //  * @param value new LBP value.
+  //  */
+  // public set lbp(value: number) {
+  //   this.lbpValue = value;
+  // }
+
+  /**
+   * Factory method for zero value discount instances.
+   *
+   * @returns a Monetary discount of zero.
+   */
+  public static noDiscount(): MonetaryDiscountType {
+    return {
+      usd: 0
+      // lbp: 0
+    };
+  }
 
   /**
    * @param value to be rounded
@@ -121,40 +165,21 @@ export default class Monetary {
   }
 
   /**
+   * @param value discount object to be applied
+   */
+  public applyDiscount(value: MonetaryDiscountType) {
+    this.usd *= 1 - value.usd;
+    // this.lbp *= 1 - value.lbp;
+    this.applyRounding();
+  }
+
+  /**
    * Applies the rounding on this instance, to USD and LBP.
    * The rounding is based on the roundLbpNumber and roundUsdNumber.
    */
   public applyRounding(): void {
     // this.lbp = Monetary.round(this.lbp, Monetary.roundLbpNumber);
     this.usd = Monetary.round(this.usd, Monetary.roundUsdNumber);
-  }
-
-  // /**
-  //  * @returns the LBP portion of the value.
-  //  */
-  // public get lbp(): number {
-  //   return this.lbpValue;
-  // }
-
-  /**
-   * @returns the USD portion of the value.
-   */
-  public get usd(): number {
-    return this.usdValue;
-  }
-
-  // /**
-  //  * @param value new LBP value.
-  //  */
-  // public set lbp(value: number) {
-  //   this.lbpValue = value;
-  // }
-
-  /**
-   * @param value new USD value.
-   */
-  public set usd(value: number) {
-    this.usdValue = value;
   }
 
   /**
@@ -251,6 +276,13 @@ export default class Monetary {
     return temp;
   }
 
+  // /**
+  //  * @returns the LBP value as a string.
+  //  */
+  // public get lbpString(): string {
+  //   return this.lbp.toString();
+  // }
+
   /**
    * @param value divide both USD and LBP of
    *        a copy of this instance by given value.
@@ -273,42 +305,6 @@ export default class Monetary {
     return this.subtractCopy(discount).percent(this);
   }
 
-  /**
-   * @param other value to compare against.
-   * @returns what percentage is this instance of the given instance.
-   */
-  public percent(other: Monetary) {
-    return {
-      usd: other.usd / this.usd,
-      // lbp: other.lbp / this.lbp
-    };
-  }
-
-  // /**
-  //  * @returns the LBP value as a string.
-  //  */
-  // public get lbpString(): string {
-  //   return this.lbp.toString();
-  // }
-
-  /**
-   * @returns the USD value as a string.
-   */
-  public get usdString(): string {
-    return this.usd.toString();
-  }
-
-  /**
-   * @returns the string representation of this instance,
-   *          in the form (USD, LBP).
-   *
-   * Used mostly for debugging and logging.
-   */
-  public toString(): string {
-    // return `(${this.usdString}, ${this.lbpString})`;
-    return `$${this.usdString}`;
-  }
-
   // /**
   //  * @param lbpPortion? portion of the LBP value to transform to USD.
   //  *        If not given, all LBP is transformed.
@@ -319,17 +315,17 @@ export default class Monetary {
   //  * buyUsdRate.
   //  */
   // public transformToUsd(lbpPortion?: number): void {
-    // if (lbpPortion != undefined && this.lbp < lbpPortion) {
-    //   throw new RangeError(
-    //     `Invalid LBP portion ${lbpPortion},
-    //      must be <= to stored ${this.lbp}`
-    //   );
-    // } else if (lbpPortion == undefined) {
-    //   lbpPortion = this.lbp;
-    // }
-    //
-    // this.usd += lbpPortion / Monetary.buyUsdRate;
-    // this.lbp -= lbpPortion;
+  // if (lbpPortion != undefined && this.lbp < lbpPortion) {
+  //   throw new RangeError(
+  //     `Invalid LBP portion ${lbpPortion},
+  //      must be <= to stored ${this.lbp}`
+  //   );
+  // } else if (lbpPortion == undefined) {
+  //   lbpPortion = this.lbp;
+  // }
+  //
+  // this.usd += lbpPortion / Monetary.buyUsdRate;
+  // this.lbp -= lbpPortion;
   // }
 
   // /**
@@ -388,6 +384,28 @@ export default class Monetary {
   // }
 
   /**
+   * @param other value to compare against.
+   * @returns what percentage is this instance of the given instance.
+   */
+  public percent(other: Monetary) {
+    return {
+      usd: other.usd / this.usd
+      // lbp: other.lbp / this.lbp
+    };
+  }
+
+  /**
+   * @returns the string representation of this instance,
+   *          in the form (USD, LBP).
+   *
+   * Used mostly for debugging and logging.
+   */
+  public toString(): string {
+    // return `(${this.usdString}, ${this.lbpString})`;
+    return `$${this.usdString}`;
+  }
+
+  /**
    * @param other Monetary value to compare against
    * @return true if the given monetary value is less than the current one,
    *         after converting both to USD.
@@ -421,21 +439,5 @@ export default class Monetary {
     temp.applyDiscountPercent(value);
 
     return temp;
-  }
-
-  /**
-   * @returns true if the USD is negative or the LBP is negative
-   */
-  public get isNegative(): boolean {
-    // return this.usd < 0 || this.lbp < 0;
-    return this.usd < 0;
-  }
-
-  /**
-   * @returns the MonetaryType data of the class.
-   */
-  public get data(): MonetaryType {
-    // return [this.usd, this.lbp];
-    return this.usd;
   }
 }

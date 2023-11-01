@@ -5,32 +5,32 @@
  * That allows to change them more easily later on.
  */
 
-import { ThemeNavigationColors } from '../../@types/theme';
+import { ThemeNavigationColors } from "../../@types/theme";
 import { Dimensions } from "react-native";
 
 /**
  * Colors
  */
 export const Colors = {
-  transparent: 'rgba(0,0,0,0)',
-  inputBackground: '#FFFFFF',
-  white: '#ffffff',
+  transparent: "rgba(0,0,0,0)",
+  inputBackground: "#FFFFFF",
+  white: "#ffffff",
   //Typography
-  textGray800: '#000000',
-  textGray400: '#4D4D4D',
-  textGray200: '#A1A1A1',
-  primary: '#E14032',
-  success: '#28a745',
-  error: '#dc3545',
+  textGray800: "#000000",
+  textGray400: "#4D4D4D",
+  textGray200: "#A1A1A1",
+  primary: "#E14032",
+  success: "#28a745",
+  error: "#dc3545",
   //ComponentColors
-  circleButtonBackground: '#E1E1EF',
-  circleButtonColor: '#44427D',
+  circleButtonBackground: "#E1E1EF",
+  circleButtonColor: "#44427D"
 };
 
 export const NavigationColors: Partial<ThemeNavigationColors> = {
   primary: Colors.primary,
-  background: '#FFF',
-  card: '#FFF',
+  background: "#FFF",
+  card: "#FFF"
 };
 
 /**
@@ -40,15 +40,15 @@ export const FontSize = {
   tiny: 14,
   small: 16,
   regular: 20,
-  large: 40,
+  large: 40
 };
 
 /**
  * Screen dimensions in pixels
  */
 export const ScreenDimensions = {
-  height: Dimensions.get('window').height,
-  width: Dimensions.get('window').width
+  height: Dimensions.get("window").height,
+  width: Dimensions.get("window").width
 };
 
 /**
@@ -62,7 +62,7 @@ export const MetricsSizes = {
   tiny,
   small,
   regular,
-  large,
+  large
 };
 
 export default {

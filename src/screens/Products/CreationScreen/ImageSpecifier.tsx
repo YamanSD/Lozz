@@ -58,13 +58,13 @@ const ImageSpecifier = ({ uspList, images, imagesMap }: Properties) => {
         marginTop: 20,
         borderRadius: 10,
         padding: 25,
-        marginBottom: 20,
+        marginBottom: 20
       }
     ]} elevation={4}>
       <Text style={{
         fontWeight: "600",
         fontSize: 22,
-        marginBottom: 15,
+        marginBottom: 15
       }}>
         Specify Media
       </Text>
@@ -75,21 +75,21 @@ const ImageSpecifier = ({ uspList, images, imagesMap }: Properties) => {
         Layout.rowHCenter,
         Layout.row,
         {
-          paddingLeft: 5,
+          paddingLeft: 5
         }
       ]} onPress={onClick}>
         <View>
           <Text style={{
             fontWeight: "500",
             fontSize: 17,
-            marginBottom: 3,
+            marginBottom: 3
           }}>
-            {uspList.length} variant{uspList.length === 1 ? '' : 's'}
+            {uspList.length} variant{uspList.length === 1 ? "" : "s"}
           </Text>
           <Text style={{
-            fontSize: 12,
+            fontSize: 12
           }}>
-              From combinations of {optionsCount} option{optionsCount === 1 ? '' : 's'}
+            From combinations of {optionsCount} option{optionsCount === 1 ? "" : "s"}
           </Text>
         </View>
         <Icon name={"chevron-right"} size={22} />

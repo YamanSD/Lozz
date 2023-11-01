@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import CollectionInfo from "../../../../CollectionInfo";
-import { FlatList, View, Image } from "react-native";
+import { FlatList, Image, View } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { Button, Text } from "react-native-paper";
-import ImagePicker from 'react-native-image-crop-picker';
+import { Button, Text, useTheme as usePaperTheme } from "react-native-paper";
+import ImagePicker from "react-native-image-crop-picker";
 import { useTheme as useBoilerTheme } from "../../../../hooks";
-import { useTheme as usePaperTheme } from "react-native-paper";
 
 /**
  * Prop-type for the GeneralImageSelector component.
@@ -78,9 +77,9 @@ const GeneralImagePicker = ({ images, setImages }: Properties) => {
         Layout.center,
         {
           height: 150,
-          paddingVertical: 10,
+          paddingVertical: 10
         }]}>
-        <MaterialCommunityIcons name={'file-image-plus'}
+        <MaterialCommunityIcons name={"file-image-plus"}
                                 size={25}
                                 color={theme.colors.secondary}
                                 style={{ margin: 0, marginBottom: 10 }}
@@ -107,7 +106,7 @@ const GeneralImagePicker = ({ images, setImages }: Properties) => {
           contentContainerStyle={{
             alignContent: "center",
             alignItems: "center",
-            height: elementHeight,
+            height: elementHeight
           }}
           showsHorizontalScrollIndicator={false}
           ItemSeparatorComponent={() => {
@@ -115,7 +114,7 @@ const GeneralImagePicker = ({ images, setImages }: Properties) => {
               <View style={{
                 width: 1,
                 backgroundColor: "transparent",
-                marginHorizontal: 10,
+                marginHorizontal: 10
               }}>
               </View>
             );
@@ -128,10 +127,10 @@ const GeneralImagePicker = ({ images, setImages }: Properties) => {
                 source={{
                   uri: item,
                   width: elementWidth,
-                  height: elementHeight - 10,
+                  height: elementHeight - 10
                 }}
                 style={{
-                  borderRadius: 10,
+                  borderRadius: 10
                 }}
               />
             );

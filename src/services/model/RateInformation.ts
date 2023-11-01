@@ -1,4 +1,4 @@
-export {} // Remove this if used
+export {}; // Remove this if used
 // import BaseModel from "./BaseModel";
 // import { Generic, information, rateInformation, TrailType } from "./types";
 // import { InvalidInputError } from "../controller/Errors";

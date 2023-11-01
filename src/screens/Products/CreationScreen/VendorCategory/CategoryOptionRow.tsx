@@ -1,9 +1,8 @@
 import React from "react";
-import { ScrollView, StyleProp,View, ViewStyle } from "react-native";
+import { ScrollView, StyleProp, View, ViewStyle } from "react-native";
 import { useTheme as useBoilerTheme } from "../../../../hooks";
-import { useTheme as usePaperTheme } from "react-native-paper";
+import { Text, useTheme as usePaperTheme } from "react-native-paper";
 import { toTitle } from "../../../../services";
-import { Text } from "react-native-paper";
 
 /**
  * Prop-type for the CategoryOptions display
@@ -41,12 +40,12 @@ const CategoryOptionRow = ({ optionKey, optionValues }: Properties) => {
       marginTop: 15,
       borderTopColor: theme.colors.secondary,
       borderTopWidth: 1,
-      paddingTop: 10,
+      paddingTop: 10
     }}>
       <Text style={{
         fontWeight: "400",
         fontSize: 18,
-        marginBottom: 7,
+        marginBottom: 7
       }}>
         {toTitle(optionKey)}
       </Text>
@@ -57,7 +56,7 @@ const CategoryOptionRow = ({ optionKey, optionValues }: Properties) => {
               <View key={optionKey + value} style={boxStyle}>
                 <Text style={{
                   fontWeight: "600",
-                  fontSize: 15,
+                  fontSize: 15
                 }}>
                   {value}
                 </Text>

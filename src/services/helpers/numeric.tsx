@@ -11,7 +11,7 @@ export function formattedNumber(value: number,
     return new Intl.NumberFormat().format(Math.round(value));
   } else {
     const result = new Intl.NumberFormat().format(value);
-    const dotIndex = result.indexOf('.');
+    const dotIndex = result.indexOf(".");
     const n = result.length;
     const diff = n - dotIndex;
 
@@ -22,7 +22,7 @@ export function formattedNumber(value: number,
           ? result
           : (
             diff < 3
-              ? `${result}${'0'.repeat(3 - diff)}` // missing right zero(s)
+              ? `${result}${"0".repeat(3 - diff)}` // missing right zero(s)
               : result.substring(0, dotIndex + 3) // has overflow of decimals
           )
       );
@@ -51,7 +51,7 @@ export const unpackPrice = (value: string) => {
   }
 
   /* remove commas from formatting */
-  pureValue = pureValue.replaceAll(',', '');
+  pureValue = pureValue.replaceAll(",", "");
   const actualValue = Number(pureValue);
 
   /* check if parsing was not successful */

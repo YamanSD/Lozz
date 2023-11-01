@@ -12,9 +12,9 @@ const Stack = createNativeStackNavigator();
 type ScreenOptionsType =
   StackNavigationOptions
   | ((props: {
-    route: RouteProp<ParamListBase, string>,
-    navigation: any
-  }) => StackNavigationOptions)
+  route: RouteProp<ParamListBase, string>,
+  navigation: any
+}) => StackNavigationOptions)
 
 /**
  * Screen type used to input screen names and their component.
@@ -48,8 +48,10 @@ type Properties = {
  * @param id ID of the stack
  * @constructor
  */
-const StackNavigator = ({ screens, screenOptions,
-                          initialRouteName, id }: Properties) => {
+const StackNavigator = ({
+                          screens, screenOptions,
+                          initialRouteName, id
+                        }: Properties) => {
   screenOptions = screenOptions ?? { headerShown: false };
 
   return (
@@ -72,6 +74,6 @@ const StackNavigator = ({ screens, screenOptions,
       }
     </Stack.Navigator>
   );
-}
+};
 
 export default StackNavigator;

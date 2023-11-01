@@ -14,14 +14,14 @@ export default {
   },
   [NavigationNames.DescriptionEditorModal]: {
     component: DescriptionEditor,
-    options: { presentation: 'modal' }
+    options: { presentation: "modal" }
   },
   [NavigationNames.QuantityEditorModal]: {
     component: QuantitiesModal,
-    options: { presentation: 'modal' }
+    options: { presentation: "modal" }
   },
   [NavigationNames.ImagesSpecifierModal]: {
     component: ImagesModal,
-    options: { presentation: 'modal' }
+    options: { presentation: "modal" }
   }
 };

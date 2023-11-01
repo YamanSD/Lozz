@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Image, ImageProps } from 'react-native';
-import { Generic } from "../../services";
-import { ImagesManager } from "../../services";
+import { Image, ImageProps } from "react-native";
+import { Generic, ImagesManager } from "../../services";
 import { useTheme as useBoilerTheme } from "../../hooks";
 
 /**
@@ -15,14 +14,14 @@ const CacheImage = (props: ImageProps) => {
   useEffect(() => {
     const temp = async () => {
       setUri(await ImagesManager.get(baseUri));
-    }
+    };
 
     temp().then();
   }, []);
 
   return (<Image
     {...props}
-    source={uri !== undefined ? {uri: uri} : Images.defaultImage}
+    source={uri !== undefined ? { uri: uri } : Images.defaultImage}
   />);
 };
 

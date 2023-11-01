@@ -1,7 +1,7 @@
 import React from "react";
-import { View } from 'react-native';
+import { View } from "react-native";
 import { Formik, FormikErrors } from "formik";
-import * as Yup from 'yup';
+import * as Yup from "yup";
 import BaseModel from "../../../../services/model/BaseModel";
 import InstructionsWrapper from "./InstructionsWrapper";
 import { useTheme as useBoilerTheme } from "../../../../hooks";
@@ -52,27 +52,27 @@ const InstructionsForm = ({ setData }: Properties) => {
   const MaxInstructions = 10;
 
   /* key for the dynamic field */
-  const dynamicFieldsKeys = 'dynamicFields';
+  const dynamicFieldsKeys = "dynamicFields";
 
   /* initial instruction values */
   const initInstructions = () => {
-    return BaseModel.deepCopy({ title: '', description: '' });
+    return BaseModel.deepCopy({ title: "", description: "" });
   };
 
   /* initial values of fields */
   const initialValues: FormResponse = {
     // Initialize with an empty array
-    dynamicFields: [],
+    dynamicFields: []
   };
 
   /* validates the input */
   const validationSchema = Yup.object().shape({
     dynamicFields: Yup.array().of(
       Yup.object().shape({
-        title: Yup.string().required('Title is required'),
-        description: Yup.string().required('Description is required'),
+        title: Yup.string().required("Title is required"),
+        description: Yup.string().required("Description is required")
       })
-    ),
+    )
   });
 
   /**
@@ -120,7 +120,7 @@ const InstructionsForm = ({ setData }: Properties) => {
             && index !== curIndex;
         })
     ) !== undefined;
-  }
+  };
 
   /**
    * @param values form response object
@@ -161,7 +161,7 @@ const InstructionsForm = ({ setData }: Properties) => {
       setFieldValue(dynamicFieldsKeys, updatedFields);
       setData(updatedFields);
     }
-  }
+  };
 
   return (
     <Formik
@@ -181,7 +181,7 @@ const InstructionsForm = ({ setData }: Properties) => {
                     handleDeleteField(index, setFieldValue, values);
                   }} key={index}>
                     <View style={[
-                      Layout.justifyContentBetween,
+                      Layout.justifyContentBetween
                     ]}>
                       {/* title field */}
                       <InputField
@@ -226,7 +226,7 @@ const InstructionsForm = ({ setData }: Properties) => {
                         errorMessage={(ignored) => {
                           return checkField(errors, index, "description")
                             ? "Field is required"
-                            : '';
+                            : "";
                         }}
                         outline={true}
                         multiline={true}
@@ -240,7 +240,7 @@ const InstructionsForm = ({ setData }: Properties) => {
             <SpringButton
               onPress={() => handleAddField(setFieldValue, values)}
               style={{
-                marginTop: 20,
+                marginTop: 20
               }}
               labelStyle={{
                 fontWeight: "700"

@@ -1,20 +1,20 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} */
+/** @type {import("ts-jest").JestConfigWithTsJest} */
 module.exports = {
-  presets: ['module:metro-react-native-babel-preset'],
+  presets: ["module:metro-react-native-babel-preset"],
   plugins: [
     "@babel/plugin-transform-export-namespace-from",
     [
-      'module-resolver',
+      "module-resolver",
       {
-        root: ['./src'],
-        extensions: ['.js', '.json'],
+        root: ["./src"],
+        extensions: [".js", ".json"],
         alias: {
-          '@': './src',
-          types: './@types',
+          "@": "./src",
+          types: "./@types",
         },
       },
     ],
-    'inline-dotenv',
-    'react-native-reanimated/plugin', // needs to be last
+    "inline-dotenv",
+    "react-native-reanimated/plugin", // needs to be last
   ],
 };
